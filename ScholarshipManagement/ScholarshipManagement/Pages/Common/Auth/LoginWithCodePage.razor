@@ -1,0 +1,239 @@
+﻿@page "/login-with-code"
+@attribute [AllowAnonymous]
+
+
+@layout EmptyLayout
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Common.Auth
+@using ScholarshipManagement.Helper
+@using ScholarshipManagement.Services.Common
+@using static ScholarshipManagement.Helper.Constant
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject AuthService AuthService
+@inject CustomAuthStateProvider AuthStateProvider
+
+
+<style>
+    .login-shell {
+        border-radius: 16px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .login-hero {
+        background: linear-gradient(135deg, rgba(90, 115, 255, 0.18) 0%, rgba(90, 115, 255, 0.06) 55%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .login-hero-img {
+        max-width: 240px;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .login-content {
+        background: white;
+    }
+
+    .login-avatar {
+        box-shadow: 0 10px 24px rgba(45, 55, 72, 0.18);
+    }
+
+    .tight-icon-btn .mud-button-icon-start {
+        margin-right: 0px !important;
+    }
+
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center">
+    <MudPaper Elevation="0" Outlined="true" Class="login-shell my-12 mud-width-full">
+
+        <div class="login-hero pa-6 pa-sm-8">
+            <div class="d-flex align-center justify-space-between gap-4">
+                <img src="Images/kafat-logo.jpg"
+                     alt="Menu" style=" height:50px; width:50px;
+                         border-radius:50%; object-fit:cover;border:2px solid white;" class="login-avatar" />
+                <div>
+                    <MudText Typo="Typo.h5" Class="mud-text-primary">Kafa’at</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mt-1">Program Platform for Higher Education</MudText>
+                </div>
+                <img class="login-hero-img" src="images/profile-img.png" alt="Hero" />
+            </div>
+        </div>
+
+        <div class="login-content pa-6 pa-sm-8">
+
+            <MudForm @ref="form" Model="model">
+
+                @if (showOtp == false)
+                {
+                    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Email Address</MudText>
+                    <MudTextField @bind-Value="model.EmailOrUsername"
+                                  Placeholder="Enter registered email"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Email is required"
+                                  AdornmentIcon="@Icons.Material.Filled.Email"
+                                  IconSize="Size.Small"
+                                  Class="mud-width-full" Dense="true" Margin="Margin.Dense" />
+
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Class="mud-width-full mt-6"
+                               Size="Size.Large"
+                               Disabled="@isBusy"
+                               OnClick="LoginWithCode">
+                        @if (isBusy)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="me-2" />
+                            <span>Sending...</span>
+                        }
+                        else
+                        {
+                            <span>Send Code</span>
+                        }
+                    </MudButton>
+                    
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle2" Class="mt-2 mb-2">
+                        Verification Code
+                    </MudText>
+
+                    <MudTextField @bind-Value="otpCode"
+                                  Placeholder="Enter 6-digit code"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  MaxLength="6"
+                                  Immediate="true"
+                                  AdornmentIcon="@Icons.Material.Filled.Password"
+                                  IconSize="Size.Small"
+                                  Class="mud-width-full"
+                                  Dense="true"
+                                  Margin="Margin.Dense" AutoFocus="true" />
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Class="mud-width-full mt-4"
+                               Size="Size.Large"
+                               Disabled="@isBusy"
+                               OnClick="VerifyOtp">
+                        Verify & Login
+                    </MudButton>
+                }
+
+
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Primary"
+                           Class="mud-width-full mt-3 tight-icon-btn"
+                           StartIcon="@Icons.Material.Filled.ArrowBackIos"
+                           IconSize="Size.Small"
+                           OnClick="GoToLogin">
+                    Back to Login
+                </MudButton>
+
+
+
+                <MudDivider Class="mt-5" />
+
+
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-6 d-block text-center">
+                    Check your email for the verification code and enter it here to continue.
+                </MudText>
+
+
+            </MudForm>
+
+        </div>
+
+    </MudPaper>
+</MudContainer>
+
+
+
+
+@code {
+
+    private MudForm? form;
+    private bool isBusy;
+
+    private UserIdentifierDto model = new UserIdentifierDto();
+
+
+    private async Task LoginWithCode()
+    {
+        await form!.Validate();
+
+        if (!form.IsValid)
+            return;
+
+        isBusy = true;
+        StateHasChanged();
+
+        var ok = await AuthService.LoginWithCode(model);
+
+        if (ok.Success)
+        {
+            Snackbar.Add(ok.Message, Severity.Success);
+            showOtp = true;   // Show OTP field
+        }
+        else
+        {
+            Snackbar.Add(ok.Message, Severity.Error);
+        }
+
+        isBusy = false;
+
+
+    }
+
+
+    private void GoToLogin()
+    {
+        Nav.NavigateTo(Routes.Login);
+    }
+
+
+
+    private bool showOtp;
+    private string otpCode = string.Empty;
+
+
+
+    private async Task VerifyOtp()
+    {
+        if (string.IsNullOrWhiteSpace(otpCode) || otpCode.Length != 6)
+        {
+            Snackbar.Add("Please enter a valid 6-digit code.", Severity.Warning);
+            return;
+        }
+
+        isBusy = true;
+
+        var result = await AuthService.VerifyLoginCode(new VerifyOtpDto
+        {
+            EmailOrUsername = model.EmailOrUsername,
+            Code = otpCode
+        });
+
+        if (result.Success)
+        {
+            AuthStateProvider.NotifyLogin();
+            Nav.NavigateTo(Routes.Dashboard, true);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error);
+        }
+
+        isBusy = false;
+    }
+
+
+
+}

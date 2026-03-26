@@ -1,0 +1,281 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersMenu
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersRole
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersRolePage
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject UsersMenuService UsersMenuService
+@inject UsersRolePagesService UsersRolePagesService
+@inject UsersRoleService UsersRoleService
+@inject CommonService CommonService
+
+
+<MudDialog MaxWidth="MaxWidth.Large" FullWidth="true">
+
+    <DialogContent>
+
+        <!-- ⭐ Paper wrapper -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            <MudForm @ref="_form" Model="@RolePage">
+
+                <MudGrid Spacing="3">
+
+                    <!-- Role -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="Role"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Value="SelectedRoleId"
+                                   ValueChanged="OnRoleChanged"
+                                   Required="true"
+                                   RequiredError="Role is required">
+
+                            @foreach (var m in UsersRole)
+                            {
+                                <MudSelectItem T="long?" Value="@m.RoleId">
+                                    @m.RoleName
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Menu -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="Menu"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Value="SelectedMenuId"
+                                   ValueChanged="OnMenuChanged"
+                                   Required="true"
+                                   RequiredError="Menu is required">
+
+                            @foreach (var m in UsersMenu)
+                            {
+                                <MudSelectItem T="long?" Value="@m.MenuLinkId">
+                                    @($"{(m.ParentId != null ? "— " : "")}{m.PageHeading}")
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+
+
+                    <!-- View -->
+                    <MudItem xs="12" md="3">
+                        <MudText Typo="Typo.subtitle2">View</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="RolePage.ViewPer">
+                            <MudRadio Value="true" Color="Color.Info">Yes</MudRadio>
+                            <MudRadio Value="false" Color="Color.Default">No</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+                    <!-- Insert -->
+                    <MudItem xs="12" md="3">
+                        <MudText Typo="Typo.subtitle2">Insert</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="RolePage.InsertPer">
+                            <MudRadio Value="true" Color="Color.Success">Yes</MudRadio>
+                            <MudRadio Value="false" Color="Color.Default">No</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+                    <!-- Update -->
+                    <MudItem xs="12" md="3">
+                        <MudText Typo="Typo.subtitle2">Update</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="RolePage.UpdatePer">
+                            <MudRadio Value="true" Color="Color.Primary">Yes</MudRadio>
+                            <MudRadio Value="false" Color="Color.Default">No</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+                    <!-- Delete -->
+                    <MudItem xs="12" md="3">
+                        <MudText Typo="Typo.subtitle2">Delete</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="RolePage.DeletePer">
+                            <MudRadio Value="true" Color="Color.Error">Yes</MudRadio>
+                            <MudRadio Value="false" Color="Color.Default">No</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+
+
+                    <!-- Actions -->
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2 mt-2">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudForm>
+
+        </MudPaper>
+
+    </DialogContent>
+
+</MudDialog>
+
+
+@code {
+
+
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public UsersRolePageRequestDto RolePage { get; set; } = new();
+
+
+    private string Title = "Add Users Role Page";
+    private List<UsersRoleRequestDto> UsersRole = new();
+    private List<UsersMenuRequestdto> UsersMenu = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+
+            await GetUsersRole();
+            await GetUsersMenu();
+
+            if (RolePage.RoleFormId is null or 0)
+            {
+                Title = "Add Users Role Page";
+                RolePage.ViewPer = true;
+                RolePage.InsertPer = true;
+                RolePage.UpdatePer = true;
+                RolePage.DeletePer = true;
+            }
+            else
+            {
+                Title = "Edit Users Role Page";
+                SelectedRoleId = RolePage.RoleId;
+                SelectedMenuId = RolePage.MenuLinkId;
+            }
+
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid || SelectedRoleId == null || SelectedMenuId == null)
+                return;
+
+            RolePage.RoleId = SelectedRoleId.Value;
+            RolePage.MenuLinkId = SelectedMenuId.Value;
+
+            var result = RolePage.RoleFormId is null or 0
+                ? await UsersRolePagesService.AddUsersRolePage(RolePage)
+                : await UsersRolePagesService.UpdateUsersRolePage(RolePage);
+
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+
+
+    private async Task GetUsersMenu()
+    {
+        var result = await UsersMenuService.GetUsersMenu(new UsersMenuFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+
+        if (result.Response.Success)
+        {
+            UsersMenu = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task GetUsersRole()
+    {
+        var result = await UsersRoleService.GetUsersRole(new UsersRoleFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+        // if your UsersRoleService already returns ApiResponseDto
+        if (result.Response.Success)
+        {
+            UsersRole = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private long? SelectedRoleId { get; set; } = null;
+
+    private void OnRoleChanged(long? roleId)
+    {
+        SelectedRoleId = roleId;
+    }
+
+    private long? SelectedMenuId { get; set; } = null;
+
+    private void OnMenuChanged(long? menuId)
+    {
+        SelectedMenuId = menuId;
+    }
+
+
+
+
+}

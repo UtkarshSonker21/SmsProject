@@ -1,0 +1,253 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersLogin
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersLoginRole
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersRole
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject UsersRoleService UsersRoleService
+@inject UsersLoginService UsersLoginService
+@inject UsersLoginRoleService UsersLoginRoleService
+
+
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+
+    <DialogContent>
+
+        <!-- ⭐ Paper wrapper -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            <MudForm @ref="_form" Model="@UsersLoginRole">
+
+                <MudGrid Spacing="3">
+
+                    <!-- Login -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="User Login"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Value="SelectedLoginId"
+                                   ValueChanged="OnLoginChanged"
+                                   Required="true"
+                                   RequiredError="User Login is required">
+
+                            @foreach (var m in UsersLogin)
+                            {
+                                <MudSelectItem T="long?" Value="@m.LoginId">
+                                    @m.LoginName
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Role -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="Role"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Value="SelectedRoleId"
+                                   ValueChanged="OnRoleChanged"
+                                   Required="true"
+                                   RequiredError="Role is required">
+
+                            @foreach (var m in UsersRole)
+                            {
+                                <MudSelectItem T="long?" Value="@m.RoleId">
+                                    @m.RoleName
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Default role -->
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.subtitle2">Default Role</MudText>
+
+                        <MudRadioGroup T="bool" @bind-Value="UsersLoginRole.IsDefault">
+
+                            <MudRadio T="bool" Value="true" Color="Color.Primary">
+                                Yes (Default)
+                            </MudRadio>
+
+                            <MudRadio T="bool" Value="false" Color="Color.Default">
+                                No
+                            </MudRadio>
+
+                        </MudRadioGroup>
+                    </MudItem>
+
+                    <!-- Actions -->
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2 mt-2">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudForm>
+
+        </MudPaper>
+
+    </DialogContent>
+
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public UsersLoginRoleRequestDto UsersLoginRole { get; set; } = new();
+
+
+    private string Title = "Add Users Login Role";
+    private List<UsersRoleRequestDto> UsersRole = new();
+    private List<UsersLoginRequestDto> UsersLogin = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+
+            await GetUsersRole();
+            await GetUsersLogin();
+
+            if (UsersLoginRole.UserLoginRoleId is null or 0)
+            {
+                Title = "Add Users Login Role";
+            }
+            else
+            {
+                Title = "Edit Users Login Role";
+                SelectedRoleId = UsersLoginRole.RoleId;
+                SelectedLoginId = UsersLoginRole.LoginId;
+                await InvokeAsync(StateHasChanged);
+            }
+
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid || SelectedRoleId == null || SelectedLoginId == null)
+                return;
+
+            UsersLoginRole.RoleId = SelectedRoleId.Value;
+            UsersLoginRole.LoginId = SelectedLoginId.Value;
+
+            var result = UsersLoginRole.UserLoginRoleId is null or 0
+                ? await UsersLoginRoleService.AddUsersLoginRole(UsersLoginRole)
+                : await UsersLoginRoleService.UpdateUsersLoginRole(UsersLoginRole);
+
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+
+
+
+
+    private async Task GetUsersRole()
+    {
+        var result = await UsersRoleService.GetUsersRole(new UsersRoleFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+
+        if (result.Response.Success)
+        {
+            UsersRole = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task GetUsersLogin()
+    {
+        var result = await UsersLoginService.GetUsersLogin(new UsersLoginFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+
+        if (result.Response.Success)
+        {
+            UsersLogin = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private long? SelectedRoleId { get; set; } = null;
+
+    private void OnRoleChanged(long? roleId)
+    {
+        SelectedRoleId = roleId;
+    }
+
+
+    private long? SelectedLoginId { get; set; } = null;
+
+    private void OnLoginChanged(long? loginId)
+    {
+        SelectedLoginId = loginId;
+    }
+
+
+}

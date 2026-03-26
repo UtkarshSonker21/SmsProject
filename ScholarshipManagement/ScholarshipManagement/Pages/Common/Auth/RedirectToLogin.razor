@@ -1,0 +1,17 @@
+﻿@using static ScholarshipManagement.Helper.Constant
+@inject NavigationManager Nav
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Nav.NavigateTo(Routes.Login, true);
+
+        var current = Nav.ToBaseRelativePath(Nav.Uri);
+
+        if (!current.Contains("login"))
+        {
+            Nav.NavigateTo(Routes.Login);
+        }
+
+    }
+}

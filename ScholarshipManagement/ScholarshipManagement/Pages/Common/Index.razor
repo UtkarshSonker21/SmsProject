@@ -1,0 +1,53 @@
+﻿@page "/"
+@using MudBlazor
+@using ScholarshipManagement.Helper.Translations
+@using ScholarshipManagement.Pages.Common.Shared
+@using ScholarshipManagement.Services.Common
+@using static ScholarshipManagement.Helper.Constant
+@inject NavigationManager Nav
+@inject AuthService Auth
+@inject TranslationManager T
+@layout EmptyLayout
+
+<Loader Visible="@isChecking"
+           Text="Checking session"
+           SecondaryText="Please wait..." />
+
+
+
+
+
+@code {
+
+    private bool isChecking = true;
+
+  //   protected override async Task OnInitializedAsync()
+  //   {
+  //       var isLoggedIn = await Auth.IsUserLoggedIn();
+
+		// isChecking = false;
+
+  //       if (isLoggedIn)
+  //           Nav.NavigateTo(Routes.Dashboard, true);
+  //       else
+  //           Nav.NavigateTo(Routes.Login, true);
+
+  //   }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isLoggedIn = await Auth.IsUserLoggedIn();
+
+        if (isLoggedIn)
+        {
+            Nav.NavigateTo(Routes.Dashboard, replace: true);
+        }
+        else
+        {
+            Nav.NavigateTo(Routes.Login, replace: true);
+        }
+    }
+
+
+}

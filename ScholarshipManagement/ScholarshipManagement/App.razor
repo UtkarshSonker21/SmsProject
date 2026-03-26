@@ -1,0 +1,36 @@
+﻿@inject NavigationManager Nav
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@using ScholarshipManagement.Pages.Common
+@using ScholarshipManagement.Pages.Common.Auth
+@using ScholarshipManagement.Pages.Common.Shared
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData">
+
+                <!-- While authorization is resolving -->
+                <Authorizing>
+                    <Loader Text="Authorizing"
+                               SecondaryText="Verifying permissions..." />
+                </Authorizing>
+
+                <!-- When user is NOT authorized -->
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+
+            </AuthorizeRouteView>
+
+        </Found>
+
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p>Page not found</p>
+            </LayoutView>
+        </NotFound>
+
+    </Router>
+</CascadingAuthenticationState>

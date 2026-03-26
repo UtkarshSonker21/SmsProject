@@ -1,0 +1,22 @@
+﻿@using MudBlazor
+@inherits LayoutComponentBase
+
+<HeadContent>
+    <title>Scholarship Managemenet</title>
+</HeadContent>
+
+<MudThemeProvider />
+
+<MudLayout>
+
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+
+
+    <!-- ✅ Place providers here so they cascade into pages -->
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+    <MudPopoverProvider />
+
+</MudLayout>

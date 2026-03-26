@@ -1,0 +1,1073 @@
+﻿@page "/enrolled/students/{reqId:long}"
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Ngo
+@using ScholarshipManagement.DTOs.School.Students
+@using ScholarshipManagement.DTOs.University.CourseRequirement
+@using ScholarshipManagement.DTOs.University.MasterDocuments
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Pages.Common
+@using ScholarshipManagement.Pages.Common.Shared
+@using ScholarshipManagement.Pages.Ngo
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.Ngo
+@using ScholarshipManagement.Services.SuperAdmin
+@using ScholarshipManagement.Services.University
+@using static ScholarshipManagement.Helper.Constant
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject CourseRequirementService CourseRequirementService
+@inject UniversityDocumentService UniversityDocumentService
+@inject PermissionService PermissionService
+@inject ApprovalService ApprovalService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject AuthService AuthService
+
+
+
+
+
+<style>
+    .contact-compact {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 13px;
+        line-height: 1.2;
+    }
+
+    .contact-line {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .contact-icon {
+        font-size: 13px !important;
+    }
+
+        .contact-icon.office {
+            color: #2563eb;
+        }
+
+        .contact-icon.email {
+            color: #ef4444;
+        }
+
+        .contact-icon.phone {
+            color: #22c55e;
+        }
+
+    .contact-text {
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 13px;
+        max-width: 230px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+        .contact-text:hover {
+            text-decoration: underline;
+        }
+
+    .contact-empty {
+        font-size: 13px;
+        color: #9ca3af;
+        font-style: italic;
+    }
+
+
+
+    .custom-tabs .mud-tabs-toolbar {
+        min-height: 36px !important;
+    }
+
+    .custom-tabs .mud-tab {
+        min-height: 40px !important;
+        padding: 6px 12px !important;
+        font-size: 15px;
+        text-transform: none;
+        font-weight: 500;
+        color: #6B7280; /* gray */
+    }
+
+        .custom-tabs .mud-tab.mud-tab-active {
+            color: #1E88E5 !important; /* blue text */
+            font-weight: 600;
+        }
+
+    .custom-tabs .mud-tabs-slider {
+        height: 5px !important;
+        background-color: #1E88E5 !important;
+    }
+
+    html, body {
+        overflow-x: hidden !important;
+    }
+
+    .mud-drawer-container {
+        overflow-x: hidden !important;
+    }
+
+</style>
+
+
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+
+                    <MudTooltip Text="Back" Placement="Placement.Bottom">
+
+                        <div class="nav-icon" @onclick="GoBack">
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
+                        </div>
+
+                    </MudTooltip>
+
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        Enrolled Students
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+                    Total Records : <span id="totalRecords">@TotalRecords</span>
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Search -->
+    <div style="margin-top:15px; display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; background: var(--color-background-main, #FFF); margin-bottom:10px;">
+
+        <!-- Left -->
+        <div class="d-flex align-items-center gap-3" style="padding: 0 24px;">
+            <div class="appbar-search">
+
+
+                <input type="text" class="search-input" placeholder="Search..."
+                       value="@_search" @oninput="e => _search = e.Value?.ToString() ?? string.Empty"
+                       @onkeydown="HandleKeyDown" />
+
+
+                @if (_searchApplied)
+                {
+                    <button type="button"
+                            class="clear-search-btn"
+                            @onclick="ClearSearch">
+                        ✕
+                    </button>
+                }
+                else
+                {
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.5" class="search-icon" style="cursor:pointer"
+                         @onclick="ApplySearch">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 1 1-13 0a6.5 6.5 0 0 1 13 0Z" />
+                    </svg>
+                }
+            </div>
+        </div>
+
+
+        <!-- Right-->
+        <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 10px;position: relative;">
+
+            <div style="display: flex; align-items: center; gap: 5px; font-family: Inter, sans-serif; font-size: 13px;">
+
+                @* @if (CurrentStaffType != StaffType.School)
+                {
+                    @if (canAdd)
+                    {
+                        <button @onclick="AddCourseReq" class="add-btn">Add Req</button>
+                    }
+                } *@
+
+            </div>
+
+
+            <button class="settings-btn" @onclick="ToggleColumnsPopup" id="toggleBtn">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     stroke-width="1.5"
+                     stroke="currentColor"
+                     class="settings-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+            </button>
+
+
+            @if (showColumnsPopup)
+            {
+                <div @onclick="ClosePopup"
+                     style="position: fixed; inset: 0; background: transparent; z-index: 9999;">
+                </div>
+            }
+
+
+            <div id="columnsPopup" style="position: absolute; right: 24px; top: 70px; z-index: 10000;
+                              background: #fff; border: 1px solid #dbdbdb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                              padding: 12px; width: 280px; font-family: Inter, sans-serif;" hidden="@(!showColumnsPopup)">
+
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 14px; font-weight: 700; color: #555;">
+                        Show/Hide Columns
+                    </div>
+                    <button @onclick="ToggleColumnsPopup"
+                            style="background: none; border: none; color: #555; font-size: 16px; cursor: pointer;">
+                        ×
+                    </button>
+                </div>
+
+
+                <!-- Checkbox list -->
+                <div style="max-height: 300px; overflow-y: auto; padding-right: 6px;">
+                    @foreach (var col in allColumns
+                                        .Where(c => string.IsNullOrEmpty(columnFilter)
+                                        || c.Title.Contains(columnFilter, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        <div class="checkbox-row">
+                            <input type="checkbox"
+                                   class="theme-checkbox"
+                                   checked="@(col.Hidden == false)"
+                                   @onchange="(e) => ToggleColumn(col, (bool)e.Value)" />
+
+                            <label>@col.Title</label>
+                        </div>
+                    }
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+    <MudPaper Class="pa-4">
+
+        <MudDataGrid T="EnrolledStudentDto" @key="GridKey" RowsPerPage="@PageSize" @ref="dataGrid"
+                     ColumnsPanelReordering='true' DragDropColumnReordering='true'
+                     Hover="true" Bordered="true" Elevation="2" Loading="_loading"
+                     Class="blue-hover-grid"
+                     Items="Items" FixedHeader="true" Height="550px"
+                     ColumnResizeMode="ResizeMode.None" Id="myGrid"
+                     Selection="DataGridSelection.Single">
+
+            <Columns>
+
+                <TemplateColumn Title="Student Information"
+                                HeaderClass="fw-bold"
+                                Hideable="true" 
+                                HeaderStyle="width:250px; min-width:250px; max-width:250px;"
+                                CellStyle="width:250px; min-width:250px; max-width:250px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="d-flex align-items-center gap-3">
+
+                            <!-- Std Photo -->
+                            <img src="@(string.IsNullOrEmpty(ctx.Item.StudentPhoto)? "/images/male-icon.png": ctx.Item.StudentPhoto)"
+                                 alt="Student Photo"
+                                 style="width:35px;height:35px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;" />
+
+                            <!-- Std Details -->
+                            <div class="flex-grow-1">
+
+                                <!-- StudentNumber -->
+                                @if (!string.IsNullOrWhiteSpace(ctx.Item.StudentNumber))
+                                {
+                                    <div class="d-flex align-items-center gap-1 small text-muted">
+                                        <MudIcon Icon="@Icons.Material.Filled.Person"
+                                                 Style="font-size:15px; color:#9e9e9e;" />
+                                        <span style="color:#374151; font-weight:500;">
+                                            @ctx.Item.StudentNumber
+                                        </span>
+                                    </div>
+                                }
+
+
+                                <!-- Clickable Full Name -->
+                                <div class="fw-bold text-primary"
+                                     style="cursor:pointer;">
+                                    @ctx.Item.StudentFullName
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Student DOB"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:150px; min-width:150px; max-width:150px;"
+                                CellStyle="width:150px; min-width:150px; max-width:150px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <span class="d-flex align-items-center">
+
+                            <MudIcon Icon="@Icons.Material.Filled.Cake"
+                                     Style="font-size:16px;"
+                                     Class="me-1 text-muted" />
+
+                            @if (ctx.Item.DateOfBirth.HasValue)
+                            {
+                                <span>
+                                    @ctx.Item.DateOfBirth.Value.ToString("dd MMM yyyy")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic small">N/A</span>
+                            }
+
+                        </span>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="School"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
+                                CellStyle="width:200px; min-width:200px; max-width:200px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="d-flex align-items-center gap-1">
+
+                            <!-- Icon -->
+                            <MudIcon Icon="@Icons.Material.Filled.School"
+                                     Color="Color.Primary"
+                                     Style="font-size:14px;" />
+
+                            <!-- Text -->
+                            <div class="d-flex flex-column lh-1">
+
+                                <!-- Main Name -->
+                                <span class="fw-semibold text-dark text-truncate"
+                                      style="font-size:13px; max-width:180px;">
+                                    @ctx.Item.SchoolName
+                                </span>
+
+                                <!-- Short Name -->
+                                @if (!string.IsNullOrWhiteSpace(ctx.Item.ShortName))
+                                {
+                                    <span class="text-muted"
+                                          style="font-size:11px;">
+                                        @ctx.Item.ShortName
+                                    </span>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+              @*   <TemplateColumn Title="Gender"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:120px; min-width:120px; max-width:120px;"
+                                CellStyle="width:120px; min-width:120px; max-width:120px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined"
+                                 Style="min-width:70px; justify-content:center;"
+                                 Color="@GetGenderColor(ctx.Item.Gender)">
+
+                            @GetGenderText(ctx.Item.Gender)
+
+                        </MudChip>
+
+                    </CellTemplate>
+                </TemplateColumn>
+ *@
+
+                @* <TemplateColumn Title="Address"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:250px; min-width:250px; max-width:250px;"
+                                CellStyle="width:250px; min-width:250px; max-width:250px;"
+                                Hideable="true" Hidden="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="d-flex flex-column">
+
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.Address) ||
+                                                        !string.IsNullOrWhiteSpace(ctx.Item.AddressCity) ||
+                                                        !string.IsNullOrWhiteSpace(ctx.Item.MasterState) ||
+                                                        !string.IsNullOrWhiteSpace(ctx.Item.ZipCode) ||
+                                                        !string.IsNullOrWhiteSpace(ctx.Item.MasterCountry))
+                            {
+                                <!-- Line 1 -->
+                                @if (!string.IsNullOrWhiteSpace(ctx.Item.Address))
+                                {
+                                    <div>@ctx.Item.Address</div>
+                                }
+
+                                <!-- Line 2 -->
+                                <div class="text-muted small">
+                                    @ctx.Item.AddressCity
+
+                                    @if (!string.IsNullOrWhiteSpace(ctx.Item.AddressCity) &&
+                                                                    !string.IsNullOrWhiteSpace(ctx.Item.MasterState))
+                                    {
+                                        <span>, </span>
+                                    }
+
+                                    @ctx.Item.MasterState
+
+                                    @if (!string.IsNullOrWhiteSpace(ctx.Item.ZipCode))
+                                    {
+                                        <span> - @ctx.Item.ZipCode</span>
+                                    }
+                                </div>
+
+                                <!-- Country -->
+                                @if (!string.IsNullOrWhiteSpace(ctx.Item.MasterCountry))
+                                {
+                                    <div class="small fw-semibold mt-1" style="color:#6b21a8;">
+                                        @ctx.Item.MasterCountry
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic">No address available</span>
+                            }
+
+                        </div>
+
+                    </CellTemplate>
+                </TemplateColumn> *@
+
+
+                <TemplateColumn Title="Student Contact"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:250px; min-width:250px; max-width:250px;"
+                                CellStyle="width:250px; min-width:250px; max-width:250px;"
+                                Hideable="true" Hidden="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="contact-compact">
+
+                            <!-- Office Email -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.StudentEmail))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Business"
+                                             Class="contact-icon office" />
+
+                                    <a href="mailto:@ctx.Item.StudentEmail"
+                                       class="contact-text"
+                                       title="@ctx.Item.StudentEmail">
+                                        @ctx.Item.StudentEmail
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Mobile -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.StudentMobileNo))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Phone"
+                                             Class="contact-icon phone" />
+
+                                    <a href="tel:@ctx.Item.StudentMobileNo"
+                                       class="contact-text">
+                                        @ctx.Item.StudentMobileNo
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Empty -->
+                            @if (string.IsNullOrWhiteSpace(ctx.Item.StudentEmail) &&
+                                                        string.IsNullOrWhiteSpace(ctx.Item.StudentMobileNo))
+                            {
+                                <span class="contact-empty">
+                                    No contact information
+                                </span>
+                            }
+
+                        </div>
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="School Contact"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:250px; min-width:250px; max-width:250px;"
+                                CellStyle="width:250px; min-width:250px; max-width:250px;"
+                                Hideable="true" Hidden="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="contact-compact">
+
+                            <!-- Website -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.SchoolWebsite))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Language"
+                                             Class="contact-icon website" />
+
+                                    <a href="@ctx.Item.SchoolWebsite"
+                                       target="_blank"
+                                       class="contact-text">
+                                        @GetDomain(ctx.Item.SchoolWebsite)
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Email -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.SchoolEmail))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Email"
+                                             Class="contact-icon email" />
+
+                                    <a href="mailto:@ctx.Item.SchoolEmail"
+                                       class="contact-text">
+                                        @ctx.Item.SchoolEmail
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Phone -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.SchoolMobileNo))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Phone"
+                                             Class="contact-icon phone" />
+
+                                    <a href="tel:@ctx.Item.SchoolMobileNo"
+                                       class="contact-text">
+                                        @ctx.Item.SchoolMobileNo
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Empty fallback -->
+                            @if (string.IsNullOrWhiteSpace(ctx.Item.SchoolEmail) &&
+                                                        string.IsNullOrWhiteSpace(ctx.Item.SchoolMobileNo) &&
+                                                        string.IsNullOrWhiteSpace(ctx.Item.SchoolWebsite))
+                            {
+                                <span class="contact-empty">
+                                    No contact info
+                                </span>
+                            }
+
+                        </div>
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+
+
+                <TemplateColumn Title="Doc Status"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
+                                CellStyle="width:200px; min-width:200px; max-width:200px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="d-flex flex-column align-items-start">
+
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.DocStatus))
+                            {
+                                <span class="text-muted">N/A</span>
+                            }
+                            else
+                            {
+
+                                <span class="text-muted">N/A</span>
+                            }
+                        </div>
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+                <TemplateColumn Title="Awardings Status"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
+                                CellStyle="width:200px; min-width:200px; max-width:200px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="d-flex flex-column align-items-start">
+
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.AwardingStatus))
+                            {
+                                <span class="text-muted">N/A</span>
+                            }
+                            else
+                            {
+
+                                <span class="text-muted">N/A</span>
+                            }
+                        </div>
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+                <TemplateColumn Title="Sponsored"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
+                                CellStyle="width:200px; min-width:200px; max-width:200px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined"
+                                 Style="min-width:120px; justify-content:center;"
+                                 Color="@GetSponsoredColor(ctx.Item.SponsoredStatus)"
+                                 Icon="@(ctx.Item.SponsoredStatus == "Sponsored"
+                                             ? Icons.Material.Filled.CheckCircle
+                                             : Icons.Material.Filled.Cancel)">
+
+                            @ctx.Item.SponsoredStatus
+
+                        </MudChip>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Created Info"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:280px; min-width:230px; max-width:300px;"
+                                CellStyle="width:280px; min-width:230px; max-width:300px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="d-flex flex-column gap-1 small">
+
+                            <!-- Created Date -->
+                            <div class="d-flex align-items-center gap-2 text-muted" title="CreatedDate">
+                                <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                         Style="font-size:15px;" />
+                                @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                            </div>
+
+                            <!-- Created By -->
+                            <div class="d-flex align-items-center gap-2 fw-semibold" title="CreatedBy">
+                                <MudIcon Icon="@Icons.Material.Filled.Person"
+                                         Style="font-size:15px;"
+                                         Color="Color.Primary" />
+                                @ctx.Item.CreatedBy
+                            </div>
+
+                        </div>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                <!-- Action -->
+                <TemplateColumn Title="Action"
+                                Filterable="false"
+                                HeaderClass="text-center fw-bold"
+                                CellClass="text-center"
+                                HeaderStyle="width:100px; min-width:100px; max-width:100px;"
+                                CellStyle="width:100px; min-width:100px; max-width:100px;">
+
+                    <CellTemplate Context="ctx">
+                        <div style="display:flex; gap:12px; justify-content:center; align-items:center; height:100%;" class="action-btn">
+
+                            <div style="display:flex; align-items:center; gap:10px;">
+
+                                
+
+                                <MudTooltip Text="View Student Data">
+
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenStudentDetails(ctx.Item))" />
+
+                                </MudTooltip>
+
+                            </div>
+
+                        </div>
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+
+            </Columns>
+
+
+            <NoRecordsContent>
+                <div class="p-4 d-flex justify-start" style="color:#0080ff; font-weight:600; margin-left:20px;">
+                    No data available
+                </div>
+            </NoRecordsContent>
+
+
+        </MudDataGrid>
+
+    </MudPaper>
+
+
+    <!-- 🔹 Pagination -->
+    <div class="d-flex align-items-center justify-content-between px-4 mb-3"
+         style="height: 50px; background: #fff; margin-top:10px;">
+
+        <!-- Left Side (Empty but keeps even spacing like your layout) -->
+        <div style="display: flex; align-items: center; gap: 10px; font-family: Inter, sans-serif; font-size: 13px; margin-right:10px;">
+            <label class="me-2">Results per Page:</label>
+
+            <select id="pageSize" class="form-select"
+                    style="width: 70px; height: 32px; font-size: 13px; padding: 2px 6px;"
+                    @onchange="OnPageSizeChanged">
+
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="500">500</option>
+            </select>
+        </div>
+
+
+
+        <!-- Center: Custom Pagination (Your Styled UI) -->
+        <div class="d-flex align-items-center gap-3">
+
+            <button @onclick="PrevPage" disabled="@IsPrevDisabled" class="pg-btn">◀ PREV</button>
+
+            <span>Page</span>
+
+            <input readonly value="@PageNumber" class="pg-input" />
+
+            <span>of @TotalPages</span>
+
+            <button @onclick="NextPage" disabled="@IsNextDisabled" class="pg-btn">NEXT ▶</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+@code {
+
+    int PageNumber = 1;       // current page
+    int PageSize = 25;        // rows per page
+    int TotalRecords = 0;     // total records returned by API
+    int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize); // calculated
+    private List<EnrolledStudentDto> Items = new();
+    private MudDataGrid<EnrolledStudentDto>? dataGrid;
+    private StudentFilterDto Filter = new StudentFilterDto();
+
+    private StaffType? CurrentStaffType;
+    bool canView => PermissionService.CanView("course-enrollment");
+    bool canAdd => PermissionService.CanInsert("course-enrollment");
+    bool canEdit => PermissionService.CanUpdate("course-enrollment");
+    bool canDelete => PermissionService.CanDelete("course-enrollment");
+
+
+    [Parameter]
+    public long reqId { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!canView)
+        {
+            Navigation.NavigateTo(Routes.Dashboard);
+        }
+
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+        CurrentStaffType = user.StaffType;
+
+        await LoadData(Filter);
+        //await GetDocuments();
+    }
+
+
+    // global search
+    private string _search = "";
+    private bool _searchApplied = false;
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await ApplySearch();
+        }
+    }
+
+    private async Task ApplySearch()
+    {
+        Filter.SearchText = string.IsNullOrWhiteSpace(_search)
+            ? null
+            : _search.Trim();
+
+        Filter.PageNumber = 1;
+        PageNumber = 1;
+        _searchApplied = true;
+
+        await LoadData(Filter);
+    }
+
+    private async Task ClearSearch()
+    {
+        _search = string.Empty;
+        Filter.SearchText = null;
+        Filter.PageNumber = 1;
+        PageNumber = 1;
+        _searchApplied = false;
+
+        await LoadData(Filter);
+    }
+
+
+    private bool _loading = false;
+    private async Task LoadData(StudentFilterDto filter)
+    {
+        try
+        {
+            _loading = true;                 // start loading
+            await InvokeAsync(StateHasChanged); // refresh UI immediately if needed
+
+            var result = await CourseRequirementService.GetEnrolledStudents(reqId,filter);
+
+            if (result.Response.Success)
+            {
+                // Data already deserialized in service
+                Items = result.Data.Items;
+                TotalRecords = result.Data.TotalCount;
+            }
+            else
+            {
+                // Always show backend message
+                Items = result.Data.Items;
+                Snackbar.Add(result.Response.Message, Severity.Error);
+            }
+
+        }
+        finally
+        {
+            _loading = false;                // finished loading
+            await InvokeAsync(StateHasChanged); // update UI
+        }
+    }
+
+
+    // for drop down
+    private int GridKey = 1;
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var newSize))
+            return;
+
+        PageNumber = 1;
+        PageSize = newSize;
+
+        GridKey++;  // <<<<< IMPORTANT (forces new DataGrid instance)
+
+        if (dataGrid is null)
+            return;   //  Prevents the crash
+
+        Filter.PageSize = PageSize;
+        Filter.PageNumber = PageNumber;
+        await LoadData(Filter);
+
+        StateHasChanged();
+    }
+
+
+    // hide / show coloumns
+    private bool showColumnsPopup = false;
+    private string columnFilter = "";
+    private List<Column<EnrolledStudentDto>> allColumns = new();
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (dataGrid is null)
+                return;   //  Prevents the crash
+
+            allColumns = dataGrid.RenderedColumns.ToList();
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleColumnsPopup()
+    {
+        showColumnsPopup = !showColumnsPopup;
+    }
+
+    private void ClosePopup()
+    {
+        showColumnsPopup = false;
+    }
+
+    private async Task ToggleColumn(Column<EnrolledStudentDto> col, bool makeVisible)
+    {
+        if (makeVisible)
+            await col.ShowAsync();
+        else
+            await col.HideAsync();
+
+        //col.Hidden = makeVisible;   // sync checkbox state
+        StateHasChanged();
+    }
+
+
+    // pagination btns
+    bool IsPrevDisabled => PageNumber <= 1;
+    private async Task PrevPage()
+    {
+        if (PageNumber > 1)
+        {
+            PageNumber--;
+            Filter.PageNumber = PageNumber;
+            await LoadData(Filter);
+        }
+    }
+
+    bool IsNextDisabled => PageNumber >= TotalPages;
+    private async Task NextPage()
+    {
+        if (PageNumber < TotalPages)
+        {
+            PageNumber++;
+            Filter.PageNumber = PageNumber;
+            await LoadData(Filter);
+        }
+    }
+
+
+    void OpenStudentDetails(EnrolledStudentDto dto)
+    {
+        Navigation.NavigateTo(Routes.EnrolledStudentData.Replace("{stdId:long}", dto.StudentId.ToString()));
+    }
+
+
+
+    private string GetGenderText(int? gender)
+    {
+        return gender switch
+        {
+            1 => "Male",
+            2 => "Female",
+            3 => "Other",
+            _ => "-"
+        };
+    }
+
+    private Color GetGenderColor(int? gender)
+    {
+        return gender switch
+        {
+            1 => Color.Primary,   // Male
+            2 => Color.Secondary, // Female
+            3 => Color.Info,      // Other
+            _ => Color.Default
+        };
+    }
+
+
+    private Color GetSponsoredColor(string? status)
+    {
+        return status switch
+        {
+            "Sponsored" => Color.Success,     // 🟢 Green
+            "Not Sponsored" => Color.Error,   // 🔴 Red
+            _ => Color.Default                // ⚪ Default
+        };
+    }
+
+
+    string GetDomain(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return "";
+
+        try
+        {
+            var uri = new Uri(url);
+            return uri.Host.Replace("www.", "");
+        }
+        catch
+        {
+            return url;
+        }
+    }
+
+
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo(Routes.Enrollments);
+    }
+
+
+
+}

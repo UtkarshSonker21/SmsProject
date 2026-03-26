@@ -1,0 +1,88 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.Helper.Enums
+
+<style>
+
+    /* Base shared button style (keeps size identical) */
+    .dialog-btn {
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-family: Inter, sans-serif;
+        font-weight: 600;
+        font-size: 9pt;
+        cursor: pointer;
+        width: 90px;
+        text-align: center;
+        border: none;
+        letter-spacing: 0.3px;
+        transition: all 0.18s ease-in-out;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+
+    /* Approve */
+    .approve-dialog-btn {
+        background: linear-gradient(135deg,#34c759,#28a745);
+        color: #fff;
+    }
+
+        .approve-dialog-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(40,167,69,0.35);
+        }
+
+    /* Reject */
+    .reject-dialog-btn {
+        background: linear-gradient(135deg,#ff5f5f,#dc3545);
+        color: #fff;
+    }
+
+        .reject-dialog-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(220,53,69,0.35);
+        }
+
+    /* Cancel */
+    .cancel-dialog-btn {
+        background: #f1f3f5;
+        color: #495057;
+        border: 1px solid #dee2e6;
+    }
+
+        .cancel-dialog-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+        }
+
+</style>
+
+<MudDialog>
+    <DialogContent>
+        <MudText>@Message</MudText>
+    </DialogContent>
+
+    <DialogActions>
+        <div class="d-flex justify-end gap-2" style="margin:5px;">
+            <button @onclick="Approve" class="dialog-btn approve-dialog-btn" type="button">Approve</button>
+            <button @onclick="Reject" class="dialog-btn reject-dialog-btn" type="button">Reject</button>
+            <button @onclick="Cancel" class="dialog-btn cancel-dialog-btn" type="button">Cancel</button>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string Message { get; set; } = string.Empty;
+
+    // private void Approve() => MudDialog.Close(DialogResult.Ok(true));
+
+
+    private void Approve() => MudDialog.Close(DialogResult.Ok((int)ApprovalStatus.Approved));
+
+    private void Reject() => MudDialog.Close(DialogResult.Ok((int)ApprovalStatus.Rejected));
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,778 @@
+﻿@page "/hr-staff"
+@page "/hr-staff-update/{Id:long}"
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Common.HrStaff
+@using ScholarshipManagement.DTOs.School.MasterSchool
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
+@using ScholarshipManagement.DTOs.University.MasterUniversity
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Pages.Common
+@using ScholarshipManagement.Services.School
+@using ScholarshipManagement.Services.SuperAdmin
+@using ScholarshipManagement.Services.University
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagementAPI.DTOs.Common.HrStaff
+@using static ScholarshipManagement.Helper.Constant
+@inject MasterDropdownService MasterDropdownService
+@inject HrStaffService HrStaffService
+@inject UniversityService UniversityService
+@inject MasterSchoolService MasterSchoolService
+@inject CommonService CommonService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<style>
+
+    .full-height-paper {
+        min-height: 100%;
+    }
+
+    .upload-drop-zone {
+        position: relative;
+        height: 160px;
+        border: 2px dashed #d6d6d6;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+    }
+
+        .upload-drop-zone.drag-active {
+            border-color: var(--mud-palette-primary);
+            background-color: rgba(25, 118, 210, 0.05);
+        }
+
+    .file-input-overlay {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        cursor: pointer;
+    }
+
+    .upload-preview-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .upload-preview-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .upload-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .upload-preview-container:hover .upload-overlay {
+        opacity: 1;
+    }
+
+
+    .profile-upload-container {
+        border-radius: 10px;
+    }
+
+    .file-input-overlay {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+
+    .profile-avatar img {
+        object-fit: cover;
+    }
+
+
+</style>
+
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        @title
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudForm Model="model" @ref="form" Class="mt-4" Style="margin:30px 0;">
+            <MudGrid Spacing="3">
+                <MudItem xs="12">
+                    <MudPaper Class="pa-4 full-height-paper" Elevation="2">
+                        <MudGrid Spacing="2">
+
+                            <!-- ================= PROFILE PICTURE ================= -->
+                            <MudItem xs="12" Class="mb-2">
+
+                                <MudPaper Class="pa-3" Outlined="true" Elevation="0">
+
+                                    <div class="d-flex align-center">
+
+                                        <!-- Avatar -->
+                                        <MudAvatar Size="Size.Medium"
+                                                   Style="width:48px;height:48px; margin-right:10px;">
+
+                                            @if (!string.IsNullOrWhiteSpace(photoPreviewUrl))
+                                            {
+                                                <img src="@photoPreviewUrl"
+                                                     style="width:100%;height:100%;object-fit:cover;" />
+                                            }
+
+                                        </MudAvatar>
+
+                                        <!-- Right Section -->
+                                        <div class="d-flex align-center flex-grow-1 justify-space-between">
+
+                                            <!-- Left: Title -->
+                                            <MudText Typo="Typo.subtitle2">
+                                                Profile Picture
+                                            </MudText>
+
+                                            <div class="d-flex flex-column align-end">
+
+                                                <!-- Helper Text (Below Buttons) -->
+                                                <MudText Typo="Typo.caption"
+                                                         Class="mb-1"
+                                                         Style="font-size:11px;opacity:0.7;">
+                                                    PNG, JPEG • Max 10MB
+                                                </MudText>
+
+                                                <!-- Right: Buttons -->
+                                                <div class="d-flex align-center gap-2">
+
+                                                    <MudButton Variant="Variant.Filled"
+                                                               Size="Size.Small"
+                                                               StartIcon="@Icons.Material.Filled.Upload"
+                                                               Style="background: #1E88E5; color: white; padding:6px 12px; text-transform:none;">
+
+                                                        Upload
+
+                                                        <InputFile OnChange="OnInputFileChanged"
+                                                                   accept="image/png,image/jpeg,image/gif"
+                                                                   class="file-input-overlay" />
+                                                    </MudButton>
+
+                                                    <MudButton Variant="Variant.Text"
+                                                               Size="Size.Small"
+                                                               Style="background:#BDBDBD; color:#1F1F1F;padding:6px 12px;"
+                                                               Disabled="string.IsNullOrWhiteSpace(photoPreviewUrl)"
+                                                               OnClick="ClearPhoto">
+                                                        Remove
+                                                    </MudButton>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </MudPaper>
+
+                            </MudItem>
+
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="long"
+                                           Label="Staff Type"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Value="model.StaffType"
+                                           ValueChanged="OnStaffTypeChanged">
+
+                                    <!-- Default placeholder -->
+                                    <MudSelectItem T="long" Value="0">
+                                        -- Select Staff Type --
+                                    </MudSelectItem>
+
+                                    @foreach (var c in UserModules)
+                                    {
+                                        <MudSelectItem T="long" Value="@c.ModuleId">
+                                            @c.ModuleName
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="long?"
+                                           Label="University"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Disabled="@(!IsUniversity)"
+                                           Class="@(!IsUniversity ? "disabled-field" : "")"
+                                           Required="@IsUniversity"
+                                           RequiredError="University is required"
+                                           @bind-Value="model.UniversityId">
+
+                                    <!-- Default placeholder -->
+                                    <MudSelectItem T="long?" Value="@null">
+                                        -- Select University --
+                                    </MudSelectItem>
+
+                                    @foreach (var c in Universities)
+                                    {
+                                        @* <MudSelectItem T="long" Value="@(c.UniversityId ?? 0)">
+                                            @c.UniversityName
+                                        </MudSelectItem> *@
+                                        <MudSelectItem T="long?" Value="@c.UniversityId">
+                                            @c.UniversityName
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="long?"
+                                           Label="School"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Disabled="@(!IsSchool)"
+                                           Class="@(!IsSchool ? "disabled-field" : "")"
+                                           Required="@IsSchool"
+                                           RequiredError="School is required"
+                                           @bind-Value="model.SchoolId">
+
+                                    <!-- Default placeholder -->
+                                    <MudSelectItem T="long?" Value="@null">
+                                        -- Select School --
+                                    </MudSelectItem>
+
+                                    @foreach (var c in Schools)
+                                    {
+                                        @* <MudSelectItem T="long" Value="@(c.SchoolId ?? 0)">
+                                            @c.SchoolName
+                                        </MudSelectItem> *@
+                                        <MudSelectItem T="long?" Value="@c.SchoolId">
+                                            @c.SchoolName
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Staff Salutation"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.StaffSalutation"
+                                              For="@(() => model.StaffSalutation)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Staff First Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.StaffFirstName"
+                                              For="@(() => model.StaffFirstName)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Staff Last Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.StaffLastName"
+                                              For="@(() => model.StaffLastName)" />
+                            </MudItem>
+
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Permanent Address"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.PermAddress"
+                                              For="@(() => model.PermAddress)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Permanent City"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.PermCity"
+                                              For="@(() => model.PermCity)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Permanent Zip Code"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.PermZipCode"
+                                              For="@(() => model.PermZipCode)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Permanent State"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.PermState"
+                                              For="@(() => model.PermState)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Permanent Country"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.PermCountry"
+                                              For="@(() => model.PermCountry)" />
+                            </MudItem>
+
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Official Email"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.OfficeEmail"
+                                              For="@(() => model.OfficeEmail)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Personal Email"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.PersonelEmail"
+                                              For="@(() => model.PersonelEmail)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Mobile No"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.MobileNo"
+                                              For="@(() => model.MobileNo)" />
+                            </MudItem>
+
+
+
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Remarks"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Lines="4"
+                                              AutoGrow="true"
+                                              @bind-Value="model.Remarks"
+                                              For="@(() => model.Remarks)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+
+                                <MudText Typo="Typo.subtitle2">Gender</MudText>
+                                <MudRadioGroup T="string"
+                                               Label="Gender"
+                                               @bind-Value="model.Gender"
+                                               Required="true"
+                                               RequiredError="Gender is required">
+
+                                    <MudRadio T="string" Value="@("Male")" Color="Color.Primary">
+                                        Male
+                                    </MudRadio>
+
+                                    <MudRadio T="string" Value="@("Female")" Color="Color.Secondary">
+                                        Female
+                                    </MudRadio>
+
+                                    <MudRadio T="string" Value="@("Other")" Color="Color.Info">
+                                        Other
+                                    </MudRadio>
+
+                                </MudRadioGroup>
+                            </MudItem>
+
+
+
+                            <MudItem xs="12" md="4">
+                                <MudText Typo="Typo.subtitle2">Active Status</MudText>
+                                <MudRadioGroup T="bool" @bind-Value="model.IsActive">
+                                    <MudRadio T="bool" Value="true" Color="Color.Primary">Active</MudRadio>
+                                    <MudRadio T="bool" Value="false" Color="Color.Primary">Inactive</MudRadio>
+                                </MudRadioGroup>
+                            </MudItem>
+
+     
+
+                            <MudItem xs="12" Class="mt-5">
+                                <div class="d-flex justify-end gap-2">
+                                    <MudButton Variant="Variant.Filled" Style="background: #1E88E5; color: white;" OnClick="SubmitAsync">Submit</MudButton>
+                                    <MudButton Variant="Variant.Filled" Style="background:#BDBDBD; color:#1F1F1F;" OnClick="Cancel">Cancel</MudButton>
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudContainer>
+
+</div>
+
+
+
+@code {
+
+    private MudForm? form;
+    private StaffRequestDto model = new();
+
+    [Parameter]
+    public long Id { get; set; }
+    private string title = "Add Staff";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetUniversities();
+        await GetSchools();
+        await GetUserModules();
+
+        model = new StaffRequestDto();
+
+        if (Id > 0)
+        {
+            await LoadHrStaff(Id);
+            title = "Edit Staff";
+        }
+        else
+        {
+            model.IsActive = true;
+            title = "Add Staff";
+        }
+    }
+
+
+    private async Task SubmitAsync()
+    {
+        if (form is null)
+            return;
+
+        await form.Validate();
+
+        if (form.IsValid)
+        {
+
+            if (model.StaffType == 0)
+            {
+                Snackbar.Add("Please select a staff type", Severity.Warning);
+                return;
+            }
+
+            model.IsActive = true; // Set active by default on registration
+
+            //var ok = await HrStaffService.AddHrStaff(model);
+            var ok = model.StaffId is null or 0
+                     ? await HrStaffService.AddHrStaff(model)
+                     : await HrStaffService.UpdateHrStaff(model);
+
+            if (ok.Success)
+            {
+                Snackbar.Add(ok.Message, Severity.Success);
+                Navigation.NavigateTo(Routes.HrStaffList);
+            }
+            else
+            {
+                Snackbar.Add(ok.Message, Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("Please fix validation errors.", Severity.Error);
+        }
+    }
+
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo(Routes.HrStaffList);
+    }
+
+
+    private List<UsersModuleDto> UserModules = new();
+    private async Task GetUserModules()
+    {
+        var result = await CommonService.GetAllUsersModule();
+
+
+        if (result.Response.Success)
+        {
+            UserModules = result.Data ?? new List<UsersModuleDto>();
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private List<UniversityRequestDto> Universities = new();
+    private async Task GetUniversities()
+    {
+        var result = await UniversityService.GetMasterUniversity(new UniversityFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+			IsActive = true,
+			IsApproved = true
+        }
+        );
+
+
+        if (result.Response.Success)
+        {
+            Universities = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private List<MasterSchoolRequestDto> Schools = new();
+    private async Task GetSchools()
+    {
+        var result = await MasterSchoolService.GetMasterSchool(new MasterSchoolFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        }
+        );
+
+
+        if (result.Response.Success)
+        {
+            Schools = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private bool IsLoading;
+    private async Task LoadHrStaff(long id)
+    {
+        IsLoading = true;
+        var result = await HrStaffService.GetHrStaffById(id);
+
+        if (!result.Response.Success)
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+            return;
+        }
+
+        if (result.Data == null)
+        {
+            Snackbar.Add("Hr staff not found", Severity.Warning);
+            return;
+        }
+
+        model = result.Data;
+        IsLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private bool IsSuperAdminOrNgo => model.StaffType == 1 || model.StaffType == 2;
+    private bool IsUniversity => model.StaffType == 4;
+    private bool IsSchool => model.StaffType == 3;
+
+
+    private void OnStaffTypeChanged(long value)
+    {
+        model.StaffType = value;
+
+        if (value == 1 ) // SuperAdmin / NGO
+        {
+            model.UniversityId = null;
+            model.SchoolId = null;
+            model.NgoId = null;
+        }
+        else if (value == 2) // NGO
+        {
+            model.UniversityId = null;
+            model.SchoolId = null;
+            model.NgoId = 1; // cuz ngo will be one by default ----
+        }
+        else if (value == 3) // School
+        {
+            model.UniversityId = null;
+            model.NgoId = null;
+        }
+        else if (value == 4) // University
+        {
+            model.SchoolId = null;
+            model.NgoId = null;
+        }
+
+        // THIS IS THE IMPORTANT PART
+        form?.ResetValidation();
+
+        StateHasChanged();
+    }
+
+
+
+    private List<MasterDropDownRequestDto> Salutation = new();
+
+    private async Task GetTzStudentCombinations()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.Salutation
+        });
+
+
+        if (result.Response.Success)
+        {
+            Salutation = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private bool clearing;
+    private string? photoPreviewUrl;
+
+    private readonly string defaultDragClass = "upload-drop-zone";
+    private string dragClass = "upload-drop-zone";
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        ClearDragClass();
+
+        var file = e.File;
+
+        if (file is not null)
+        {
+            using var stream = file.OpenReadStream(5 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            photoPreviewUrl = $"data:{file.ContentType};base64,{base64}";
+
+            model.Photo = photoPreviewUrl;
+        }
+    }
+
+    private void SetDragClass()
+    {
+        dragClass = "upload-drop-zone drag-active";
+    }
+
+    private void ClearDragClass()
+    {
+        dragClass = defaultDragClass;
+    }
+
+
+
+    private async Task OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file is not null)
+        {
+            if (file.Size > 10 * 1024 * 1024)
+                return;
+
+            using var stream = file.OpenReadStream(10 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            photoPreviewUrl = $"data:{file.ContentType};base64,{base64}";
+
+            model.Photo = photoPreviewUrl;
+        }
+    }
+
+    private void ClearPhoto()
+    {
+        photoPreviewUrl = null;
+        model.Photo = null;
+    }
+
+
+}

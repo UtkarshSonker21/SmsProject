@@ -1,0 +1,27 @@
+﻿@using MudBlazor
+@using ScholarshipManagement.DTOs.Common.Menu
+
+@if (Menu.Permissions.CanView)
+{
+    @if (Menu.SubMenus.Any())
+    {
+        <MudNavGroup Title="@Menu.PageHeading" Icon="@Menu.Icon">
+            @foreach (var child in Menu.SubMenus)
+            {
+                <MenuNode Menu="child" />
+            }
+        </MudNavGroup>
+    }
+    else
+    {
+        <MudNavLink Href="@Menu.PagePath" Match="NavLinkMatch.All">
+            @Menu.PageHeading
+        </MudNavLink>
+    }
+}
+
+
+@code {
+    [Parameter, EditorRequired]
+    public LoadMenuDto Menu { get; set; } = default!;
+}

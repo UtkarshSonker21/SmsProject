@@ -1,0 +1,722 @@
+﻿@page "/users-login-roles"
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersLogin
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersLoginRole
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Pages.Common
+@using ScholarshipManagement.Pages.Common.Shared
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@using static ScholarshipManagement.Helper.Constant
+@inject CommonService CommonService
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject PermissionService PermissionService
+@inject UsersLoginRoleService UsersLoginRoleService
+@inject UsersLoginService UsersLoginService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        Users Login Roles
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+                    Total Records : <span id="totalRecords">@TotalRecords</span>
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Search -->
+    <div style="margin-top:15px; display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; background: var(--color-background-main, #FFF); margin-bottom:10px;">
+
+        <!-- Left -->
+        <div class="d-flex align-items-center gap-3" style="padding: 0 24px;">
+         
+
+            <!-- Name FILTER -->
+            <div class="appbar-search dropdown-filter">
+
+                <label class="filter-label">Login Name : </label>
+
+                <MudSelect T="long?"
+                           Value="SelectedLoginId"
+                           ValueChanged="OnLoginChanged"
+                           Placeholder="Login Name"
+                           Variant="Variant.Text"
+                           Dense="true"
+                           DisableUnderline="true"
+                           Clearable="true"
+                           Class="dropdown-select">
+
+                    @foreach (var m in UsersLogin)
+                    {
+                        <MudSelectItem T="long?" Value="@m.LoginId">
+                            @m.LoginName
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- Right-->
+        <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 10px;position: relative;">
+
+            <div style="display: flex; align-items: center; gap: 5px; font-family: Inter, sans-serif; font-size: 13px;">
+                <button @onclick="SaveRoles" class="add-btn">Save</button>
+            </div>
+
+
+            <button class="settings-btn" @onclick="ToggleColumnsPopup" id="toggleBtn">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     stroke-width="1.5"
+                     stroke="currentColor"
+                     class="settings-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+            </button>
+
+
+            @if (showColumnsPopup)
+            {
+                <div @onclick="ClosePopup"
+                     style="position: fixed; inset: 0; background: transparent; z-index: 9999;">
+                </div>
+            }
+
+
+            <div id="columnsPopup" style="position: absolute; right: 24px; top: 70px; z-index: 10000;
+                              background: #fff; border: 1px solid #dbdbdb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                              padding: 12px; width: 280px; font-family: Inter, sans-serif;" hidden="@(!showColumnsPopup)">
+
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 14px; font-weight: 700; color: #555;">
+                        Show/Hide Columns
+                    </div>
+                    <button @onclick="ToggleColumnsPopup"
+                            style="background: none; border: none; color: #555; font-size: 16px; cursor: pointer;">
+                        ×
+                    </button>
+                </div>
+
+
+                <!-- Checkbox list -->
+                <div style="max-height: 300px; overflow-y: auto; padding-right: 6px;">
+                    @foreach (var col in allColumns
+                                        .Where(c => string.IsNullOrEmpty(columnFilter)
+                                        || c.Title.Contains(columnFilter, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        <div class="checkbox-row">
+                            <input type="checkbox"
+                                   class="theme-checkbox"
+                                   checked="@(col.Hidden == false)"
+                                   @onchange="(e) => ToggleColumn(col, (bool)e.Value)" />
+
+                            <label>@col.Title</label>
+                        </div>
+                    }
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+    <MudPaper Class="pa-4">
+
+        <MudDataGrid T="LoginRoleAssignmentDto" @key="GridKey" RowsPerPage="@PageSize" @ref="dataGrid"
+                     ColumnsPanelReordering='true' DragDropColumnReordering='true'
+                     Hover="true" Bordered="true" Elevation="2" Loading="_loading"
+                     Class="blue-hover-grid" Filterable="true"
+                     Items="Items" FixedHeader="true" Virtualize="true" Height="550px"
+                     ColumnResizeMode="ResizeMode.None" Id="myGrid" RowClick="OnRowClick"
+                     @bind-SelectedItem="SelectedUsersRole"
+                     Selection="DataGridSelection.Single"
+                     RowClassFunc="GetRowClass">
+
+            <Columns>
+
+                <TemplateColumn Title="Mapped"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:130px;"
+                                CellStyle="width:130px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudCheckBox T="bool"
+                                     Value="ctx.Item.IsMapped"
+                                     ValueChanged="@((bool value) => OnMappedChanged(ctx.Item, value))"
+                                     Color="Color.Success"
+                                     Dense="true" Size="Size.Small" />
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Default"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:130px;"
+                                CellStyle="width:130px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudCheckBox T="bool"
+                                     Value="ctx.Item.IsDefault"
+                                     ValueChanged="@((bool value) => OnDefaultChanged(ctx.Item, value))"
+                                     Disabled="!ctx.Item.IsMapped"
+                                     Color="Color.Warning"
+                                     Dense="true" Size="Size.Small" />
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Role"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:280px; min-width:230px; max-width:300px;"
+                                CellStyle="width:280px; min-width:230px; max-width:300px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="d-flex align-items-center gap-1">
+
+                            <MudIcon Icon="@Icons.Material.Filled.Badge"
+                                     Style="font-size:15px;"
+                                     Class="text-muted" />
+
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.RoleName))
+                            {
+                                <span>@ctx.Item.RoleName</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic">N/A</span>
+                            }
+
+                        </div>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Module"
+                                HeaderClass="fw-bold"
+                                Hideable="true" >
+
+                    <CellTemplate Context="ctx">
+
+                        <MudChip Size="Size.Small"
+                                 Variant="Variant.Outlined"
+                                 Color="Color.Success"
+                                 Style="min-width:100px; justify-content:center;">
+                            @ctx.Item.Module
+                        </MudChip>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+            </Columns>
+
+
+            <NoRecordsContent>
+                <div class="p-4 d-flex justify-start" style="color:#0080ff; font-weight:600; margin-left:20px;">
+                    No data available
+                </div>
+            </NoRecordsContent>
+
+
+        </MudDataGrid>
+
+    </MudPaper>
+
+
+    <!-- 🔹 Pagination -->
+    <div class="d-flex align-items-center justify-content-between px-4 mb-3"
+         style="height: 50px; background: #fff; margin-top:10px;">
+
+        <!-- Left Side (Empty but keeps even spacing like your layout) -->
+        <div style="display: flex; align-items: center; gap: 10px; font-family: Inter, sans-serif; font-size: 13px; margin-right:10px;">
+            <label class="me-2">Results per Page:</label>
+
+            <select id="pageSize" class="form-select"
+                    style="width: 70px; height: 32px; font-size: 13px; padding: 2px 6px;"
+                    @onchange="OnPageSizeChanged">
+
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="500">500</option>
+            </select>
+        </div>
+
+
+
+        <!-- Center: Custom Pagination (Your Styled UI) -->
+        <div class="d-flex align-items-center gap-3">
+
+            <button @onclick="PrevPage" disabled="@IsPrevDisabled" class="pg-btn">◀ PREV</button>
+
+            <span>Page</span>
+
+            <input readonly value="@PageNumber" class="pg-input" />
+
+            <span>of @TotalPages</span>
+
+            <button @onclick="NextPage" disabled="@IsNextDisabled" class="pg-btn">NEXT ▶</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+@code {
+
+    int PageNumber = 1;       // current page
+    int PageSize = 25;        // rows per page
+    int TotalRecords = 0;     // total records returned by API
+    int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize); // calculated
+    private List<LoginRoleAssignmentDto> Items = new();
+    private MudDataGrid<LoginRoleAssignmentDto>? dataGrid;
+    private UsersLoginRoleFilterDto Filter = new UsersLoginRoleFilterDto();
+
+
+    private StaffType? CurrentStaffType;
+    bool canView => PermissionService.CanView("role assign");
+    bool canAdd => PermissionService.CanInsert("role assign");
+    bool canEdit => PermissionService.CanUpdate("role assign");
+    bool canDelete => PermissionService.CanDelete("role assign");
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!canView)
+        {
+            Navigation.NavigateTo(Routes.Dashboard);
+        }
+
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+        CurrentStaffType = user.StaffType;
+
+        //await LoadData(Filter);
+        await GetUsersLogin();
+    }
+
+
+    private bool _loading = false;
+    private async Task LoadData(UsersLoginRoleFilterDto Filter)
+    {
+        try
+        {
+            _loading = true;                 // start loading
+            await InvokeAsync(StateHasChanged); // refresh UI immediately if needed
+
+            Filter.PageSize = 0;
+            var result = await UsersLoginRoleService.GetRolesByLogin(Filter);
+
+            if (result.Response.Success)
+            {
+                // Data already deserialized in service
+                Items = result.Data.Items;
+                TotalRecords = result.Data.TotalCount;
+            }
+            else
+            {
+                // Always show backend message
+                Items = result.Data.Items;
+                Snackbar.Add(result.Response.Message, Severity.Error);
+            }
+
+        }
+        finally
+        {
+            _loading = false;                // finished loading
+            await InvokeAsync(StateHasChanged); // update UI
+        }
+    }
+
+
+    private int GridKey = 1;
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var newSize))
+            return;
+
+        PageNumber = 1;
+        PageSize = newSize;
+
+        GridKey++;  // <<<<< IMPORTANT (forces new DataGrid instance)
+
+        if (dataGrid is null)
+            return;   //  Prevents the crash
+
+        Filter.PageSize = PageSize;
+        Filter.PageNumber = PageNumber;
+
+        await LoadData(Filter);
+
+        StateHasChanged();
+    }
+
+
+    // hide / show coloumns
+    private bool showColumnsPopup = false;
+    private string columnFilter = "";
+    private List<Column<LoginRoleAssignmentDto>> allColumns = new();
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (dataGrid is null)
+                return;   //  Prevents the crash
+
+            allColumns = dataGrid.RenderedColumns.ToList();
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleColumnsPopup()
+    {
+        showColumnsPopup = !showColumnsPopup;
+    }
+
+    private void ClosePopup()
+    {
+        showColumnsPopup = false;
+    }
+
+    private async Task ToggleColumn(Column<LoginRoleAssignmentDto> col, bool makeVisible)
+    {
+        if (makeVisible)
+            await col.ShowAsync();
+        else
+            await col.HideAsync();
+
+        //col.Hidden = makeVisible;   // sync checkbox state
+        StateHasChanged();
+    }
+
+
+    // pagination btns
+    bool IsPrevDisabled => PageNumber <= 1;
+    private async Task PrevPage()
+    {
+        if (PageNumber > 1)
+        {
+            PageNumber--;
+            Filter.PageNumber = PageNumber;
+            await LoadData(Filter);
+        }
+    }
+
+    bool IsNextDisabled => PageNumber >= TotalPages;
+    private async Task NextPage()
+    {
+        if (PageNumber < TotalPages)
+        {
+            PageNumber++;
+            Filter.PageNumber = PageNumber;
+            await LoadData(Filter);
+        }
+    }
+
+
+    // row selection --
+    private LoginRoleAssignmentDto? SelectedUsersRole;
+
+
+    private string GetRowClass(LoginRoleAssignmentDto menu, int rowNumber)
+    {
+        // selected-row
+        return menu == SelectedUsersRole ? "" : "";
+    }
+
+
+    private void OnRowClick(DataGridRowClickEventArgs<LoginRoleAssignmentDto> args)
+    {
+        StateHasChanged();
+    }
+
+
+    private async Task EditUsersLoginRole(UsersLoginRoleRequestDto role)
+    {
+        var parameters = new DialogParameters
+        {
+            {
+                "UsersLoginRole",
+                new UsersLoginRoleRequestDto
+                {
+					UserLoginRoleId = role.UserLoginRoleId,
+                    RoleId = role.RoleId,
+                    RoleName = role.RoleName,
+					LoginId = role.LoginId,
+					LoginName = role.LoginName,
+                    IsDefault = role.IsDefault,
+                    CreatedBy = role.CreatedBy,
+                    CreatedDate = role.CreatedDate
+                }
+            } // label model for edit
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<UsersLoginRoleDialog>("Edit Users Login Role", parameters, options);
+
+        var result = await dialog.Result;
+
+        // Reload only if Save was successful
+        if (result is not null && !result.Canceled)
+        {
+            PageNumber = 1;
+            PageSize = 25;
+            var filter = new UsersLoginRoleFilterDto();
+            await LoadData(filter);   // your grid reload method
+        }
+
+    }
+
+    private async Task DeleteUsersLoginRole(UsersLoginRoleRequestDto role)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to delete '{role.RoleName}'?" }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && role.UserLoginRoleId.HasValue)
+        {
+            var response = await UsersLoginRoleService.DeleteUsersLoginRole(role.UserLoginRoleId.Value);
+
+            Snackbar.Add(
+                response.Message,
+                response.Success ? Severity.Success : Severity.Error
+            );
+
+            if (response.Success)
+            {
+                PageNumber = 1;
+                PageSize = 25;
+                var filter = new UsersLoginRoleFilterDto();
+                await LoadData(filter);
+            }
+        }
+    }
+
+
+    private async Task AddUsersLoginRole()
+    {
+        var parameters = new DialogParameters
+        {
+            { "UsersLoginRole", new UsersLoginRoleRequestDto() } // empty model for ADD
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<UsersLoginRoleDialog>("Add Users Login Role", parameters, options);
+
+        var result = await dialog.Result;
+
+        // Reload only if Save was successful
+        if (result is not null && !result.Canceled)
+        {
+            PageNumber = 1;
+            PageSize = 25;
+            var filter = new UsersLoginRoleFilterDto();
+            await LoadData(filter);   // your grid reload method
+        }
+    }
+
+
+    void NavigateToMenu(long menuId)
+    {
+        // Navigation or detail page
+    }
+
+
+    void ExportData()
+    {
+
+    }
+
+
+
+    private List<UsersLoginRequestDto> UsersLogin = new();
+    private long? SelectedLoginId { get; set; } = null;
+
+    private async Task GetUsersLogin()
+    {
+        var result = await UsersLoginService.GetUsersLogin(new UsersLoginFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+
+        if (result.Response.Success)
+        {
+            UsersLogin = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnLoginChanged(long? loginId)
+    {
+        SelectedLoginId = loginId;
+
+        if (SelectedLoginId.HasValue)
+        {
+			Filter.LoginId = SelectedLoginId.Value;
+            await LoadData(Filter);
+        }
+        else
+        {
+            SelectedLoginId = null;
+			Filter.LoginId = null;
+			Items.Clear();
+        }
+
+    }
+
+
+    private void OnMappedChanged(LoginRoleAssignmentDto role, bool value)
+    {
+        role.IsMapped = value;
+
+        if (!value)
+            role.IsDefault = false;
+    }
+
+    private void OnDefaultChanged(LoginRoleAssignmentDto role, bool value)
+    {
+        if (!role.IsMapped)
+            return;
+
+        if (value)
+        {
+            // Only one default role allowed
+            foreach (var r in Items)
+                r.IsDefault = false;
+
+            role.IsDefault = true;
+        }
+        else
+        {
+            role.IsDefault = false;
+        }
+    }
+
+
+    private async Task SaveRoles()
+    {
+        if(!SelectedLoginId.HasValue)
+        {
+            Snackbar.Add("Please select a login to save roles.", Severity.Warning);
+            return;
+		};
+
+        var dto = new LoginRoleBulkSaveDto
+        {
+            LoginId = SelectedLoginId.Value,
+            Roles = Items
+        };
+
+        var response = await UsersLoginRoleService.BulkSaveRolesAsync(dto);
+
+        Snackbar.Add(
+            response.Message,
+            response.Success ? Severity.Success : Severity.Error
+        );
+
+
+        if (response.Success)
+        {
+            PageNumber = 1;
+            PageSize = 25;
+            var filter = new UsersLoginRoleFilterDto();
+            filter.LoginId = SelectedLoginId.Value;
+            await LoadData(filter);
+        }
+
+    }
+
+
+
+
+}

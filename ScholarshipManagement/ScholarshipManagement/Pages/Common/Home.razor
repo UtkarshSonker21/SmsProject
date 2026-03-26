@@ -1,0 +1,100 @@
+﻿@page "/home"
+@page "/dashboard"
+@attribute [Authorize]
+
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.Helper.Translations
+@using ScholarshipManagement.Services.Common
+@inject AuthService AuthService
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject TranslationStateService T
+@inject TranslationStateService TState
+
+<!-- Main Content Wrapper -->
+<div style="display: flex; flex-direction: column; align-items: flex-start; flex: 1 0 0;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        @T.T("Dashboard")
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+                    @* Total Records : <span id="totalRecords">@TotalRecords</span> *@
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@* <Loader Text="Loading"
+        SecondaryText="Fetching Data..." Visible="true" /> *@
+ 
+@code {
+
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     if (!await AuthService.IsUserLoggedIn())
+    //     {
+    //         Nav.NavigateTo("/login", true);
+    //     }
+    // }
+
+
+    protected override void OnInitialized()
+    {
+        TState.OnChange += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        TState.OnChange -= OnLanguageChanged;
+    }
+
+
+    private string _search = string.Empty;
+
+    void OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            // perform search
+        }
+    }
+
+
+
+}

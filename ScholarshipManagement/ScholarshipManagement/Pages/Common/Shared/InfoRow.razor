@@ -1,0 +1,11 @@
+﻿<div class="d-flex justify-space-between mb-2">
+    <span style="color:#6B7280;">@Label</span>
+    <span style="font-weight:500;">
+        @(string.IsNullOrWhiteSpace(Value) ? "-" : Value)
+    </span>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; }
+    [Parameter] public string Value { get; set; }
+}

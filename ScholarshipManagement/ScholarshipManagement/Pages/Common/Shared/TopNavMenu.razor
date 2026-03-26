@@ -1,0 +1,145 @@
+﻿@using MudBlazor
+@using ScholarshipManagement.DTOs.Common.Menu
+@using ScholarshipManagement.Helper
+@inject NavigationManager Nav
+
+<div class="nav-btn-wrapper">
+    <div class="nav-btn-container">
+
+        @foreach (var menu in Menus
+            .Where(m => m.HasAccess)
+            .OrderBy(m => m.SequenceNo))
+        {
+            if (menu.SubMenus != null && menu.SubMenus.Any(x => x.HasAccess))
+            {
+                <!-- MENU WITH DROPDOWN -->
+                <MudMenu Dense="true" OpenOnHover="true" CloseOnMouseLeave="true">
+
+                    <ActivatorContent>
+                        <MudButton Class="@NavClass(menu.PagePath, menu.SubMenus)"
+                                   Title="@menu.PageHeading">
+                            <div class="icon-with-text">
+                                @RenderIcon(menu.Icon)
+                                <span class="icon-text">@menu.PageHeading</span>
+                                <span class="material-icons nav-arrow" style="font-size:20px;">expand_more</span>
+                            </div>
+                        </MudButton>
+                    </ActivatorContent>
+
+                    <ChildContent>
+                        @foreach (var sub in menu.SubMenus
+                            .Where(s => s.HasAccess)
+                            .OrderBy(s => s.SequenceNo))
+                        {
+                            <MudMenuItem Class="@(IsSubActive(sub) ? "submenu-active" : "")" 
+                                OnClick="@(() => Navigate(sub.PagePath))">
+                                <div class="icon-with-text">
+                                    @RenderIcon(sub.Icon)
+                                    <span class="icon-text">@sub.PageHeading</span>
+                                </div>
+                            </MudMenuItem>
+                        }
+                    </ChildContent>
+
+                </MudMenu>
+            }
+            else
+            {
+                <!-- SIMPLE BUTTON -->
+                <MudButton Class="@NavClass(menu.PagePath)"
+                           OnClick="@(() => Navigate(menu.PagePath))"
+                           Title="@menu.PageHeading">
+
+                    <div class="icon-with-text">
+                        @RenderIcon(menu.Icon)
+                        <span class="icon-text">@menu.PageHeading</span>
+                    </div>
+
+                </MudButton>
+            }
+        }
+
+        
+
+    </div>
+
+    @* <div class="scroll-indicator"></div> *@
+</div>
+
+@code {
+
+    [Parameter, EditorRequired]
+    public List<LoadMenuDto> Menus { get; set; } = new();
+
+    private void Navigate(string url)
+    {
+        if (!string.IsNullOrWhiteSpace(url))
+            Nav.NavigateTo(url);
+    }
+
+
+    private RenderFragment RenderIcon(string? icon) => builder =>
+    {
+        if (string.IsNullOrWhiteSpace(icon))
+            return;
+
+        // Example: material-icons support
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", "material-icons nav-icon");
+        builder.AddContent(2, icon);
+        builder.CloseElement();
+
+
+
+        // Basic safety check
+        // if (icon.Contains("<script", StringComparison.OrdinalIgnoreCase))
+        //     return;
+
+        // builder.AddMarkupContent(0, icon);
+    };
+
+
+    private string NavClass(string route)
+    {
+        return Nav.Uri.Contains(route, StringComparison.OrdinalIgnoreCase)
+            ? "custom-navlink-btn icon-square active"
+            : "custom-navlink-btn icon-square";
+    }
+
+
+    private string NavClass(string parentRoute, List<LoadMenuDto>? subMenus)
+    {
+        var currentUrl = Nav.Uri;
+
+        // Direct parent match
+        if (!string.IsNullOrWhiteSpace(parentRoute) &&
+            currentUrl.Contains(parentRoute, StringComparison.OrdinalIgnoreCase))
+        {
+            return "custom-navlink-btn icon-square active";
+        }
+
+        // Child match → parent active
+        if (subMenus != null)
+        {
+            foreach (var child in subMenus)
+            {
+                if (!string.IsNullOrWhiteSpace(child.PagePath) &&
+                    currentUrl.Contains(child.PagePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return "custom-navlink-btn icon-square active";
+                }
+            }
+        }
+
+        return "custom-navlink-btn icon-square";
+    }
+
+
+    private bool IsSubActive(LoadMenuDto sub)
+    {
+        return Nav.Uri.Contains(sub.PagePath, StringComparison.OrdinalIgnoreCase);
+    }
+
+
+
+}

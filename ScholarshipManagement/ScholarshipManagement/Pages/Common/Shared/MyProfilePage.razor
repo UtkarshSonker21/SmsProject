@@ -1,0 +1,1028 @@
+﻿@page "/my-profile"
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs.Common.Auth
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterCountry
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersLoginLog
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@using static ScholarshipManagement.Pages.Common.Shared.MyProfilePage
+@inject AuthService AuthService
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject UsersLoginLogService UsersLoginLogService
+@inject MasterCountryService MasterCountryService
+@inject MasterDropdownService MasterDropdownService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<style>
+
+    .custom-tabs .mud-tabs-toolbar {
+        min-height: 36px !important;
+    }
+
+    .custom-tabs .mud-tab {
+        min-height: 40px !important;
+        padding: 6px 12px !important;
+        font-size: 15px;
+        text-transform: none;
+        font-weight: 500;
+        color: #6B7280; /* gray */
+    }
+
+        .custom-tabs .mud-tab.mud-tab-active {
+            color: #1E88E5 !important; /* blue text */
+            font-weight: 600;
+        }
+
+    .custom-tabs .mud-tabs-slider {
+        height: 5px !important;
+        background-color: #1E88E5 !important;
+    }
+
+    .upload-drop-zone {
+        position: relative;
+        height: 160px;
+        border: 2px dashed #d6d6d6;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+    }
+
+        .upload-drop-zone.drag-active {
+            border-color: var(--mud-palette-primary);
+            background-color: rgba(25, 118, 210, 0.05);
+        }
+
+    .file-input-overlay {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        cursor: pointer;
+    }
+
+    .upload-preview-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .upload-preview-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .upload-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .upload-preview-container:hover .upload-overlay {
+        opacity: 1;
+    }
+
+
+    .profile-upload-container {
+        border-radius: 10px;
+    }
+
+    .file-input-overlay {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+
+    .profile-avatar img {
+        object-fit: cover;
+    }
+
+
+    .primary-btn {
+        background: #1E88E5;
+        color: white;
+        border-radius: 8px;
+        text-transform: none;
+        padding: 10px 20px;
+        font-weight: 500;
+        box-shadow: none;
+    }
+
+        .primary-btn:hover {
+            background: #1565C0 !important;
+        }
+
+
+
+    .profile-tabs .mud-tab.mud-tab-active {
+        color: #1976d2;
+        border-bottom: 2px solid #1976d2;
+    }
+
+
+    .profile-header {
+        padding: 6px 0;
+    }
+
+
+    .profile-avatar {
+        width: 56px !important;
+        height: 56px !important;
+        font-weight: 600;
+        font-size: 18px;
+        background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+        color: #4f46e5;
+        border: 2px solid #e5e7eb;
+    }
+
+    .text-muted {
+        color: #6b7280;
+    }
+
+    .text-secondary {
+        color: #9ca3af;
+    }
+
+    .status-chip {
+        font-weight: 500;
+        padding: 4px 12px;
+    }
+
+
+    /* Role + Module (Green tone) */
+    .role-text {
+        color: #16a34a; /* green-600 */
+        font-weight: 500;
+    }
+
+    /* Email (Blue tone) */
+    .email-text {
+        color: #2563eb; /* blue-600 */
+    }
+
+    /* Optional subtle hover */
+    .role-text:hover {
+        color: #15803d;
+    }
+
+    .email-text:hover {
+        color: #1d4ed8;
+    }
+
+    .border-bottom-only {
+        box-shadow: none !important; /* remove elevation shadow */
+        border-radius: 0; /* optional: flat look */
+        border-bottom: 2px solid #e5e7eb; /* light gray divider */
+    }
+
+
+</style>
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        My Profile
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+
+                <div style="background:#f5f7fb; padding:6px; border-radius:12px;">
+                    <MudChipSet T="int"
+                                @bind-SelectedValue="_tabIndex"
+                                Class="d-flex gap-2">
+
+                        <MudChip Value="0"
+                                 Variant="Variant.Filled"
+                                 Color="@(_tabIndex == 0 ? Color.Primary : Color.Default)"
+                                 Icon="@Icons.Material.Filled.Person">
+                            Profile
+                        </MudChip>
+
+                        <MudChip Value="1"
+                                 Variant="Variant.Filled"
+                                 Color="@(_tabIndex == 1 ? Color.Primary : Color.Default)"
+                                 Icon="@Icons.Material.Filled.Lock">
+                            Security
+                        </MudChip>
+
+                        <MudChip Value="2"
+                                 Variant="Variant.Filled"
+                                 Color="@(_tabIndex == 2 ? Color.Primary : Color.Default)"
+                                 Icon="@Icons.Material.Filled.History">
+                            Activity
+                        </MudChip>
+
+                    </MudChipSet>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-5 mb-3">
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12">
+                <MudPaper Class="pa-4 full-height-paper border-bottom-only">
+                    <MudGrid Spacing="2">
+                       
+                        <div class="d-flex align-center justify-space-between w-100">
+
+                            <!-- LEFT SECTION -->
+                            <div class="d-flex align-center">
+
+                                <!-- Avatar -->
+                                <MudAvatar Size="Size.Large"
+                                           Class="me-4 profile-avatar">
+                                    @GetInitials()
+                                </MudAvatar>
+
+                                <!-- User Info -->
+                                <div>
+
+                                    <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                                        @Profile.FullName
+                                    </MudText>
+
+                                    <MudText Typo="Typo.caption" Class="d-flex align-center gap-1 role-text">
+                                        <MudIcon Icon="@Icons.Material.Filled.WorkOutline" Style="font-size:16px;" />
+                                        @Profile.CurrentRoleName • @Profile.ModuleName
+                                    </MudText>
+
+                                    <MudText Typo="Typo.caption" Class="d-flex align-center gap-1 email-text">
+                                        <MudIcon Icon="@Icons.Material.Filled.Email" Style="font-size:16px;" />
+                                        @Profile.OfficialEmail
+                                    </MudText>
+
+                                </div>
+
+                            </div>
+
+                            <!-- RIGHT SECTION -->
+                            <div class="d-flex align-center">
+
+                                <MudChip T="string"
+                                         Variant="Variant.Outlined"
+                                         Color="@(Profile.Status ? Color.Success : Color.Error)"
+                                         Icon="@(Profile.Status ? Icons.Material.Filled.CheckCircle
+                                                    : Icons.Material.Filled.Cancel)"
+                                         Class="status-chip">
+
+                                    @(Profile.Status ? "Active" : "Inactive")
+
+                                </MudChip>
+
+                            </div>
+
+                        </div>
+                   
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+
+        </MudGrid>
+
+    </MudContainer>
+
+
+    <!-- ================= PROFILE INFO ================= -->
+    @if (_tabIndex == 0)
+    {
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+            <MudForm Model="Profile" @ref="profileForm" Class="mt-4" Style="margin:30px 0;">
+
+                <MudGrid Spacing="3">
+
+                    <MudItem xs="12">
+                        <MudPaper Class="pa-4 full-height-paper" Elevation="2">
+                            <MudGrid Spacing="2">
+
+                                <!-- PROFILE Picture -->
+                                <MudItem xs="12" Class="mb-2">
+
+                                    <MudPaper Class="pa-3" Outlined="true" Elevation="0">
+
+                                        <div class="d-flex align-center">
+
+                                            <!-- Avatar -->
+                                            <MudAvatar Size="Size.Medium"
+                                                       Style="width:48px;height:48px; margin-right:10px;">
+
+                                                @if (!string.IsNullOrWhiteSpace(photoPreviewUrl))
+                                                {
+                                                    <img src="@photoPreviewUrl"
+                                                         style="width:100%;height:100%;object-fit:cover;" />
+                                                }
+
+                                            </MudAvatar>
+
+                                            <!-- Right Section -->
+                                            <div class="d-flex align-center flex-grow-1 justify-space-between">
+
+                                                <!-- Left: Title -->
+                                                <MudText Typo="Typo.subtitle2">
+                                                    Profile Picture
+                                                </MudText>
+
+                                                <div class="d-flex flex-column align-end">
+
+                                                    <!-- Helper Text (Below Buttons) -->
+                                                    <MudText Typo="Typo.caption"
+                                                             Class="mb-1"
+                                                             Style="font-size:11px;opacity:0.7;">
+                                                        PNG, JPEG • Max 10MB
+                                                    </MudText>
+
+                                                    <!-- Right: Buttons -->
+                                                    <div class="d-flex align-center gap-2">
+
+                                                        <MudButton Variant="Variant.Filled"
+                                                                   Size="Size.Small"
+                                                                   StartIcon="@Icons.Material.Filled.Upload"
+                                                                   Style="background: #1E88E5; color: white; padding:6px 12px; text-transform:none;">
+
+                                                            Upload
+
+                                                            <InputFile OnChange="OnInputFileChanged"
+                                                                       accept="image/png,image/jpeg,image/gif"
+                                                                       class="file-input-overlay" />
+                                                        </MudButton>
+
+                                                        <MudButton Variant="Variant.Text"
+                                                                   Size="Size.Small"
+                                                                   Style="background:#BDBDBD; color:#1F1F1F;padding:6px 12px;"
+                                                                   Disabled="string.IsNullOrWhiteSpace(photoPreviewUrl)"
+                                                                   OnClick="ClearPhoto">
+                                                            Remove
+                                                        </MudButton>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </MudPaper>
+
+                                </MudItem>
+
+                                <!-- PROFILE INFO -->
+                                <MudItem xs="12" Class="mb-2">
+                                    <MudText Typo="Typo.h6"
+                                             Style="font-size:15px; font-weight:600; color:#1E293B; margin-bottom:2px; margin-top:3px;">
+                                        Basic Information
+                                    </MudText>
+                                    <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                                    <MudDivider />
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="string"
+                                               Label="Salutation"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Placeholder="--- Select ---"
+                                               @bind-Value="Profile.Salutation" Clearable="true">
+
+                                        @foreach (var div in Salutation)
+                                        {
+                                            <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                        }
+
+                                    </MudSelect>
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string"
+                                                  Label="First Name"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="Profile.FirstName" />
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string"
+                                                  Label="Last Name"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="Profile.LastName" />
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string"
+                                                  Label="Last Name"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="Profile.Mobile" />
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string"
+                                                  Label="Last Name"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="Profile.PersonalEmail" />
+                                </MudItem>
+
+
+                                <!-- ADDRESS -->
+                                <MudItem xs="12" Class="mb-2">
+                                    <MudText Typo="Typo.h6"
+                                             Style="font-size:15px; font-weight:600; color:#1E293B; margin-bottom:2px; margin-top:3px;">
+                                        Address
+                                    </MudText>
+                                    <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                                    <MudDivider />
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string"
+                                                  Label="Address"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="Profile.Address" />
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string"
+                                                  Label="City"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="Profile.City" />
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="string"
+                                               Label="Country"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               @bind-Value="Profile.Country"
+                                               Clearable="true">
+
+                                        <!-- Placeholder -->
+                                        <MudSelectItem T="string" Value="@null">
+                                            -- Select Country --
+                                        </MudSelectItem>
+
+                                        @foreach (var c in Countries.Where(x => x.CountryId.HasValue))
+                                        {
+                                            <MudSelectItem T="string" Value="@c.CountryName">
+                                                @c.CountryName
+                                            </MudSelectItem>
+                                        }
+
+                                    </MudSelect>
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudTextField T="string"
+                                                  Label="Zip"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="Profile.Zip" />
+                                </MudItem>
+
+                                <!-- SAVE BUTTON -->
+                                <MudItem xs="12" Class="mt-5">
+                                    <div class="d-flex justify-end gap-2">
+                                        <MudButton Variant="Variant.Filled" Style="background: #1E88E5; color: white;" OnClick="UpadteProfile">Submit</MudButton>
+                                    </div>
+                                </MudItem>
+
+
+                            </MudGrid>
+                        </MudPaper>
+                    </MudItem>
+
+
+                </MudGrid>
+            </MudForm>
+        </MudContainer>
+    }
+
+  
+
+    <!-- ================= SECURITY ================= -->
+    @if (_tabIndex == 1)
+    {
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+
+            <MudGrid Spacing="3" Class="mt-4" Style="margin:30px 0;">
+
+                <MudItem xs="12" md="6">
+                    <MudForm Model="@Password" @ref="profileUpdatePasswordForm">
+                        <MudPaper Class="pa-4 full-height-paper" Elevation="2">
+                            <MudGrid Spacing="2">
+
+                                <MudItem xs="12">
+                                    <MudTextField @bind-Value="Password.Current"
+                                                  Label="Current Password"
+                                                  InputType="InputType.Password"
+                                                  Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <MudTextField Value="Password.New"
+                                                  Label="New Password"
+                                                  InputType="InputType.Password"
+                                                  Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <MudTextField @bind-Value="Password.Confirm"
+                                                  Label="Confirm Password"
+                                                  InputType="InputType.Password"
+                                                  Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                </MudItem>
+
+
+                                <MudItem xs="12" Style="margin-top:10px;">
+                                    <div class="d-flex justify-content-end gap-2 mt-2">
+                                        <MudButton Variant="Variant.Filled"
+                                                   Style="background: #1E88E5; color: white;">
+                                            Submit
+                                        </MudButton>
+
+                                        <MudButton Variant="Variant.Filled"
+                                                   Style="background-color:#6c757d; color:white; border:1px solid #6c757d;"
+                                                   Class="cancel-btn">
+                                            Cancel
+                                        </MudButton>
+                                    </div>
+                                </MudItem>
+
+                            </MudGrid>
+                        </MudPaper>
+                    </MudForm>
+                </MudItem>
+
+
+                <MudItem xs="12" md="6">
+                    <MudForm Model="@Username" @ref="profileUpdateUserNameForm">
+                        <MudPaper Class="pa-4 full-height-paper" Elevation="2">
+                            <MudGrid Spacing="2">
+
+                                <MudItem xs="12">
+                                    <MudTextField Value="Profile.FullName"
+                                                  Label="Current Username"
+                                                  Disabled="true"
+                                                  Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField @bind-Value="Username.NewUsername"
+                                                  Label="New Username"
+                                                  Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField @bind-Value="Username.Confirm"
+                                                  Label="Confirm Username"
+                                                  Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                </MudItem>
+
+
+                                <MudItem xs="12" Style="margin-top:10px;">
+                                    <div class="d-flex justify-content-end gap-2 mt-2">
+                                        <MudButton Variant="Variant.Filled"
+                                                   Style="background: #1E88E5; color: white;">
+                                            Submit
+                                        </MudButton>
+
+                                        <MudButton Variant="Variant.Filled"
+                                                   Style="background-color:#6c757d; color:white; border:1px solid #6c757d;"
+                                                   Class="cancel-btn">
+                                            Cancel
+                                        </MudButton>
+                                    </div>
+                                </MudItem>
+
+                            </MudGrid>
+                        </MudPaper>
+                    </MudForm>
+                </MudItem>
+
+            </MudGrid>
+        </MudContainer>
+
+
+    }
+
+
+    <!-- ================= ACTIVITY ================= -->
+    @if (_tabIndex == 2)
+    {
+        <MudPaper Class="pa-4 ">
+
+            <MudItem xs="12" Class="mb-3">
+                <MudText Typo="Typo.h6"
+                         Style="font-size:15px; font-weight:600; color:#1E293B; margin-bottom:2px; margin-top:3px;">
+                    Login Activity
+                </MudText>
+                <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                <MudDivider />
+            </MudItem>
+
+            <MudTable Items="Items" Dense="true" Hover="true" Bordered="true" Striped="true" Elevation="2" Height="550px">
+
+                <HeaderContent>
+                    <MudTh Class="fw-bold" Style="width:250px; min-width:200px; max-width:300px;">User</MudTh>
+                    <MudTh Class="fw-bold" >IP</MudTh>
+                    <MudTh Class="fw-bold" Style="width:200px; min-width:200px; max-width:200px;">Browser</MudTh>
+                    <MudTh Class="fw-bold" Style="width:200px; min-width:200px; max-width:200px;">OS</MudTh>
+                    <MudTh Class="fw-bold" Style="width:200px; min-width:200px; max-width:200px;">Device</MudTh>
+                    <MudTh Class="fw-bold" Style="width:280px; min-width:230px; max-width:300px;">Login</MudTh>
+                    <MudTh Class="fw-bold" Style="width:280px; min-width:230px; max-width:300px;">Status</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+
+                    <!-- IP -->
+                    <MudTd>
+                        @if (!string.IsNullOrWhiteSpace(context.LoginName))
+                        {
+                            <div class="d-flex flex-column">
+
+                                <span class="fw-semibold text-primary" title="Login Name">
+                                    @context.LoginName
+                                </span>
+
+                            </div>
+                        }
+                    </MudTd>
+
+                    <!-- IP -->
+                    <MudTd>
+                        @if (!string.IsNullOrWhiteSpace(context.IpAddress))
+                        {
+                            <span style="display:inline-flex; align-items:center; gap:6px; padding:3px 10px;
+                                                     border-radius:14px; border:1px solid #cfe2ff; background:#f8fbff;
+                                                    font-family:monospace; font-size:13px; min-width:150px;">
+                                <MudIcon Icon="@Icons.Material.Filled.Language" Size="Size.Small" />
+                                @context.IpAddress
+                            </span>
+                        }
+                    </MudTd>
+
+                    <!-- Browser -->
+                    <MudTd>
+                        <div class="text-muted small d-flex align-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Public" Size="Size.Small" />
+                            @context.BrowserName
+                        </div>
+                    </MudTd>
+
+                    <!-- OS -->
+                    <MudTd>
+                        <div class="text-muted small d-flex align-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" />
+                            @context.OperatingSystem
+                        </div>
+                    </MudTd>
+
+                    <!-- Device -->
+                    <MudTd>
+                        <div class="text-muted small d-flex align-center gap-1">
+                            <MudIcon Icon="@(context.ComputerName?.Contains("Mobile") == true
+                                                                                          ? Icons.Material.Filled.Smartphone
+                                                                                          : Icons.Material.Filled.Computer)" />
+                        @context.ComputerName
+                    </div>
+                </MudTd>
+
+                    <!-- Login -->
+                    <MudTd>
+                        <div class="d-flex align-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Login" Color="Color.Success" />
+                            @context.LoginDateTime.ToString("dd MMM yyyy, hh:mm tt")
+                        </div>
+                    </MudTd>
+
+                    <!-- Status -->
+                    <MudTd>
+
+                    @if (context.LogoutDateTime.HasValue)
+                        {
+                            <div class="d-flex align-center gap-1">
+                                <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Error" />
+                                @context.LogoutDateTime.Value.ToString("dd MMM yyyy, hh:mm tt")
+                            </div>
+                        }
+                        else
+                        {
+                            bool isActive = (DateTime.UtcNow - context.LoginDateTime) <= TimeSpan.FromHours(24);
+
+                            <MudChip T="string" Size="Size.Small"
+                                     Variant="Variant.Outlined"
+                                     Color="@(isActive ? Color.Success : Color.Error)">
+                                @(isActive ? "Active" : "Expired")
+                            </MudChip>
+                        }
+
+                    </MudTd>
+
+                </RowTemplate>
+
+            </MudTable>
+        </MudPaper>
+    }
+
+
+</div>
+
+
+@code {
+
+    CurrentUserProfileDto Profile = new();
+    PasswordDto Password = new();
+    ChangeUsernameDto Username = new();
+    string NewUsername;
+
+    private MudForm? profileForm;
+    private MudForm? profileUpdatePasswordForm;
+    private MudForm? profileUpdateUserNameForm;
+
+
+    private int _tabIndex = 0;
+
+
+    string GetInitials()
+    {
+        return $"{Profile.FirstName?.FirstOrDefault()}{Profile.LastName?.FirstOrDefault()}";
+    }
+
+    private StaffType? CurrentStaffType;
+    private string loginName = "";
+    private long loginId = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+        CurrentStaffType = user.StaffType;
+        loginName = user.LoginName;
+        loginId = user.LoginId;
+
+        await GetSalutation();
+        await GetCountries();
+        await LoadProfile();
+        await LoadLogActivity();
+
+    }
+
+    private List<MasterDropDownRequestDto> Salutation = new();
+    private async Task GetSalutation()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.Salutation
+        });
+
+
+        if (result.Response.Success)
+        {
+            Salutation = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private List<MasterCountryRequestDto> Countries = new();
+    private async Task GetCountries()
+    {
+        var result = await MasterCountryService.GetMasterCountry(new MasterCountryFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+
+        if (result.Response.Success)
+        {
+            Countries = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    async Task LoadProfile()
+    {
+        var result = await AuthService.GetMyProfile();
+
+        if (result.Response.Success)
+        {
+            // Data already deserialized in service
+            Profile = result.Data;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Error);
+        }
+    }
+
+    async Task UpadteProfile()
+    {
+        // call update API
+
+        var response = await AuthService.UpdateMyProfile(new UpdateMyProfileDto
+        {
+            Saluatation = Profile.Salutation,
+            FirstName = Profile.FirstName,
+            LastName = Profile.LastName,
+            PersonalEmail = Profile.PersonalEmail,
+            Mobile = Profile.Mobile,
+
+            Address = Profile.Address,
+            City = Profile.City,
+            Country = Profile.Country,
+            Zip = Profile.Zip
+
+        });
+
+        if (response.Success)
+        {
+            Snackbar.Add("Profile updated successfully", Severity.Success);
+            await LoadProfile();
+        }
+        else
+        {
+            Snackbar.Add(response.Message ?? "Update failed", Severity.Error);
+        }
+    }
+
+
+    private List<UsersLoginLogRequestDto> Items = new();
+    async Task LoadLogActivity()
+    {
+        await InvokeAsync(StateHasChanged); // refresh UI immediately if needed
+
+        var result = await UsersLoginLogService.GetUsersLoginLog(new UsersLoginLogFilterDto()
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            LoginId = loginId
+        });
+
+        if (result.Response.Success)
+        {
+            Items = result.Data.Items;
+        }
+        else
+        {
+            Items = result.Data.Items;
+            Snackbar.Add(result.Response.Message, Severity.Error);
+        }
+
+    }
+
+
+    public class PasswordDto
+    {
+        public string Current { get; set; } = string.Empty;
+        public string New { get; set; } = string.Empty;
+        public string Confirm { get; set; } = string.Empty;
+    }
+
+
+    public class ChangeUsernameDto
+    {
+        public string CurrentUsername { get; set; } = string.Empty;
+        public string NewUsername { get; set; } = string.Empty;
+        public string Confirm { get; set; } = string.Empty;
+    }
+
+
+    async Task ChangePassword()
+    {
+        // validation + API
+    }
+
+    async Task ChangeUsername()
+    {
+        // API
+    }
+
+
+
+
+
+
+    private bool clearing;
+    private string? photoPreviewUrl;
+
+    private readonly string defaultDragClass = "upload-drop-zone";
+    private string dragClass = "upload-drop-zone";
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        ClearDragClass();
+
+        var file = e.File;
+
+        if (file is not null)
+        {
+            using var stream = file.OpenReadStream(5 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            photoPreviewUrl = $"data:{file.ContentType};base64,{base64}";
+
+            Profile.ProfilePhoto = photoPreviewUrl;
+        }
+    }
+
+    private void SetDragClass()
+    {
+        dragClass = "upload-drop-zone drag-active";
+    }
+
+    private void ClearDragClass()
+    {
+        dragClass = defaultDragClass;
+    }
+
+
+
+    private async Task OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file is not null)
+        {
+            if (file.Size > 10 * 1024 * 1024)
+                return;
+
+            using var stream = file.OpenReadStream(10 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            photoPreviewUrl = $"data:{file.ContentType};base64,{base64}";
+
+            Profile.ProfilePhoto = photoPreviewUrl;
+        }
+    }
+
+    private void ClearPhoto()
+    {
+        photoPreviewUrl = null;
+        Profile.ProfilePhoto = null;
+    }
+
+
+
+
+}

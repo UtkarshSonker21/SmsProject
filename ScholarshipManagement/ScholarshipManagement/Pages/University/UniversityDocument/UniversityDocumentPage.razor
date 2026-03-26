@@ -1,0 +1,296 @@
+﻿@page "/university-document"
+@page "/university-document-update/{Id:long}"
+
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.University.MasterDocuments
+@using ScholarshipManagement.DTOs.University.MasterUniversity
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Pages.Common
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@using ScholarshipManagement.Services.University
+@using static ScholarshipManagement.Helper.Constant
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject UniversityDocumentService UniversityDocumentService
+@inject UniversityService UniversityService
+@inject MasterCountryService MasterCountryService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<style>
+
+    .full-height-paper {
+        min-height: 100%;
+    }
+
+</style>
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        @title
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudForm Model="model" @ref="form" Class="mt-4" Style="margin:30px 0;">
+            <MudGrid Spacing="3">
+                <MudItem xs="12">
+                    <MudPaper Class="pa-4 full-height-paper" Elevation="2">
+                        <MudGrid Spacing="2">
+
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="long"
+                                           Label="University"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Required="true"
+                                           RequiredError="University is required"
+                                           @bind-Value="model.UniversityId"
+                                           Disabled="@IsUniversityLocked">
+
+                                    <!-- Default placeholder -->
+                                    <MudSelectItem T="long" Value="0">
+                                        -- Select University --
+                                    </MudSelectItem>
+
+                                    @foreach (var c in Universities)
+                                    {
+                                        <MudSelectItem T="long" Value="@(c.UniversityId ?? 0)">
+                                            @c.UniversityName
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Document Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.DocumentName"
+                                              For="@(() => model.DocumentName)" />
+                            </MudItem>
+
+                            <!-- Line break + space -->
+                            <MudItem xs="12"></MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="File Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.FileName"
+                                              For="@(() => model.FileName)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Document Type"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.DocType"
+                                              For="@(() => model.DocType)" />
+                            </MudItem>
+
+                            <!-- Line break + space -->
+                            <MudItem xs="12"></MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudText Typo="Typo.subtitle2">Downloadable</MudText>
+                                <MudRadioGroup T="bool" @bind-Value="model.IsDownloadable">
+                                    <MudRadio T="bool" Value="true" Color="Color.Primary">Yes</MudRadio>
+                                    <MudRadio T="bool" Value="false" Color="Color.Primary">No</MudRadio>
+                                </MudRadioGroup>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudText Typo="Typo.subtitle2">Active Status</MudText>
+                                <MudRadioGroup T="bool" @bind-Value="model.IsActive">
+                                    <MudRadio T="bool" Value="true" Color="Color.Primary">Active</MudRadio>
+                                    <MudRadio T="bool" Value="false" Color="Color.Primary">Inactive</MudRadio>
+                                </MudRadioGroup>
+                            </MudItem>
+
+                            <MudItem xs="12" Class="mt-5">
+                                <div class="d-flex justify-end gap-2">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="SubmitAsync">Submit</MudButton>
+                                    <MudButton Variant="Variant.Filled" Style="background:#BDBDBD; color:#1F1F1F;" OnClick="Cancel">Cancel</MudButton>
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudContainer>
+
+</div>
+
+
+@code {
+
+    private MudForm? form;
+    private UniversityDocumentRequestDto model = new();
+
+    [Parameter]
+    public long Id { get; set; }
+    private string title = "Add University Document";
+
+    private StaffType? CurrentStaffType;
+    bool IsUniversityLocked = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        model = new UniversityDocumentRequestDto();
+
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+        CurrentStaffType = user.StaffType;
+
+        if (user.UniversityId.HasValue)
+        {
+            model.UniversityId = user.UniversityId.Value;
+            IsUniversityLocked = true;
+        }
+
+        if (Id > 0)
+        {
+            await LoadUniversityDocument(Id);
+            title = "Edit University Document";
+        }
+        else
+        {
+            model.IsActive = true;
+            title = "Add University Document";
+        }
+
+        await GetUniversities();
+    }
+
+
+
+    private async Task SubmitAsync()
+    {
+        if (form is null)
+            return;
+
+        await form.Validate();
+
+        if (form.IsValid)
+        {
+
+            model.IsActive = true; // Set active by default on registration
+
+            var ok = model.UniversityDocsId is null or 0
+                     ? await UniversityDocumentService.AddMasterUniversityDocument(model)
+                     : await UniversityDocumentService.UpdateMasterUniversityDocument(model);
+
+
+            if (ok.Success)
+            {
+                Navigation.NavigateTo(Routes.UniversityDocumentList);
+                Snackbar.Add(ok.Message, Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(ok.Message, Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("Please fix validation errors.", Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo(Routes.UniversityDocumentList);
+    }
+
+    private List<UniversityRequestDto> Universities = new();
+    private async Task GetUniversities()
+    {
+        var result = await UniversityService.GetMasterUniversity(new UniversityFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+
+        if (result.Response.Success)
+        {
+            Universities = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private bool IsLoading;
+    private async Task LoadUniversityDocument(long id)
+    {
+        IsLoading = true;
+        var result = await UniversityDocumentService.GetMasterUniversityDocumentById(id);
+
+        if (!result.Response.Success)
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+            return;
+        }
+
+        if (result.Data == null)
+        {
+            Snackbar.Add("University document not found", Severity.Warning);
+            return;
+        }
+
+        model = result.Data;
+        IsLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+}

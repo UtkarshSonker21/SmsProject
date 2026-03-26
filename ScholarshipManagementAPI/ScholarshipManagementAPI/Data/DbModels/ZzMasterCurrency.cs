@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace ScholarshipManagementAPI.Data.DbModels;
+
+public partial class ZzMasterCurrency
+{
+    public long CurrencyId { get; set; }
+
+    public string CurrencyName { get; set; } = null!;
+
+    public string CurrencyAbb { get; set; } = null!;
+
+    public string CurrencyString { get; set; } = null!;
+
+    public string? CurrencyFracUnit { get; set; }
+
+    public bool IsActive { get; set; }
+
+    public DateTime CreatedDate { get; set; }
+
+    public virtual ICollection<AcCurrencyConversion> AcCurrencyConversions { get; set; } = new List<AcCurrencyConversion>();
+}

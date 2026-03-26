@@ -1,0 +1,417 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Common.HrStaff
+@using ScholarshipManagement.DTOs.School.StudentRequirements
+@using ScholarshipManagement.DTOs.School.Students
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersMenu
+@using ScholarshipManagement.DTOs.University.CourseRequirement
+@using ScholarshipManagement.DTOs.University.MasterDocuments
+@using ScholarshipManagement.DTOs.University.MasterUniversity
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.School
+@using ScholarshipManagement.Services.SuperAdmin
+@using ScholarshipManagement.Services.University
+@using ScholarshipManagement.Helper.Enums
+@inject UniversityDocumentService UniversityDocumentService
+@inject UniversityService UniversityService
+@inject StudentRequirementService StudentRequirementService
+@inject CourseRequirementService CourseRequirementService
+@inject StudentService StudentService
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject UsersMenuService UsersMenuService
+@inject CommonService CommonService
+
+
+<MudDialog MaxWidth="MaxWidth.Large" FullWidth="true">
+
+    <DialogContent>
+
+        <!-- ⭐ Paper wrapper (same as page) -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            <MudForm @ref="_form" Model="@StdReqMap">
+
+                <MudGrid Spacing="3">
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="University"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Required="true"
+                                   RequiredError="University is required"
+                                   Value="SelectedUniversityId"
+                                   ValueChanged="OnUniversityChanged">
+
+                            <MudSelectItem T="long?" Value="null">
+                                -- Select University --
+                            </MudSelectItem>
+
+                            @foreach (var c in Universities)
+                            {
+                                <MudSelectItem T="long?" Value="c.UniversityId">
+                                    @c.UniversityName
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long"
+                                   Label="Course Requirement"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Required="true"
+                                   RequiredError="Requirement is required"
+                                   @bind-Value="StdReqMap.ReqId">
+
+                            <!-- Default placeholder -->
+                            <MudSelectItem T="long" Value="0">
+                                -- Select Course --
+                            </MudSelectItem>
+
+                            @foreach (var c in Requirements)
+                            {
+                                <MudSelectItem T="long" Value="@(c.ReqId ?? 0)">
+                                    @c.CourseName
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudSelect T="long"
+                                   Label="Student"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Required="true"
+                                   RequiredError="Student is required"
+                                   @bind-Value="StdReqMap.StudentID">
+
+                            <!-- Default placeholder -->
+                            <MudSelectItem T="long" Value="0">
+                                -- Select Student --
+                            </MudSelectItem>
+
+                            @foreach (var c in Students)
+                            {
+                                <MudSelectItem T="long" Value="@(c.StudentId ?? 0)">
+									@c.StudentSalutation @c.StudentFirstName @c.StudentLastName : @c.StudentNumber
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+                    </MudItem>
+
+
+                    <MudItem xs="12">
+                        <MudPaper Class="pa-3" Elevation="0" Style="border-radius:8px;">
+
+                            <!-- Header -->
+                            <div class="d-flex align-items-center mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Description"
+                                         Class="me-2"
+                                         Color="Color.Primary" />
+                                <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                                    Student Documents
+                                </MudText>
+                            </div>
+
+                            @if (GetDocuments(StdReqMap.RequiredDocuments).Any())
+                            {
+                                <MudTable Items="GetDocuments(StdReqMap.RequiredDocuments)"
+                                          Dense="true"
+                                          Hover="true"
+                                          Bordered="true"
+                                          Striped="true">
+
+                                    <HeaderContent>
+                                        <MudTh>Type</MudTh>
+                                        <MudTh>Document Name</MudTh>
+                                        <MudTh Style="width:140px;">Action</MudTh>
+                                    </HeaderContent>
+
+                                    <RowTemplate>
+                                        <!-- ✅ Document Type -->
+                                        <MudTd>
+                                            <MudChip T="string" Size="Size.Small"
+                                                     Color="Color.Primary"
+                                                     Variant="Variant.Outlined" Style="min-width:80px; justify-content:center;">
+                                                @context.DocType
+                                            </MudChip>
+                                        </MudTd>
+
+                                        <!-- ✅ Document Name -->
+                                        <MudTd>@context.DocumentName</MudTd>
+
+                                        <!-- ✅ Actions -->
+                                        <MudTd>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                                           Disabled="!context.IsDownloadable"
+                                                           Size="Size.Small"
+                                                           Color="Color.Primary"
+                                                           Class="me-1" />
+
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                           Size="Size.Small"
+                                                           Color="Color.Error" />
+                                        </MudTd>
+
+                                    </RowTemplate>
+
+                                </MudTable>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info" Dense="true">
+                                    No documents required for this student.
+                                </MudAlert>
+                            }
+
+                        </MudPaper>
+                    </MudItem>
+
+
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+
+                </MudGrid>
+
+            </MudForm>
+
+        </MudPaper>
+
+    </DialogContent>
+
+</MudDialog>
+
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public StudentRequirementMappingDto StdReqMap { get; set; } = new();
+
+
+    private string Title = "Apply To Requirement";
+    private List<CourseRequirementRequestDto> Requirements = new();
+    private List<StudentRequestDto> Students = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+
+            await GetStudents();
+            await GetUniversities();
+            await GetDocuments();
+
+            if (StdReqMap.StudentReqID is null or 0)
+            {
+                Title = "Apply To Requirement";
+            }
+            else
+            {
+                Title = "Apply To Requirement";
+
+				SelectedUniversityId = StdReqMap.UniversityId;
+
+                // ✅ FORCE UI REFRESH
+                await InvokeAsync(StateHasChanged);
+
+                if (SelectedUniversityId.HasValue)
+                {
+                    await GetRequirements(SelectedUniversityId.Value);
+                }
+            }
+
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid || !SelectedUniversityId.HasValue)
+                return;
+
+            StdReqMap.UniversityId = SelectedUniversityId.Value;
+
+            var result = StdReqMap.StudentReqID is null or 0
+                ? await StudentRequirementService.CreateStudentRequirementMapAsync(StdReqMap)
+                : await StudentRequirementService.UpdateStudentRequirementMapAsync(StdReqMap);
+
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+
+
+    private List<UniversityRequestDto> Universities = new();
+    private async Task GetUniversities()
+    {
+        var result = await UniversityService.GetMasterUniversity(new UniversityFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        }
+        );
+
+
+        if (result.Response.Success)
+        {
+            Universities = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private long? SelectedUniversityId { get; set; } = null;
+
+    private async Task OnUniversityChanged(long? universityId)
+    {
+        SelectedUniversityId = universityId;
+
+        if (universityId.HasValue)
+        {
+            await GetRequirements(universityId.Value);
+        }
+    }
+
+    private async Task GetRequirements(long universityId)
+    {
+        var result = await CourseRequirementService.GetCourseRequirement(new CourseRequirementFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            ApprovalStatus = (int)ApprovalStatus.Approved,
+			UniversityId = universityId
+        });
+
+
+        if (result.Response.Success)
+        {
+            Requirements = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private async Task GetStudents()
+    {
+        var result = await StudentService.GetStudents(new StudentFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+
+        if (result.Response.Success)
+        {
+            Students = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private List<UniversityDocumentRequestDto> Documents = new();
+    private async Task GetDocuments()
+    {
+        var result = await UniversityDocumentService.GetMasterUniversityDocuments(new UniversityDocumentFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            IsActive = true,
+        });
+
+
+        if (result.Response.Success)
+        {
+            Documents = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private List<UniversityDocumentRequestDto> GetDocuments(string requiredDocuments)
+    {
+        if (string.IsNullOrWhiteSpace(requiredDocuments))
+            return new();
+
+        var ids = requiredDocuments
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => long.TryParse(x, out var id) ? id : 0)
+            .Where(x => x > 0)
+            .ToHashSet();
+
+        return Documents
+            .Where(d => d.UniversityDocsId.HasValue &&
+                        ids.Contains(d.UniversityDocsId.Value))
+            .ToList();
+    }
+
+
+
+
+}

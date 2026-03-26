@@ -1,0 +1,6 @@
+@ScholarshipManagementAPI_HostAddress = http://localhost:5205
+
+GET {{ScholarshipManagementAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

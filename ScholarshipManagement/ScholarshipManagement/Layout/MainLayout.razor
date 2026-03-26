@@ -1,0 +1,498 @@
+﻿@inherits LayoutComponentBase
+
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Common.Menu
+@using ScholarshipManagement.DTOs.Common.Settings
+@using ScholarshipManagement.Helper
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Helper.Translations
+@using ScholarshipManagement.Pages.Common
+@using ScholarshipManagement.Pages.Common.Shared
+@using ScholarshipManagement.Services.Common
+@using static ScholarshipManagement.Helper.Constant
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject AuthService AuthService
+@inject LabelService LabelService
+@inject CommonService CommonService
+@inject LocalStorageService LocalStorageService
+@inject CustomAuthStateProvider AuthStateProvider
+@inject PermissionService PermissionService
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject PermissionState PermissionState
+@inject TranslationManager TranslationManager
+@inject TranslationStateService TState
+@using System.Reflection
+@using ScholarshipManagement.Services.SuperAdmin
+
+
+<style>
+    .current-role-text {
+        color: #DC2626; /* primary blue */
+    }
+</style>
+
+<HeadContent>
+    <title>Scholarship Managemenet</title>
+</HeadContent>
+
+<MudThemeProvider />
+
+
+<MudLayout>
+
+    <!-- AppBar -->
+    <MudAppBar Elevation="1" Dense="@_dense" Class="appbar-black" >
+
+        <div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <MudIconButton Color="Color.Inherit"
+                               Edge="Edge.Start"
+                               Style="padding: 0 10px 0 20px;">
+                    <img src="Images/kafat-logo.jpg"
+                         alt="Menu" style=" height:36px; width:36px; 
+                         border-radius:50%; object-fit:cover;border:2px solid white;" />
+                </MudIconButton>
+
+                <span style="font-family: Inter, sans-serif;font-size: 23px;font-weight: 600;
+                             text-transform: capitalize; color: #FFF;">
+                    Kafa'at
+                </span>
+            </div>
+
+        </div>
+
+        <MudSpacer />
+
+        <!-- Right Section -->
+        <MudMenu OffsetY="true" Dense AutoClose="true"
+                 OpenChanged="OnUserMenuOpenChanged">
+
+            <!-- ACTIVATOR -->
+            <ActivatorContent>
+                <div class="appbar-user hover-user">
+
+                    <div class="user-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountCircle"
+                                 Class="user-material-icon" />
+                    </div>
+
+                    <span class="username">@loginName</span>
+
+                    <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown"
+                             Class="dropdown-material-icon" Size="Size.Small"/>
+
+                </div>
+            </ActivatorContent>
+
+            <!-- MENU -->
+            <ChildContent>
+
+
+                <MudMenuItem OnClick="MyProfile">
+                    My Profile
+                </MudMenuItem>
+
+                <MudMenuItem>
+
+                    <div class="menu-row" @onclick="ToggleRoles"
+                         @onclick:stopPropagation="true">
+                        <span>Role</span>
+                        <MudIcon Icon="@(expandRoles
+                                                 ? Icons.Material.Filled.KeyboardArrowUp
+                                                 : Icons.Material.Filled.KeyboardArrowDown)" Size="Size.Small"/>
+                    </div>
+                </MudMenuItem>
+
+                <MudCollapse Expanded="expandRoles">
+                    <div class="submenu">
+
+                        @foreach (var role in availableRoles)
+                        {
+                            var isCurrent = role.RoleId == currentRoleId;
+
+                            <MudMenuItem Dense Disabled="@isCurrent">
+                                <div class="submenu-item d-flex align-center"
+                                     @onclick="() => ChangeRole(role.RoleId)">
+
+                                    <div class="d-flex align-center">
+                                        <span>@role.RoleName</span>
+
+                                        @if (role.IsDefault)
+                                        {
+                                            <MudTooltip Text="Default Role" Placement="Placement.Start">
+                                                <MudIcon Icon="@Icons.Material.Filled.Verified"
+                                                         Style="font-size:16px;"
+                                                         Color="Color.Success"
+                                                         Class="ms-1" />
+                                            </MudTooltip>
+                                        }
+                                    </div>
+
+                                </div>
+                           </MudMenuItem>
+                        }
+
+                    </div>
+                </MudCollapse>
+
+                <MudMenuItem>
+
+                    <div class="menu-row" @onclick="ToggleLanguages"
+                         @onclick:stopPropagation="true">
+                        <span>Language</span>
+                        <MudIcon Icon="@(expandLanguage
+                                                 ? Icons.Material.Filled.KeyboardArrowUp
+                                                 : Icons.Material.Filled.KeyboardArrowDown)" Size="Size.Small"/>
+                    </div>
+                </MudMenuItem>
+
+                <MudCollapse Expanded="expandLanguage">
+                    <div class="submenu">
+
+                        @foreach (var lang in Enum.GetValues<LanguageCode>())
+                        {
+                            var langCode = lang.ToString().ToLower();
+                            var isCurrent = langCode == TState.CurrentLanguage?.ToLower();
+
+                            <MudMenuItem Dense="true" Disabled="@isCurrent">
+                                <div class="submenu-item d-flex align-center"
+                                     @onclick="() => ChangeLanguage(lang)">
+
+                                    <span>
+                                        @GetLanguageName(lang)
+                                    </span>
+
+                                </div>
+                            </MudMenuItem>
+                        }
+
+                    </div>
+                </MudCollapse>
+
+                
+                <MudMenuItem>
+
+                    <div class="menu-row" @onclick="ToggleUpdates" @onclick:stopPropagation="true">
+                        <span>Version: @AppVersion.Current</span>
+                        <MudIcon Icon="@(expandUpdates
+                                                 ? Icons.Material.Filled.KeyboardArrowUp
+                                                 : Icons.Material.Filled.KeyboardArrowDown)" Size="Size.Small"/>
+                    </div>
+                </MudMenuItem>
+
+                <MudCollapse Expanded="expandUpdates">
+                    <div class="submenu">
+
+                        <MudMenuItem Dense Style="color:#DC2626;">
+                            <div class="submenu-item" @onclick="ForceReload"@onclick:stopPropagation="true">
+                                <MudIcon Icon="@Icons.Material.Filled.SystemUpdateAlt" Style="font-size:15px;margin-right:3px" />
+                                <span>Check Updates</span>
+                            </div>
+                         </MudMenuItem>
+
+                    </div>
+                </MudCollapse>
+
+                
+                <MudMenuItem Style="color:#DC2626; border-top:1px solid #DC2626; margin-top:5px" OnClick="HandleLogout">
+                    <div style="padding-left:0px; display: flex;align-items: center;width: 100%;">
+                        <MudIcon Icon="@Icons.Material.Filled.Logout" Style="font-size:15px;margin-right:5px" />
+                        <span>Logout</span>
+                    </div>
+                </MudMenuItem>
+
+            </ChildContent>
+
+        </MudMenu>
+
+
+    </MudAppBar>
+
+    <!-- SECOND APP BAR (CENTER NAVIGATION) -->
+
+    <MudAppBar Elevation="2"
+               Dense="true"
+               Class="appbar-secondary"
+               Style="top:64px; padding:5px 0;">
+
+
+        <!-- DESKTOP NAV -->
+
+        <TopNavMenu Menus="menus" />
+       
+
+        <!-- MOBILE HAMBURGER -->
+        <div class="nav-mobile">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           Edge="Edge.Start"
+                           OnClick="@(() => _drawerOpen = true)" />
+        </div>
+   
+    </MudAppBar>
+
+
+
+    <MudDrawer Open="@_drawerOpen"
+               OpenChanged="@(v => _drawerOpen = v)"
+               Variant="DrawerVariant.Temporary"
+               Anchor="Anchor.Left"
+               Elevation="4">
+
+        <MudNavMenu>
+            @* <MudNavLink Href="/dashboard">Dashboard</MudNavLink> *@
+            
+            <MudNavMenu>
+                @foreach (var menu in menus)
+                {
+                    <MenuNode Menu="menu" />
+                }
+            </MudNavMenu>
+
+        </MudNavMenu>
+
+    </MudDrawer>
+
+
+    <div class="main-content">
+        @Body
+    </div>
+
+	
+
+    <!-- ✅ Place providers here so they cascade into pages -->
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+    <MudPopoverProvider />
+
+</MudLayout>
+
+@code {
+
+    private bool _dense = false;
+    private DrawerClipMode _clipMode = DrawerClipMode.Always;
+
+    private string loginName = "";
+    private long loginId = 0;
+    private long currentRoleId = 0;
+
+    // private string role = "University";
+    private List<AvailableRolesDto> availableRoles = new List<AvailableRolesDto>();
+
+    MudMenu userMenu;
+    bool expandRoles = false;
+
+
+    protected override void OnInitialized()
+    {
+        // await GetMenuByRoleId();
+        // await FetchCurrentUserProfile();
+
+        // var user = CurrentUserProfileService.GetCurrentUserProfile();
+
+        // loginName = user.LoginName;
+        // loginId = user.LoginId;
+        // currentRoleId = user.CurrentRoleId;
+
+        // availableRoles = await AuthService.GetAvailableRolesAsync();
+
+
+        TState.OnChange += OnLanguageChanged;
+
+    }
+
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadUserData();
+    }
+
+
+    private async Task LoadUserData()
+    {
+        await GetMenuByRoleId();
+        await FetchCurrentUserProfile();
+
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+
+        loginName = user.LoginName;
+        loginId = user.LoginId;
+        currentRoleId = user.CurrentRoleId;
+
+        availableRoles = await AuthService.GetAvailableRolesAsync();
+
+        StateHasChanged();
+    }
+
+
+    private async Task FetchCurrentUserProfile()                                 
+    {
+        var user = await AuthService.GetMyProfile();
+        CurrentUserProfileService.SetCurrentUserProfile(user.Data);
+    }
+
+
+
+    private bool _drawerOpen = false;
+    private bool _open = true;
+    private void ToggleDrawer()
+    {
+        _open = !_open;
+    }
+
+
+    private async Task HandleLogout()
+    {
+        var ok = await AuthService.Logout();
+
+        if (ok.Success)
+        {
+            AuthStateProvider.NotifyLogout();
+            Nav.NavigateTo(Routes.Login); // redirect to login page
+        }
+        else
+        {
+            Snackbar.Add(ok.Message, Severity.Error);
+        }
+    }
+
+
+    private void MyProfile()
+    {
+        Nav.NavigateTo(Routes.MyProfile);
+    }
+
+
+
+
+    List<LoadMenuDto> menus = new List<LoadMenuDto>();
+    private async Task GetMenuByRoleId()
+    {
+        var ok = await CommonService.GetAllMenu();
+
+        if (ok.Response.Success)
+        {
+            menus = ok.Data;
+            //PermissionState.Menus = ok.Data;
+            PermissionService.BuildMenuMap(ok.Data);
+
+            StateHasChanged(); // ensure UI refresh
+        }
+        else
+        {
+            Snackbar.Add(ok.Response.Message, Severity.Error);
+        }
+    }
+
+
+    private async Task ChangeRole(long roleId)
+    {
+        // Switch role (updates token + session)
+        var switchRes = await AuthService.SwitchRole(roleId);
+
+        if (!switchRes.Success)
+        {
+            Snackbar.Add(switchRes.Message, Severity.Error);
+            return;
+        }
+
+        // Load menus for new role
+        await GetMenuByRoleId();
+
+        Nav.NavigateTo(Routes.Dashboard);
+    }
+
+    private void ToggleRoles()
+    {
+        expandRoles = !expandRoles;
+    }
+
+    private void OnUserMenuOpenChanged(bool open)
+    {
+        // When menu closes → collapse expanded sections
+        if (!open)
+        {
+            expandRoles = false;
+            expandUpdates = false;
+            expandLanguage = false;
+            StateHasChanged();
+        }
+    }
+
+
+    private void ForceReload()
+    {
+        JS.InvokeVoidAsync("location.reload", true);
+    }
+
+    bool expandUpdates = false;
+    void ToggleUpdates()
+    {
+        expandUpdates = !expandUpdates;
+    }
+
+
+
+
+    bool expandLanguage = false;
+
+    private void ToggleLanguages()
+    {
+        expandLanguage = !expandLanguage;
+    }
+
+    private async Task ChangeLanguage(LanguageCode language)
+    {
+
+        var success = await TranslationManager.Load(language);
+
+        if (!success)
+        {
+            Snackbar.Add("Failed to load translations", Severity.Error);
+            return;
+        }
+
+        // Apply RTL
+        // var dir = TranslationManager.IsRtl ? "rtl" : "ltr";
+        // await JS.InvokeVoidAsync("setDirection", dir);
+
+        OnUserMenuOpenChanged(false);
+
+        Nav.NavigateTo(Routes.Dashboard);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private string GetLanguageName(LanguageCode lang)
+    {
+        return lang switch
+        {
+            LanguageCode.En => "English",
+            LanguageCode.Ar => "Arabic",
+            _ => lang.ToString()
+        };
+    }
+
+
+
+    private void OnLanguageChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        TState.OnChange += OnLanguageChanged;
+    }
+
+
+}
+

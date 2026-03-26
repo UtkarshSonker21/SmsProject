@@ -1,0 +1,59 @@
+﻿@inject IJSRuntime JS
+@using ScholarshipManagement.Helper
+
+
+<style>
+    .update-bar {
+        background: #898989;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+    }
+
+    .update-btn {
+        margin-left: 10px;
+        padding: 5px 12px;
+        cursor: pointer;
+    }
+
+</style>
+
+@if (_updateAvailable)
+{
+    <div class="update-bar">
+        🚀 New version available (Current v@_currentVersion)
+        <button class="update-btn" @onclick="UpdateNow">
+            Update Now
+        </button>
+    </div>
+}
+
+@code {
+    private bool _updateAvailable;
+    private string _currentVersion = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentVersion = AppVersion.Current;
+
+        await JS.InvokeVoidAsync(
+            "registerForUpdateAvailableNotification",
+            DotNetObjectReference.Create(this),
+            nameof(OnUpdateAvailable));
+    }
+
+    [JSInvokable]
+    public void OnUpdateAvailable()
+    {
+        _updateAvailable = true;
+        StateHasChanged();
+    }
+
+    private async Task UpdateNow()
+    {
+        await JS.InvokeVoidAsync("forceAppUpdate");
+    }
+}

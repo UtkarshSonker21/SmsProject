@@ -1,0 +1,156 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.SuperAdmin.GeneralSettings
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject GeneralSettingService GeneralSettingService
+@inject CommonService CommonService
+
+
+
+
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+
+    <DialogContent>
+
+        <!-- ⭐ Paper wrapper -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            @* <MudText Typo="Typo.h6">@Title</MudText> *@
+
+            <MudForm @ref="_form" Model="@Settings">
+
+                <MudGrid Spacing="3">
+
+                    <!-- Display Text -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Config Key"
+                                      @bind-Value="Settings.ConfigKey"
+                                      For="@(() => Settings.ConfigKey)"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Config Value"
+                                      @bind-Value="Settings.ConfigValue"
+                                      For="@(() => Settings.ConfigValue)"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+
+                    @* <MudItem xs="12">
+                        <MudTextField T="string"
+                                      Label="Description"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      AutoGrow="true"
+                                      Lines="4"
+                                      @bind-Value="Settings.ConfigDescription"
+                                      For="@(() => Settings.ConfigDescription)" />
+                    </MudItem> *@
+
+                 
+
+                    <!-- ACTION BUTTONS -->
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudForm>
+
+        </MudPaper>
+
+    </DialogContent>
+
+</MudDialog>
+
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public GeneralSettingRequestDto Settings { get; set; } = new();
+
+    private string Title = "Add General Settings";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+
+            if (Settings.ConfigId is null or 0)
+            {
+                Title = "Add General Settings";
+            }
+            else
+            {
+                Title = "Edit General Settings";
+            }
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid)
+                return;
+
+
+            var result = Settings.ConfigId is null or 0
+                ? await GeneralSettingService.AddGeneralSettings(Settings)
+                : await GeneralSettingService.UpdateGeneralSettings(Settings);
+
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+}

@@ -1,0 +1,1320 @@
+﻿@page "/course-req-list"
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Ngo
+@using ScholarshipManagement.DTOs.University.CourseRequirement
+@using ScholarshipManagement.DTOs.University.MasterDocuments
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Pages.Common
+@using ScholarshipManagement.Pages.Common.Shared
+@using ScholarshipManagement.Pages.Ngo
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.Ngo
+@using ScholarshipManagement.Services.SuperAdmin
+@using ScholarshipManagement.Services.University
+@using static ScholarshipManagement.Helper.Constant
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject CourseRequirementService CourseRequirementService
+@inject UniversityDocumentService UniversityDocumentService
+@inject PermissionService PermissionService
+@inject ApprovalService ApprovalService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject AuthService AuthService
+
+<style>
+    .school-link:hover {
+        text-decoration: underline;
+    }
+
+    /* .school-tooltip-content {
+        background: linear-gradient(180deg,#ffffff,#f8fafc) !important;
+        color: #1f2937 !important;
+        border-radius: 12px !important;
+        padding: 14px 16px !important;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08) !important;
+        border: 1px solid rgba(0,0,0,0.06) !important;
+        backdrop-filter: blur(6px);
+        min-width: 210px;
+    } */
+
+    .school-tooltip-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12.5px;
+        padding: 3px 0;
+        transition: all .18s ease;
+    }
+
+    .school-tooltip-section {
+        font-size: 11px;
+        font-weight: 600;
+        opacity: .7;
+        margin-top: 6px;
+        margin-bottom: 3px;
+    }
+
+        /* subtle hover */
+        .school-tooltip-row:hover {
+            transform: translateX(2px);
+        }
+
+
+        </style>
+
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        Courses Requirement
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+                    Total Records : <span id="totalRecords">@TotalRecords</span>
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Search -->
+    <div style="margin-top:15px; display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; background: var(--color-background-main, #FFF); margin-bottom:10px;">
+
+        <!-- Left -->
+        <div class="d-flex align-items-center gap-3" style="padding: 0 24px;">
+            <div class="appbar-search">
+
+
+                <input type="text" class="search-input" placeholder="Search..."
+                       value="@_search" @oninput="e => _search = e.Value?.ToString() ?? string.Empty"
+                       @onkeydown="HandleKeyDown" />
+
+
+                @if (_searchApplied)
+                {
+                    <button type="button"
+                            class="clear-search-btn"
+                            @onclick="ClearSearch">
+                        ✕
+                    </button>
+                }
+                else
+                {
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.5" class="search-icon" style="cursor:pointer"
+                         @onclick="ApplySearch">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 1 1-13 0a6.5 6.5 0 0 1 13 0Z" />
+                    </svg>
+                }
+            </div>
+        </div>
+
+
+        <!-- Right-->
+        <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 10px;position: relative;">
+
+            <div style="display: flex; align-items: center; gap: 5px; font-family: Inter, sans-serif; font-size: 13px;">
+               
+                @if (CurrentStaffType != StaffType.School)
+                {
+                    @if (canAdd)
+                    {
+                        <button @onclick="AddCourseReq" class="add-btn">Add Req</button>
+                    }
+                }
+
+            </div>
+
+
+            <button class="settings-btn" @onclick="ToggleColumnsPopup" id="toggleBtn">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     stroke-width="1.5"
+                     stroke="currentColor"
+                     class="settings-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+            </button>
+
+
+            @if (showColumnsPopup)
+            {
+                <div @onclick="ClosePopup"
+                     style="position: fixed; inset: 0; background: transparent; z-index: 9999;">
+                </div>
+            }
+
+
+            <div id="columnsPopup" style="position: absolute; right: 24px; top: 70px; z-index: 10000;
+                              background: #fff; border: 1px solid #dbdbdb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                              padding: 12px; width: 280px; font-family: Inter, sans-serif;" hidden="@(!showColumnsPopup)">
+
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 14px; font-weight: 700; color: #555;">
+                        Show/Hide Columns
+                    </div>
+                    <button @onclick="ToggleColumnsPopup"
+                            style="background: none; border: none; color: #555; font-size: 16px; cursor: pointer;">
+                        ×
+                    </button>
+                </div>
+
+
+                <!-- Checkbox list -->
+                <div style="max-height: 300px; overflow-y: auto; padding-right: 6px;">
+                    @foreach (var col in allColumns
+                                        .Where(c => string.IsNullOrEmpty(columnFilter)
+                                        || c.Title.Contains(columnFilter, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        <div class="checkbox-row">
+                            <input type="checkbox"
+                                   class="theme-checkbox"
+                                   checked="@(col.Hidden == false)"
+                                   @onchange="(e) => ToggleColumn(col, (bool)e.Value)" />
+
+                            <label>@col.Title</label>
+                        </div>
+                    }
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    @if (CurrentStaffType != StaffType.School)
+    {
+        <MudTabs Elevation="0" Rounded="true" ActivePanelIndex="_activeTabIndex" ActivePanelIndexChanged="OnTabChanged"
+                 style="padding: 0 24px;">
+
+            <MudTabPanel>
+                <TabContent>
+
+                    <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" />
+                    All
+                </TabContent>
+            </MudTabPanel>
+
+            <MudTabPanel>
+                <TabContent>
+
+                    <MudIcon Icon="@Icons.Material.Filled.HourglassTop"
+                             Color="Color.Warning"
+                             Class="mr-2" />
+
+                    <MudText Color="Color.Warning" Typo="Typo.subtitle2">
+                        Pending
+                    </MudText>
+
+                </TabContent>
+            </MudTabPanel>
+
+            <MudTabPanel>
+                <TabContent>
+
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                             Color="Color.Success"
+                             Class="mr-2" />
+
+                    <MudText Color="Color.Success" Typo="Typo.subtitle2">
+                        Approved
+                    </MudText>
+
+                </TabContent>
+            </MudTabPanel>
+
+            <MudTabPanel>
+                <TabContent>
+
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel"
+                             Color="Color.Error"
+                             Class="mr-2" />
+
+                    <MudText Color="Color.Error" Typo="Typo.subtitle2">
+                        Rejected
+                    </MudText>
+
+                </TabContent>
+            </MudTabPanel>
+
+        </MudTabs>
+
+    }
+
+
+
+    <MudPaper Class="pa-4">
+
+        <MudDataGrid T="CourseRequirementRequestDto" @key="GridKey" RowsPerPage="@PageSize" @ref="dataGrid"
+                     ColumnsPanelReordering='true' DragDropColumnReordering='true'
+                     Hover="true" Bordered="true" Elevation="2" Loading="_loading"
+                     Class="blue-hover-grid"
+                     Items="Items" FixedHeader="true" Height="550px"
+                     ColumnResizeMode="ResizeMode.None" Id="myGrid"
+                     Selection="DataGridSelection.Single">
+
+            <Columns>
+
+                <TemplateColumn Title="Course"
+                                HeaderClass="fw-bold"
+                                Style="min-width:220px"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.CourseName))
+                        {
+                            <div class="d-flex align-items-center gap-1 ">
+                                <MudIcon Icon="@Icons.Material.Filled.AutoStories"
+                                         Style="font-size:15px;"
+                                         Class="text-muted"
+                                         @onclick="@(() => EditCourseReq(ctx.Item))" />
+                                <span class="text-primary fw-medium"
+                                      style="cursor:pointer;"
+                                      @onclick="@(() => EditCourseReq(ctx.Item))">
+                                    @ctx.Item.CourseName
+                                </span>
+                            </div>
+
+                            @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin || CurrentStaffType == StaffType.School)
+                            {
+                                <div class="d-flex align-items-center gap-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
+                                             Style="font-size:15px;"
+                                             Class="text-muted" />
+                                    <span>@ctx.Item.UniversityName</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">N/A</span>
+                        }
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Documents"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:130px; min-width:130px; max-width:130px;"
+                                CellStyle="width:130px; min-width:130px; max-width:130px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.RequiredDocuments))
+                        {
+                            <MudTooltip>
+                                <ChildContent>
+                                    <div class="d-flex align-items-center gap-1 text-primary" style="cursor:pointer">
+                                        <MudIcon Icon="@Icons.Material.Filled.Description" Style="font-size:15px;" />
+                                        <span>View</span>
+                                    </div>
+                                </ChildContent>
+
+                                <TooltipContent>
+                                    @((MarkupString)GetDocumentsHtml(ctx.Item))
+                                </TooltipContent>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">None</span>
+                        }
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Seats"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:100px; min-width:100px; max-width:100px;"
+                                CellStyle="width:100px; min-width:100px; max-width:100px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+                        @if (ctx.Item.NoSeats > 0)
+                        {
+                            <span>@ctx.Item.NoSeats</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">N/A</span>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Year"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:100px; min-width:100px; max-width:100px;"
+                                CellStyle="width:100px; min-width:100px; max-width:100px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <span class="d-flex align-items-center">
+                            <MudIcon Icon="@Icons.Material.Filled.CalendarMonth"
+                                     Style="font-size:17px;"
+                                     Class="me-1 text-muted" />
+
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.AcademicYear))
+                            {
+                                <span>@ctx.Item.AcademicYear</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic small">N/A</span>
+                            }
+
+                        </span>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Combination"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:130px; min-width:130px; max-width:130px;"
+                                CellStyle="width:130px; min-width:130px; max-width:130px;"
+                                Hideable="true" Hidden="true">
+
+                    <CellTemplate Context="ctx">
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.TzStuCombi))
+                        {
+                            <span>@ctx.Item.TzStuCombi</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">N/A</span>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Division"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:130px; min-width:130px; max-width:130px;"
+                                CellStyle="width:130px; min-width:130px; max-width:130px;"
+                                Hideable="true" Hidden="true">
+
+                    <CellTemplate Context="ctx">
+
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.HsDivision))
+                        {
+                            <span>@ctx.Item.HsDivision</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">N/A</span>
+                        }
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Score"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:130px; min-width:130px; max-width:130px;"
+                                CellStyle="width:130px; min-width:130px; max-width:130px;"
+                                Hideable="true" Hidden="true">
+
+                    <CellTemplate Context="ctx">
+
+                        @if (ctx.Item.CollegeScore > 0)
+                        {
+                            <span>@ctx.Item.CollegeScore</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">N/A</span>
+                        }
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Costs"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:100px; min-width:100px; max-width:100px;"
+                                CellStyle="width:100px; min-width:100px; max-width:100px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        @* CHECK IF ANY COST EXISTS *@
+                        @if (ctx.Item.RegistrationCost.HasValue ||
+                                                ctx.Item.TutionCost.HasValue ||
+                                                ctx.Item.TextBookCost.HasValue ||
+                                                ctx.Item.AccomoCost.HasValue ||
+                                                ctx.Item.TravellingCost.HasValue ||
+                                                ctx.Item.TransportCost.HasValue ||
+                                                ctx.Item.DocuAttestCost.HasValue ||
+                                                ctx.Item.VisaResiCost.HasValue)
+                        {
+                            <MudTooltip Placement="Placement.Right"
+                                        Arrow="true"
+                                        Class="school-tooltip-content">
+
+                                <!-- ⭐ HOVER TARGET -->
+                                <ChildContent>
+                                    <div class="d-flex align-items-center gap-1 text-primary"
+                                         style="cursor:pointer">
+                                        <MudIcon Icon="@Icons.Material.Filled.Payments"
+                                                 Style="font-size:15px;" />
+                                        <span>View</span>
+                                    </div>
+                                </ChildContent>
+
+                                <!-- ⭐ TOOLTIP CONTENT -->
+                                <TooltipContent>
+                                    <div class="d-flex flex-column gap-1" style="min-width:260px">
+
+                                        <div class="school-tooltip-section">💰 Cost Breakdown</div>
+
+                                        <div class="school-tooltip-row">
+                                            <MudIcon Icon="@Icons.Material.Filled.AppRegistration" Size="Size.Small"/>
+                                            <span class="school-tooltip-label">Registration:</span>
+                                            <span class="school-tooltip-value">@(ctx.Item.RegistrationCost?.ToString("N0") ?? "N/A")</span>
+                                        </div>
+
+                                        <div class="school-tooltip-row">
+                                            <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" />
+                                            <span class="school-tooltip-label">Tuition:</span>
+                                            <span class="school-tooltip-value">@(ctx.Item.TutionCost?.ToString("N0") ?? "N/A")</span>
+                                        </div>
+
+                                        <div class="school-tooltip-row">
+                                            <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Small" />
+                                            <span class="school-tooltip-label">TextBook:</span>
+                                            <span class="school-tooltip-value">@(ctx.Item.TextBookCost?.ToString("N0") ?? "N/A")</span>
+                                        </div>
+
+                                        <div class="school-tooltip-row">
+                                            <MudIcon Icon="@Icons.Material.Filled.Hotel" Size="Size.Small" />
+                                            <span class="school-tooltip-label">Accommodation:</span>
+                                            <span class="school-tooltip-value">@(ctx.Item.AccomoCost?.ToString("N0") ?? "N/A")</span>
+                                        </div>
+
+                                        <div class="school-tooltip-row">
+                                            <MudIcon Icon="@Icons.Material.Filled.Flight" Size="Size.Small" />
+                                            <span class="school-tooltip-label">Travelling:</span>
+                                            <span class="school-tooltip-value">@(ctx.Item.TravellingCost?.ToString("N0") ?? "N/A")</span>
+                                        </div>
+
+                                        <div class="school-tooltip-row">
+                                            <MudIcon Icon="@Icons.Material.Filled.DirectionsBus" Size="Size.Small" />
+                                            <span class="school-tooltip-label">Transport:</span>
+                                            <span class="school-tooltip-value">@(ctx.Item.TransportCost?.ToString("N0") ?? "N/A")</span>
+                                        </div>
+
+                                        <div class="school-tooltip-row">
+                                            <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                                            <span class="school-tooltip-label">Doc Attest:</span>
+                                            <span class="school-tooltip-value">@(ctx.Item.DocuAttestCost?.ToString("N0") ?? "N/A")</span>
+                                        </div>
+
+                                        <div class="school-tooltip-row">
+                                            <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" />
+                                            <span class="school-tooltip-label">Visa/Resi:</span>
+                                            <span class="school-tooltip-value">@(ctx.Item.VisaResiCost?.ToString("N0") ?? "N/A")</span>
+                                        </div>
+
+                                        @* TOTAL *@
+                                        @{
+                                            var total = (ctx.Item.RegistrationCost ?? 0) +
+                                            (ctx.Item.TutionCost ?? 0) +
+                                            (ctx.Item.TextBookCost ?? 0) +
+                                            (ctx.Item.AccomoCost ?? 0) +
+                                            (ctx.Item.TravellingCost ?? 0) +
+                                            (ctx.Item.TransportCost ?? 0) +
+                                            (ctx.Item.DocuAttestCost ?? 0) +
+                                            (ctx.Item.VisaResiCost ?? 0);
+                                        }
+
+                                        <div class="school-tooltip-row">
+                                            <MudIcon Icon="@Icons.Material.Filled.Calculate" />
+                                            <span class="school-tooltip-label fw-bold">Total:</span>
+                                            <span class="school-tooltip-value fw-bold">@total.ToString("N0")</span>
+                                        </div>
+
+                                    </div>
+                                </TooltipContent>
+
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">No costs</span>
+                        }
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="Period"
+                                HeaderClass="fw-bold" 
+                                HeaderStyle="width:180px; min-width:150px; max-width:180px;"
+                                CellStyle="width:180px; min-width:150px; max-width:180px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        @if (ctx.Item.ReqStartDate.HasValue && ctx.Item.ReqEndDate.HasValue)
+                        {
+                            <div class="d-flex flex-column small">
+
+                                <span>
+                                    <span style="width:30px;display:inline-block" class="text-muted">Start</span>
+                                    @ctx.Item.ReqStartDate.Value.ToString("dd MMM yyyy")
+                                </span>
+
+                                <span>
+                                    <span style="width:30px;display:inline-block" class="text-muted">End</span>
+                                    @ctx.Item.ReqEndDate.Value.ToString("dd MMM yyyy")
+                                </span>
+
+                            </div>
+                        }
+                        else if (ctx.Item.ReqStartDate.HasValue)
+                        {
+                            <span>
+                                <span class="text-muted me-2">Start</span>
+                                @ctx.Item.ReqStartDate.Value.ToString("dd MMM yyyy")
+                            </span>
+                        }
+                        else if (ctx.Item.ReqEndDate.HasValue)
+                        {
+                            <span>
+                                <span class="text-muted me-2">End  </span>
+                                @ctx.Item.ReqEndDate.Value.ToString("dd MMM yyyy")
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">N/A</span>
+                        }
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+                @if (CurrentStaffType != StaffType.School)
+                {
+                    <TemplateColumn Title="Approval"
+                                    HeaderClass="fw-bold"
+                                    HeaderStyle="width:280px; min-width:230px; max-width:300px;"
+                                    CellStyle="width:280px; min-width:230px; max-width:300px;"
+                                    Hideable="true">
+
+                        <CellTemplate Context="ctx">
+
+                            <div class="d-flex flex-column align-items-start">
+
+                                <!-- STATUS BADGE -->
+                                <MudChip Size="Size.Small"
+                                         Variant="Variant.Outlined"
+                                         Color="@GetApprovalChipColor(ctx.Item.ApprovalStatus)"
+                                         Style="min-width:90px; justify-content:center;">
+                                    @GetApprovalChipText(ctx.Item.ApprovalStatus)
+                                </MudChip>
+
+                                <!-- APPROVED / REJECTED BY -->
+                                @if (ctx.Item.ApprovalStatus != (int)ApprovalStatus.Pending &&
+                                                            !string.IsNullOrWhiteSpace(ctx.Item.ApprovedByName))
+                                {
+                                    <div class="d-flex align-items-center gap-1 text-muted small mt-1"
+                                         title="Action By">
+
+                                        <MudIcon Icon="@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                                 Style="font-size:13px;" />
+
+                                        @ctx.Item.ApprovedByName
+                                    </div>
+                                }
+
+                                <!-- ⭐ APPROVE / REJECT ACTION -->
+                                @if (ctx.Item.ApprovalStatus == (int)ApprovalStatus.Pending &&
+                                                            (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin))
+                                {
+                                    <div class="d-flex align-items-center gap-1 text-primary small mt-1 approval-action"
+                                         @onclick="@(() => ApproveCourseReqAsync(ctx.Item))">
+
+                                        <MudIcon Icon="@Icons.Material.Filled.PendingActions"
+                                                 Style="font-size:13px;" />
+
+                                        <span style="cursor:pointer;">
+                                            Review & decide
+                                        </span>
+                                    </div>
+                                }
+
+                            </div>
+
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                }
+
+
+                @if (CurrentStaffType != StaffType.School)
+                {
+                    <TemplateColumn Title="Created Info"
+                                    HeaderClass="fw-bold"
+                                    HeaderStyle="width:280px; min-width:230px; max-width:300px;"
+                                    CellStyle="width:280px; min-width:230px; max-width:300px;"
+                                    Hideable="true">
+
+                        <CellTemplate Context="ctx">
+
+                            <div class="d-flex flex-column gap-1 small">
+
+                                <!-- Created Date -->
+                                <div class="d-flex align-items-center gap-2 text-muted" title="CreatedDate">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                             Style="font-size:15px;" />
+                                    @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </div>
+
+                                <!-- Created By -->
+                                <div class="d-flex align-items-center gap-2 fw-semibold" title="CreatedBy">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person"
+                                             Style="font-size:15px;"
+                                             Color="Color.Primary" />
+                                    @ctx.Item.CreatedBy
+                                </div>
+
+                            </div>
+
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                }
+
+
+                <TemplateColumn Title="Active"
+                                HeaderClass="fw-bold"
+                                Style="min-width:140px"
+                                CellClass="text-center"
+                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
+                                CellStyle="width:80px; min-width:80px; max-width:80px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
+
+                            <span style="width:15px;height:15px;border-radius:50%;
+                 display:inline-block;
+                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
+                            </span>
+
+                        </MudTooltip>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+
+                @if (CurrentStaffType != StaffType.School)
+                {
+                    <!-- Action -->
+                    @if (canEdit || canDelete)
+                    {
+                        <!-- Action -->
+                        <TemplateColumn Title="Action"
+                                        Filterable="false"
+                                        HeaderClass="text-center fw-bold"
+                                        CellClass="text-center"
+                                        HeaderStyle="width:100px; min-width:100px; max-width:100px;"
+                                        CellStyle="width:100px; min-width:100px; max-width:100px;">
+
+                            <CellTemplate Context="ctx">
+                                <div style="display:flex; gap:12px; justify-content:center; align-items:center; height:100%;" class="action-btn">
+
+                                    <div style="display:flex; align-items:center; gap:10px;">
+
+                                        <!-- EDIT -->
+                                        @if (canEdit)
+                                        {
+                                            <!-- EDIT -->
+                                            <MudTooltip Text="Approved records cannot be edited"
+                                                        Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved">
+
+                                                <span style="display:flex; align-items:center;">
+
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                         fill="none"
+                                                         viewBox="0 0 24 24"
+                                                         stroke-width="1.5"
+                                                         stroke="currentColor"
+                                                         style="width:20px;
+                                                height:20px;
+                                                cursor:@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? "not-allowed" : "pointer");
+                                                color:@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? "#adb5bd" : "#0d6efd")"
+                                                         @onclick="@(() =>
+                                                         {
+                                                             if (ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved)
+                                                                 EditCourseReq(ctx.Item);
+                                                         })">
+
+                                                        <path stroke-linecap="round"
+                                                              stroke-linejoin="round"
+                                                              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652
+                                                 L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13
+                                                 L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897
+                                                 l8.932-8.931ZM18 14v4.75
+                                                 A2.25 2.25 0 0 1 15.75 21H5.25
+                                                 A2.25 2.25 0 0 1 3 18.75V8.25
+                                                 A2.25 2.25 0 0 1 5.25 6H10" />
+                                                    </svg>
+
+                                                </span>
+                                            </MudTooltip>
+                                        }
+
+                                        <!-- DELETE -->
+                                        @if (canDelete)
+                                        {
+                                            <MudTooltip Text="Approved records cannot be deleted"
+                                                        Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved">
+
+                                                <span style="display:flex; align-items:center;">
+
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                         fill="none"
+                                                         viewBox="0 0 24 24"
+                                                         stroke-width="1.5"
+                                                         stroke="currentColor"
+                                                         style="width:20px;
+                                                height:20px;
+                                                cursor:@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? "not-allowed" : "pointer");
+                                                color:@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? "#adb5bd" : "#dc3545")"
+                                                         @onclick="@(() =>
+                                                         {
+                                                             if (ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved)
+                                                                 DeleteCourseReq(ctx.Item);
+                                                         })">
+
+                                                        <path stroke-linecap="round"
+                                                              stroke-linejoin="round"
+                                                              d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21
+                                    c.342.052.682.107 1.022.166m-1.022-.165
+                                    L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077
+                                    H8.084a2.25 2.25 0 0 1-2.244-2.077
+                                    L4.772 5.79m14.456 0
+                                    a48.108 48.108 0 0 0-3.478-.397m-12 .562
+                                    c.34-.059.68-.114 1.022-.165m0 0
+                                    a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916
+                                    c0-1.18-.91-2.164-2.09-2.201
+                                    a51.964 51.964 0 0 0-3.32 0
+                                    c-1.18.037-2.09 1.022-2.09 2.201v.916
+                                    m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                    </svg>
+
+                                                </span>
+
+                                            </MudTooltip>
+                                        }
+
+                                    </div>
+
+                                </div>
+                            </CellTemplate>
+
+                        </TemplateColumn>
+                    }
+
+                }
+
+
+            </Columns>
+
+
+            <NoRecordsContent>
+                <div class="p-4 d-flex justify-start" style="color:#0080ff; font-weight:600; margin-left:20px;">
+                    No data available
+                </div>
+            </NoRecordsContent>
+
+
+        </MudDataGrid>
+
+    </MudPaper>
+
+
+    <!-- 🔹 Pagination -->
+    <div class="d-flex align-items-center justify-content-between px-4 mb-3"
+         style="height: 50px; background: #fff; margin-top:10px;">
+
+        <!-- Left Side (Empty but keeps even spacing like your layout) -->
+        <div style="display: flex; align-items: center; gap: 10px; font-family: Inter, sans-serif; font-size: 13px; margin-right:10px;">
+            <label class="me-2">Results per Page:</label>
+
+            <select id="pageSize" class="form-select"
+                    style="width: 70px; height: 32px; font-size: 13px; padding: 2px 6px;"
+                    @onchange="OnPageSizeChanged">
+
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="500">500</option>
+            </select>
+        </div>
+
+
+
+        <!-- Center: Custom Pagination (Your Styled UI) -->
+        <div class="d-flex align-items-center gap-3">
+
+            <button @onclick="PrevPage" disabled="@IsPrevDisabled" class="pg-btn">◀ PREV</button>
+
+            <span>Page</span>
+
+            <input readonly value="@PageNumber" class="pg-input" />
+
+            <span>of @TotalPages</span>
+
+            <button @onclick="NextPage" disabled="@IsNextDisabled" class="pg-btn">NEXT ▶</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+@code {
+
+    int PageNumber = 1;       // current page
+    int PageSize = 25;        // rows per page
+    int TotalRecords = 0;     // total records returned by API
+    int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize); // calculated
+    private List<CourseRequirementRequestDto> Items = new();
+    private MudDataGrid<CourseRequirementRequestDto>? dataGrid;
+    private CourseRequirementFilterDto Filter = new CourseRequirementFilterDto();
+
+    private StaffType? CurrentStaffType;
+    bool canView => PermissionService.CanView("course requirements");
+    bool canAdd => PermissionService.CanInsert("course requirements");
+    bool canEdit => PermissionService.CanUpdate("course requirements");
+    bool canDelete => PermissionService.CanDelete("course requirements");
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!canView)
+        {
+            Navigation.NavigateTo(Routes.Dashboard);
+        }
+
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+        CurrentStaffType = user.StaffType;
+
+        @if (CurrentStaffType == StaffType.School)
+        {
+			Filter.ApprovalStatus = (int)ApprovalStatus.Approved; // default to approved for school users
+        }
+
+        await LoadData(Filter);
+        await GetDocuments();
+    }
+
+
+    // global search
+    private string _search = "";
+    private bool _searchApplied = false;
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await ApplySearch();
+        }
+    }
+
+    private async Task ApplySearch()
+    {
+        Filter.SearchText = string.IsNullOrWhiteSpace(_search)
+            ? null
+            : _search.Trim();
+
+        Filter.PageNumber = 1;
+        PageNumber = 1;
+        _searchApplied = true;
+
+        await LoadData(Filter);
+    }
+
+    private async Task ClearSearch()
+    {
+        _search = string.Empty;
+        Filter.SearchText = null;
+        Filter.PageNumber = 1;
+        PageNumber = 1;
+        _searchApplied = false;
+
+        await LoadData(Filter);
+    }
+
+
+    private bool _loading = false;
+    private async Task LoadData(CourseRequirementFilterDto filter)
+    {
+        try
+        {
+            _loading = true;                 // start loading
+            await InvokeAsync(StateHasChanged); // refresh UI immediately if needed
+
+            var result = await CourseRequirementService.GetCourseRequirement(filter);
+
+            if (result.Response.Success)
+            {
+                // Data already deserialized in service
+                Items = result.Data.Items;
+                TotalRecords = result.Data.TotalCount;
+            }
+            else
+            {
+                // Always show backend message
+                Items = result.Data.Items;
+                Snackbar.Add(result.Response.Message, Severity.Error);
+            }
+
+        }
+        finally
+        {
+            _loading = false;                // finished loading
+            await InvokeAsync(StateHasChanged); // update UI
+        }
+    }
+
+
+    // for drop down
+    private int GridKey = 1;
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var newSize))
+            return;
+
+        PageNumber = 1;
+        PageSize = newSize;
+
+        GridKey++;  // <<<<< IMPORTANT (forces new DataGrid instance)
+
+        if (dataGrid is null)
+            return;   //  Prevents the crash
+
+        Filter.PageSize = PageSize;
+        Filter.PageNumber = PageNumber;
+        await LoadData(Filter);
+
+        StateHasChanged();
+    }
+
+
+    // hide / show coloumns
+    private bool showColumnsPopup = false;
+    private string columnFilter = "";
+    private List<Column<CourseRequirementRequestDto>> allColumns = new();
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (dataGrid is null)
+                return;   //  Prevents the crash
+
+            allColumns = dataGrid.RenderedColumns.ToList();
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleColumnsPopup()
+    {
+        showColumnsPopup = !showColumnsPopup;
+    }
+
+    private void ClosePopup()
+    {
+        showColumnsPopup = false;
+    }
+
+    private async Task ToggleColumn(Column<CourseRequirementRequestDto> col, bool makeVisible)
+    {
+        if (makeVisible)
+            await col.ShowAsync();
+        else
+            await col.HideAsync();
+
+        //col.Hidden = makeVisible;   // sync checkbox state
+        StateHasChanged();
+    }
+
+
+    // pagination btns
+    bool IsPrevDisabled => PageNumber <= 1;
+    private async Task PrevPage()
+    {
+        if (PageNumber > 1)
+        {
+            PageNumber--;
+            Filter.PageNumber = PageNumber;
+            await LoadData(Filter);
+        }
+    }
+
+    bool IsNextDisabled => PageNumber >= TotalPages;
+    private async Task NextPage()
+    {
+        if (PageNumber < TotalPages)
+        {
+            PageNumber++;
+            Filter.PageNumber = PageNumber;
+            await LoadData(Filter);
+        }
+    }
+
+
+    private void AddCourseReq()
+    {
+        Navigation.NavigateTo(Routes.CourseRequirement);
+    }
+
+
+    private void EditCourseReq(CourseRequirementRequestDto dto)
+    {
+        Navigation.NavigateTo(Routes.CourseRequirementUpdate.Replace("{Id:long}", dto.ReqId.ToString()));
+    }
+
+    private async Task DeleteCourseReq(CourseRequirementRequestDto dto)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to delete '{dto.CourseName}' requirement ?" }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && dto.ReqId.HasValue)
+        {
+            var response = await CourseRequirementService.DeleteCourseRequirement(dto.ReqId.Value);
+
+            Snackbar.Add(
+                response.Message,
+                response.Success ? Severity.Success : Severity.Error
+            );
+
+            if (response.Success)
+            {
+                PageNumber = 1;
+                PageSize = 25;
+                var filter = new CourseRequirementFilterDto();
+                await LoadData(filter);
+            }
+        }
+
+    }
+
+
+    private void NavigateToMenu(long menuId)
+    {
+        // Navigation or detail page
+    }
+
+
+    private void ExportData()
+    {
+
+    }
+
+    private ApprovalRequestDto approvalRequestDto = new ApprovalRequestDto();
+    private async Task ApproveCourseReqAsync(CourseRequirementRequestDto dto)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to approve '{dto.CourseName}' requirement from '{dto.UniversityName}'?" }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small
+        };
+
+        var dialog = await DialogService.ShowAsync<ApprovalDialog> ("Confirm Approval", parameters, options);
+        
+        // dialog returns 1 for approve, 2 for reject
+        var result = await dialog.Result;
+
+        if (result != null && result.Data is int selectedStatus && !result.Canceled && dto.ReqId.HasValue)
+        {
+            approvalRequestDto.EntityId = dto.ReqId.Value;
+            approvalRequestDto.ApprovalStatus = selectedStatus;
+            var response = await ApprovalService.ApproveCourseRequirement(approvalRequestDto);
+
+            Snackbar.Add(response.Message, response.Success ? Severity.Success : Severity.Error);
+
+            if (response.Success)
+            {
+                PageNumber = 1;
+                PageSize = 25;
+                var filter = new CourseRequirementFilterDto();
+                await LoadData(filter);
+            }
+        }
+    }
+
+
+    private List<UniversityDocumentRequestDto> Documents = new();
+    private async Task GetDocuments()
+    {
+        var result = await UniversityDocumentService.GetMasterUniversityDocuments(new UniversityDocumentFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            IsActive = true,
+        });
+
+
+        if (result.Response.Success)
+        {
+            Documents = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private string GetDocumentsHtml(CourseRequirementRequestDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.RequiredDocuments))
+            return "";
+
+        var ids = dto.RequiredDocuments
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(long.Parse)
+            .ToHashSet();
+
+        var names = Documents
+            .Where(d => d.UniversityDocsId.HasValue &&
+                        ids.Contains(d.UniversityDocsId.Value))
+            .Select(d => d.DocumentName);
+
+        var listItems = string.Join("", names.Select(n => $"<li>{n}</li>"));
+
+        // return $"<ul style='margin:0;padding-left:16px;text-align:left'>{listItems}</ul>";
+
+        return $"<ul style='margin-top:6px;margin-bottom:0;padding-left:16px;text-align:left'>{listItems}</ul>";
+    }
+
+
+    private Color GetApprovalChipColor(int status)
+    {
+        return status switch
+        {
+            (int)ApprovalStatus.Approved => Color.Success,
+            (int)ApprovalStatus.Rejected => Color.Error,
+            _ => Color.Warning
+        };
+    }
+
+    private string GetApprovalChipText(int status)
+    {
+        return status switch
+        {
+            (int)ApprovalStatus.Approved => "Approved",
+            (int)ApprovalStatus.Rejected => "Rejected",
+            _ => "Pending"
+        };
+    }
+
+
+    private ApprovalStatus? SelectedStatus = null; // null = All
+    private int _activeTabIndex = 0;
+
+    private async Task OnTabChanged(int index)
+    {
+        _activeTabIndex = index;
+
+        SelectedStatus = index switch
+        {
+            1 => ApprovalStatus.Pending,
+            2 => ApprovalStatus.Approved,
+            3 => ApprovalStatus.Rejected,
+            _ => null
+        };
+
+        // Reset paging when tab changes
+        PageNumber = 1;
+        PageSize = 25;
+        TotalRecords = 0;
+
+        var filter = new CourseRequirementFilterDto
+        {
+            PageNumber = PageNumber,
+            PageSize = PageSize,
+            ApprovalStatus = SelectedStatus.HasValue ? (int)SelectedStatus.Value : null,
+            SearchText = _search              // if you have search
+        };
+
+        await LoadData(filter);
+    }
+
+
+
+}

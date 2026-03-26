@@ -1,0 +1,357 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Common.HrStaff
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersMenu
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject UsersMenuService UsersMenuService
+@inject CommonService CommonService
+
+
+<MudDialog MaxWidth="MaxWidth.Large" FullWidth="true">
+
+    <DialogContent>
+
+        <!-- ⭐ Paper wrapper (same as page) -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            <MudForm @ref="_form" Model="@Menu">
+
+                <MudGrid Spacing="3">
+
+
+                    <!-- Module -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="Module"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Value="SelectedModuleId"
+                                   ValueChanged="OnModuleChanged"
+                                   Required="true"
+                                   RequiredError="Module is required">
+
+                            @foreach (var m in UsersModule)
+                            {
+                                <MudSelectItem T="long?" Value="@m.ModuleId">
+                                    @m.ModuleName
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Page Heading -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Page Heading"
+                                      @bind-Value="Menu.PageHeading"
+                                      For="@(() => Menu.PageHeading)"
+                                      Required="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+
+                    <!-- Parent -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="Parent Menu"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Clearable="true"
+                                   Value="SelectedParentId"
+                                   ValueChanged="OnParentChanged">
+
+                            <MudSelectItem T="long?" Value="null">
+                                -- No Parent --
+                            </MudSelectItem>
+
+                            @foreach (var parent in ParentOptions)
+                            {
+                                <MudSelectItem T="long?" Value="@parent.MenuLinkId">
+                                    @($"{(parent.ParentId != null ? "— " : "")}{parent.PageHeading}")
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Page Path -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Page Path"
+                                      @bind-Value="Menu.PagePath"
+                                      For="@(() => Menu.PagePath)"
+                                      Required="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <!-- Actual Name -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Actual Name"
+                                      @bind-Value="Menu.ActualName"
+                                      For="@(() => Menu.ActualName)"
+                                      Required="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <!-- Icon -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Icon"
+                                      @bind-Value="Menu.Icon"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+
+                    <!-- Level -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="int"
+                                      Label="Level"
+                                      @bind-Value="Menu.LevelNo"
+                                      For="@(() => Menu.LevelNo)"
+                                      Required="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <!-- Sequence -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="int"
+                                      Label="Sequence"
+                                      @bind-Value="Menu.SequenceNo"
+                                      For="@(() => Menu.SequenceNo)"
+                                      Required="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+
+                    <!-- Flags -->
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.subtitle2">Is View</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="Menu.IsView">
+                            <MudRadio T="bool" Value="true" Color="Color.Success">Yes</MudRadio>
+                            <MudRadio T="bool" Value="false" Color="Color.Default">No</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.subtitle2">Show In Menu</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="Menu.ShowInMenu">
+                            <MudRadio T="bool" Value="true" Color="Color.Primary">Yes</MudRadio>
+                            <MudRadio T="bool" Value="false" Color="Color.Default">No</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.subtitle2">Dashboard</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="Menu.IsDashboard">
+                            <MudRadio T="bool" Value="true" Color="Color.Warning">Yes</MudRadio>
+                            <MudRadio T="bool" Value="false" Color="Color.Default">No</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudForm>
+
+        </MudPaper>
+
+    </DialogContent>
+
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public UsersMenuRequestdto Menu { get; set; } = new();
+
+
+    private string Title = "Add Users Menu";
+    private List<UsersModuleDto> UsersModule = new();
+    private List<UsersMenuRequestdto> ParentOptions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+
+            await GetUsersModule();
+            await GetParent();
+
+            if (Menu.MenuLinkId is null or 0)
+            {
+                Title = "Add Users Menu";
+
+                Menu.IsView = true;
+                Menu.ShowInMenu = true;
+                Menu.IsDashboard = false;
+
+                SetNextSequence(null);
+            }
+            else
+            {
+                Title = "Edit Users Menu";
+                SelectedModuleId = Menu.ModuleId;
+                SelectedParentId = Menu.ParentId;
+            }
+
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid || SelectedModuleId == null)
+                return;
+
+            Menu.ModuleId = SelectedModuleId.Value;
+
+            var result = Menu.MenuLinkId is null or 0
+                ? await UsersMenuService.AddUsersMenu(Menu)
+                : await UsersMenuService.UpdateUsersMenu(Menu);
+
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+
+
+
+    private async Task GetParent()
+    {
+        var result = await UsersMenuService.GetUsersMenu(new UsersMenuFilterDto
+            {
+                PageNumber = 1,
+                PageSize = 0
+            }
+        );
+
+
+        if (result.Response.Success)
+        {
+            ParentOptions = result.Data.Items
+            .Where(x => x.MenuLinkId != Menu.MenuLinkId) // avoid self-parent
+            .ToList();
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private long? SelectedParentId { get; set; } = null;
+  
+    private void OnParentChanged(long? parentId)
+    {
+        SelectedParentId = parentId;
+        Menu.ParentId = parentId;
+
+        if (parentId == null || parentId == 0)
+        {
+            Menu.LevelNo = 0;
+        }
+        else
+        {
+            var parent = ParentOptions.FirstOrDefault(x => x.MenuLinkId == parentId);
+            Menu.LevelNo = parent?.LevelNo + 1 ?? 1;
+
+            // if (parent != null)
+            // {
+            //     Menu.LevelNo = parent.LevelNo + 1;
+            // }
+        }
+
+        SetNextSequence(parentId);
+    }
+
+    private void SetNextSequence(long? parentId)
+    {
+        var nextSeq = ParentOptions
+            .Where(x => x.ParentId == parentId)
+            .Select(x => x.SequenceNo)
+            .DefaultIfEmpty(0)
+            .Max() + 1;
+
+        Menu.SequenceNo = nextSeq;
+    }
+
+
+
+    private async Task GetUsersModule()
+    {
+        var result = await CommonService.GetAllUsersModule();
+
+        // if your CommonService already returns ApiResponseDto
+        if (result.Response.Success)
+        {
+            UsersModule = result.Data ?? new List<UsersModuleDto>();
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private long? SelectedModuleId { get; set; } = null;
+
+    private void OnModuleChanged(long? moduleId)
+    {
+        SelectedModuleId = moduleId;
+    }
+
+
+}

@@ -1,0 +1,164 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.SuperAdmin.Labels
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject LabelService LabelService
+@inject CommonService CommonService
+
+<MudDialog>
+    <DialogContent>
+        <!-- ⭐ Paper wrapper -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            @* <MudText Typo="Typo.h5">@Title</MudText> *@
+
+            <MudForm @ref="_form" Model="@Label">
+
+                <MudGrid Spacing="3">
+
+
+                    <!-- LabelName -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Label Name"
+                                      @bind-Value="Label.LabelName"
+                                      Required="true"
+                                      RequiredError="Label Name is required"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" Disabled="@(Label.LableId.HasValue && Label.LableId > 0)" />
+                    </MudItem>
+
+
+                    <!-- LabelValue -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Label Value"
+                                      @bind-Value="Label.LabelValue"
+                                      Required="true"
+                                      RequiredError="Label Value is required"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <!-- LabelNewValue -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Label New Value"
+                                      @bind-Value="Label.LabelNewValue"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <!-- Arabic -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Arabic"
+                                      @bind-Value="Label.Arabic"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+
+                    <!-- ACTION BUTTONS -->
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudForm>
+
+        </MudPaper>
+
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public LabelRequestDto Label { get; set; } = new();
+
+    private string Title = "Add Label";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+
+            if (Label.LableId is null or 0)
+            {
+                Title = "Add Label";
+                Label.CreatedBy = "1";
+            }
+            else
+            {
+                Title = "Edit Label";
+
+            }
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid)
+                return;
+
+
+            var result = Label.LableId is null or 0
+                ? await LabelService.AddLabel(Label)
+                : await LabelService.UpdateLabel(Label);
+
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+
+
+}

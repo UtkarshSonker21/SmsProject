@@ -1,0 +1,1162 @@
+﻿@page "/student-add"
+@page "/student-update/{Id:long}"
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs.School.MasterSchool
+@using ScholarshipManagement.DTOs.School.Students
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterCountry
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.School
+@using ScholarshipManagement.Services.SuperAdmin
+@using static ScholarshipManagement.Helper.Constant
+@inject MasterCountryService MasterCountryService
+@inject MasterDropdownService MasterDropdownService
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject StudentService StudentService
+@inject MasterSchoolService MasterSchoolService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<style>
+
+    .full-height-paper {
+        min-height: 100%;
+    }
+
+    .upload-drop-zone {
+        position: relative;
+        height: 160px;
+        border: 2px dashed #d6d6d6;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+    }
+
+        .upload-drop-zone.drag-active {
+            border-color: var(--mud-palette-primary);
+            background-color: rgba(25, 118, 210, 0.05);
+        }
+
+    .file-input-overlay {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        cursor: pointer;
+    }
+
+    .upload-preview-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .upload-preview-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .upload-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .upload-preview-container:hover .upload-overlay {
+        opacity: 1;
+    }
+
+
+    .profile-upload-container {
+        border-radius: 10px;
+    }
+
+    .file-input-overlay {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+
+    .profile-avatar img {
+        object-fit: cover;
+    }
+
+
+    .primary-btn {
+        background: #1E88E5;
+        color: white;
+        border-radius: 8px;
+        text-transform: none;
+        padding: 10px 20px;
+        font-weight: 500;
+        box-shadow: none;
+    }
+
+        .primary-btn:hover {
+            background: #1565C0 !important;
+        }
+
+</style>
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        @title
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudForm Model="model" @ref="form" Class="mt-4" Style="margin:30px 0;">
+           
+            <MudGrid Spacing="3">
+
+                <MudItem xs="12">
+                    <MudPaper Class="pa-4 full-height-paper" Elevation="2">
+                        <MudGrid Spacing="2">
+
+                            <!-- ================= PROFILE PICTURE ================= -->
+                            <MudItem xs="12" Class="mb-2">
+
+                                <MudPaper Class="pa-3" Outlined="true" Elevation="0">
+
+                                    <div class="d-flex align-center">
+
+                                        <!-- Avatar -->
+                                        <MudAvatar Size="Size.Medium"
+                                                   Style="width:48px;height:48px; margin-right:10px;">
+
+                                            @if (!string.IsNullOrWhiteSpace(photoPreviewUrl))
+                                            {
+                                                <img src="@photoPreviewUrl"
+                                                     style="width:100%;height:100%;object-fit:cover;" />
+                                            }
+
+                                        </MudAvatar>
+
+                                        <!-- Right Section -->
+                                        <div class="d-flex align-center flex-grow-1 justify-space-between">
+
+                                            <!-- Left: Title -->
+                                            <MudText Typo="Typo.subtitle2">
+                                                Profile Picture
+                                            </MudText>
+
+                                            <div class="d-flex flex-column align-end">
+                                                
+                                                <!-- Helper Text (Below Buttons) -->
+                                                <MudText Typo="Typo.caption"
+                                                         Class="mb-1"
+                                                         Style="font-size:11px;opacity:0.7;">
+                                                    PNG, JPEG • Max 10MB
+                                                </MudText>
+
+                                                <!-- Right: Buttons -->
+                                                <div class="d-flex align-center gap-2">
+
+                                                    <MudButton Variant="Variant.Filled"
+                                                               Size="Size.Small"
+                                                               StartIcon="@Icons.Material.Filled.Upload"
+                                                               Style="background: #1E88E5; color: white; padding:6px 12px; text-transform:none;">
+
+                                                        Upload
+
+                                                        <InputFile OnChange="OnInputFileChanged"
+                                                                   accept="image/png,image/jpeg,image/gif"
+                                                                   class="file-input-overlay" />
+                                                    </MudButton>
+
+                                                    <MudButton Variant="Variant.Text"
+                                                               Size="Size.Small"
+                                                               Style="background:#BDBDBD; color:#1F1F1F;padding:6px 12px;"
+                                                               Disabled="string.IsNullOrWhiteSpace(photoPreviewUrl)"
+                                                               OnClick="ClearPhoto">
+                                                        Remove
+                                                    </MudButton>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </MudPaper>
+
+                            </MudItem>
+
+
+                            <!-- ================= Basic Information ================= -->
+                            <MudItem xs="12" Class="mb-2">
+                                <MudText Typo="Typo.h6"
+                                         Style="font-size:15px; font-weight:600; color:#1E293B; margin-bottom:2px; margin-top:3px;">
+                                    Basic Information
+                                </MudText>
+                                <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                                <MudDivider />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="long"
+                                           Label="School"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Required="true"
+                                           RequiredError="School is required"
+                                           @bind-Value="model.SchoolId"
+                                           Disabled="@IsSchoolLocked">
+
+                                    <!-- Default placeholder -->
+                                    <MudSelectItem T="long" Value="0">
+                                        -- Select University --
+                                    </MudSelectItem>
+
+                                    @foreach (var c in Schools)
+                                    {
+                                        <MudSelectItem T="long" Value="@(c.SchoolId ?? 0)">
+                                            @c.SchoolName
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Student Salutation"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Placeholder="--- Select ---"
+                                           @bind-Value="model.StudentSalutation" Clearable="true">
+
+                                    @foreach (var div in Salutation)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Student First Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.StudentFirstName"
+                                              For="@(() => model.StudentFirstName)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Student Last Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.StudentLastName"
+                                              For="@(() => model.StudentLastName)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Student Other Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.StudentOtherName"
+                                              For="@(() => model.StudentOtherName)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="NIN"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.NIN"
+                                              For="@(() => model.NIN)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudDatePicker @bind-Date="model.DateOfBirth"
+                                               MaxDate="@DateTime.Today"
+                                               Label="Date of Birth"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               DateFormat="dd/MM/yyyy"
+                                               Clearable="true" />
+                            </MudItem>
+
+
+                            <!-- ================= Personal Details ================= -->
+                            <MudItem xs="12" Class="mb-2">
+                                <MudText Typo="Typo.h6"
+                                         Style="font-size:15px; font-weight:600; color:#1E293B; margin-bottom:2px; margin-top:3px;">
+                                    Personal Details
+                                </MudText>
+                                <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                                <MudDivider />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Nationality"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           @bind-Value="model.Nationality"
+                                           For="@(() => model.Nationality)"
+                                           Clearable="true">
+
+                                    <!-- Placeholder -->
+                                    <MudSelectItem T="string" Value="@null">
+                                        -- Select Country --
+                                    </MudSelectItem>
+
+                                    @foreach (var c in Countries.Where(x => x.CountryId.HasValue))
+                                    {
+                                        <MudSelectItem T="string" Value="@c.CountryName">
+                                            @c.CountryName
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Tribe"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.Tribe"
+                                              For="@(() => model.Tribe)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="long?"
+                                           Label="Religion"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Placeholder="--- Select ---"
+                                           @bind-Value="model.Religion"
+                                           For="@(() => model.Religion)"
+                                           Clearable="true">
+
+                                    @foreach (var div in Religion)
+                                    {
+                                        <MudSelectItem Value="@div.UniqueId">
+                                            @div.DisplayText
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+
+                                <MudText Typo="Typo.subtitle2">Gender</MudText>
+                                <MudRadioGroup T="int?"
+                                               Label="Gender"
+                                               @bind-Value="model.Gender"
+                                               Required="true"
+                                               RequiredError="Gender is required">
+
+                                    <MudRadio T="int?" Value="1" Color="Color.Primary">
+                                        Male
+                                    </MudRadio>
+
+                                    <MudRadio T="int?" Value="2" Color="Color.Secondary">
+                                        Female
+                                    </MudRadio>
+
+                                    <MudRadio T="int?" Value="3" Color="Color.Info">
+                                        Other
+                                    </MudRadio>
+
+                                </MudRadioGroup>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+
+                                <MudText Typo="Typo.subtitle2">Orphan</MudText>
+
+                                <MudRadioGroup T="bool?"
+                                               Label="Orphan"
+                                               @bind-Value="model.IsOrphan">
+
+                                    <MudRadio T="bool?" Value="true" Color="Color.Primary">
+                                        Yes
+                                    </MudRadio>
+
+                                    <MudRadio T="bool?" Value="false" Color="Color.Secondary">
+                                        No
+                                    </MudRadio>
+
+                                </MudRadioGroup>
+
+                            </MudItem>
+
+                            @if (model.IsOrphan == true)
+                            {
+                                <MudItem xs="12" md="4">
+                                    <MudTextField Label="Orphan Number"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  @bind-Value="model.OrphanNumber"
+                                                  Required="true"
+                                                  RequiredError="Orphan number is required" />
+                                </MudItem>
+                            }
+
+
+                            <!-- ================= Contact & ADDRESS ================= -->
+                            <MudItem xs="12" Class="mb-2">
+                                <MudText Typo="Typo.h6"
+                                         Style="font-size:15px; font-weight:600; color:#1E293B; margin-bottom:2px; margin-top:3px;">
+                                    Contact & Address
+                                </MudText>
+                                <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                                <MudDivider />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Address"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.Address"
+                                              For="@(() => model.Address)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="City"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.AddressCity"
+                                              For="@(() => model.AddressCity)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="State"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.MasterState"
+                                              For="@(() => model.MasterState)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Country"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           @bind-Value="model.MasterCountry"
+                                           For="@(() => model.MasterCountry)"
+                                           Clearable="true">
+
+                                    <!-- Placeholder -->
+                                    <MudSelectItem T="string" Value="@null">
+                                        -- Select Country --
+                                    </MudSelectItem>
+
+                                    @foreach (var c in Countries.Where(x => x.CountryId.HasValue))
+                                    {
+                                        <MudSelectItem T="string" Value="@c.CountryName">
+                                            @c.CountryName
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Zip Code"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.ZipCode"
+                                              For="@(() => model.ZipCode)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Mobile No"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.MobileNo"
+                                              For="@(() => model.MobileNo)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Email"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.EmailID"
+                                              For="@(() => model.EmailID)" />
+                            </MudItem>
+
+
+                            <!-- ================= Family Details ================= -->
+                            <MudItem xs="12" Class="mb-2">
+                                <MudText Typo="Typo.h6"
+                                         Style="font-size:15px; font-weight:600; color:#1E293B; margin-bottom:2px; margin-top:3px;">
+                                    Family Details
+                                </MudText>
+                                <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                                <MudDivider />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Father Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.FatherName"
+                                              For="@(() => model.FatherName)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Mother Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.MotherName"
+                                              For="@(() => model.MotherName)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Guardian Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.GuardianName"
+                                              For="@(() => model.GuardianName)" />
+                            </MudItem>
+
+
+                            <!-- ================= Academic Information ================= -->
+                            <MudItem xs="12" Class="mb-2">
+                                <MudText Typo="Typo.h6"
+                                         Style="font-size:15px; font-weight:600; color:#1E293B; margin-bottom:2px; margin-top:3px;">
+                                    Academic Information
+                                </MudText>
+                                <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                                <MudDivider />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Graduation Score"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.GraduationScore"
+                                              For="@(() => model.GraduationScore)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Grade"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.Grade"
+                                              For="@(() => model.Grade)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="High School Division"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Placeholder="--- Select ---"
+                                           @bind-Value="model.HighSchoolDiv" Clearable="true">
+
+                                    @foreach (var div in HsDivisions)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="decimal?"
+                                              Label="English Placement Test"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.EnglishPlacementTest"
+                                              For="@(() => model.EnglishPlacementTest)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="decimal?"
+                                              Label="Maximum Marks"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.MaxMarks"
+                                              For="@(() => model.MaxMarks)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Tanzanian Students Combination"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Placeholder="--- Select ---"
+                                           @bind-Value="model.TanzComb"
+                                           For="@(() => model.TanzComb)" Clearable="true">
+
+                                    @foreach (var div in TzStudentCombinations)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+
+                            <!-- ================= Social & Behavioral ================= -->
+                            <MudItem xs="12" Class="mb-2">
+                                <MudText Typo="Typo.h6"
+                                         Style="font-size:15px; font-weight:600; color:#1E293B; margin-bottom:2px; margin-top:3px;">
+                                    Social & Behavioral
+                                </MudText>
+                                <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                                <MudDivider />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Social Economic Status"
+                                           Placeholder="--- Select ---"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           @bind-Value="model.SocialEcoStatus"
+                                           For="@(() => model.SocialEcoStatus)"
+                                           Clearable="true">
+
+                                    <MudSelectItem Value="@("Needs financial assistance")">
+                                        Needs financial assistance
+                                    </MudSelectItem>
+
+                                    <MudSelectItem Value="@("Does not need financial assistance")">
+                                        Does not need financial assistance
+                                    </MudSelectItem>
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Recommendation Letter"
+                                           Placeholder="--- Select ---"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           @bind-Value="model.RecommendationLetter"
+                                           For="@(() => model.RecommendationLetter)"
+                                           Clearable="true">
+
+                                    @foreach (var div in Availability)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string"
+                                              Label="Recommendation Letter Path"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.RecommendationLetterPath"
+                                              For="@(() => model.RecommendationLetterPath)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Self Determination"
+                                           Placeholder="--- Select ---"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           @bind-Value="model.SelfDettoSuccess"
+                                           For="@(() => model.SelfDettoSuccess)"
+                                           Clearable="true">
+
+                                    @foreach (var div in LevelType)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Motivation Level"
+                                           Placeholder="--- Select ---"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           @bind-Value="model.MotLevelToOverComedStudying"
+                                           For="@(() => model.MotLevelToOverComedStudying)"
+                                           Clearable="true">
+
+                                    @foreach (var div in LevelType)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Future Goals"
+                                           Placeholder="--- Select ---"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           @bind-Value="model.ClearTargetsFutureGoals"
+                                           For="@(() => model.ClearTargetsFutureGoals)"
+                                           Clearable="true">
+
+                                    @foreach (var div in LevelType)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+
+                            <!-- ================= ACTION ================= -->
+                            <MudItem xs="12" Class="mt-5">
+                                <div class="d-flex justify-end gap-2">
+                                    <MudButton Variant="Variant.Filled" Style="background: #1E88E5; color: white;" OnClick="SubmitAsync">Submit</MudButton>
+                                    <MudButton Variant="Variant.Filled" Style="background:#BDBDBD; color:#1F1F1F;" OnClick="Cancel">Cancel</MudButton>
+                                </div>
+                            </MudItem>
+
+
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+            
+            </MudGrid>
+        </MudForm>
+    </MudContainer>
+
+</div>
+
+
+
+
+@code {
+
+    private MudForm? form;
+    private StudentRequestDto model = new();
+
+    [Parameter]
+    public long Id { get; set; }
+    private string title = "Add Student";
+
+    private StaffType? CurrentStaffType;
+    bool IsSchoolLocked = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetSchools();
+        await GetCountries();
+
+        await GetSalutation();
+        await GetReligion();
+        await GetHsDivisions();
+        await GetTzStudentCombinations();
+        await GetLevelType();
+        await GetAvailability();
+
+        model = new StudentRequestDto();
+
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+        CurrentStaffType = user.StaffType;
+
+        if (user.SchoolId.HasValue)
+        {
+            model.SchoolId = user.SchoolId.Value;
+            IsSchoolLocked = true;
+        }
+
+        if (Id > 0)
+        {
+            await LoadStudent(Id);
+            title = "Edit Student";
+        }
+        else
+        {
+            title = "Add Student";
+        }
+    }
+
+
+    private async Task SubmitAsync()
+    {
+        if (form is null)
+            return;
+
+        await form.Validate();
+
+        if (form.IsValid)
+        {
+            // if (model.StaffType == 0)
+            // {
+            //     Snackbar.Add("Please select a staff type", Severity.Warning);
+            //     return;
+            // }
+
+            var ok = model.StudentId is null or 0
+                     ? await StudentService.AddStudent(model)
+                     : await StudentService.UpdateStudent(model);
+
+            if (ok.Success)
+            {
+                Snackbar.Add(ok.Message, Severity.Success);
+                Navigation.NavigateTo(Routes.StudentList);
+            }
+            else
+            {
+                Snackbar.Add(ok.Message, Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("Please fix validation errors.", Severity.Error);
+        }
+    }
+
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo(Routes.StudentList);
+    }
+
+
+
+    private List<MasterSchoolRequestDto> Schools = new();
+    private async Task GetSchools()
+    {
+        var result = await MasterSchoolService.GetMasterSchool(new MasterSchoolFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        }
+        );
+
+
+        if (result.Response.Success)
+        {
+            Schools = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private bool IsLoading;
+    private async Task LoadStudent(long id)
+    {
+        IsLoading = true;
+        var result = await StudentService.GetStudentById(id);
+
+        if (!result.Response.Success)
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+            return;
+        }
+
+        if (result.Data == null)
+        {
+            Snackbar.Add("Hr staff not found", Severity.Warning);
+            return;
+        }
+
+        model = result.Data;
+        IsLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private List<MasterCountryRequestDto> Countries = new();
+    private async Task GetCountries()
+    {
+        var result = await MasterCountryService.GetMasterCountry(new MasterCountryFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+
+        if (result.Response.Success)
+        {
+            Countries = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private List<MasterDropDownRequestDto> Salutation = new();
+    private async Task GetSalutation()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.Salutation
+        });
+
+
+        if (result.Response.Success)
+        {
+            Salutation = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private List<MasterDropDownRequestDto> Religion = new();
+    private async Task GetReligion()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.Religion
+        });
+
+
+        if (result.Response.Success)
+        {
+            Religion = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private List<MasterDropDownRequestDto> HsDivisions = new();
+    private async Task GetHsDivisions()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.HsDivision
+        });
+
+
+        if (result.Response.Success)
+        {
+            HsDivisions = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private List<MasterDropDownRequestDto> TzStudentCombinations = new();
+    private async Task GetTzStudentCombinations()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.TanzanianStudentsCombination
+        });
+
+
+        if (result.Response.Success)
+        {
+            TzStudentCombinations = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+  
+    private List<MasterDropDownRequestDto> Availability = new();
+    private async Task GetAvailability()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.Availability
+        });
+
+
+        if (result.Response.Success)
+        {
+            Availability = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private List<MasterDropDownRequestDto> LevelType = new();
+    private async Task GetLevelType()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.LevelType
+        });
+
+
+        if (result.Response.Success)
+        {
+            LevelType = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private bool clearing;
+    private string? photoPreviewUrl;
+
+    private readonly string defaultDragClass = "upload-drop-zone";
+    private string dragClass = "upload-drop-zone";
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        ClearDragClass();
+
+        var file = e.File;
+
+        if (file is not null)
+        {
+            using var stream = file.OpenReadStream(5 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            photoPreviewUrl = $"data:{file.ContentType};base64,{base64}";
+
+            model.Photo = photoPreviewUrl;
+        }
+    }
+
+    private void SetDragClass()
+    {
+        dragClass = "upload-drop-zone drag-active";
+    }
+
+    private void ClearDragClass()
+    {
+        dragClass = defaultDragClass;
+    }
+
+
+
+    private async Task OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file is not null)
+        {
+            if (file.Size > 10 * 1024 * 1024)
+                return;
+
+            using var stream = file.OpenReadStream(10 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            photoPreviewUrl = $"data:{file.ContentType};base64,{base64}";
+
+            model.Photo = photoPreviewUrl;
+        }
+    }
+
+    private void ClearPhoto()
+    {
+        photoPreviewUrl = null;
+        model.Photo = null;
+    }
+
+
+}

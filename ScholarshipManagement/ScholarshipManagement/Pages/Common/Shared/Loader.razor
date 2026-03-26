@@ -1,0 +1,50 @@
+﻿@using MudBlazor
+
+<style>
+    .app-loader-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.4); /* overlay */
+        backdrop-filter: blur(2px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .app-loader-card {
+        min-width: 260px;
+        background: rgba(42, 48, 66, 0.2); /* semi-transparent */
+    }
+
+</style>
+
+@if (Visible)
+{
+    <div class="app-loader-overlay">
+        <MudPaper Elevation="6" Class="pa-4 rounded-lg app-loader-card" Outlined="true">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="gap-3">
+                <MudProgressCircular Size="Size.Medium"
+                                     Indeterminate="true"
+                                     Color="Color.Default" />
+                <div class="d-flex flex-column">
+                    <MudText Typo="Typo.subtitle1">@Text</MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(SecondaryText))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Default">
+                            @SecondaryText
+                        </MudText>
+                    }
+                </div>
+            </MudStack>
+        </MudPaper>
+    </div>
+}
+
+@code {
+    [Parameter] public string Text { get; set; } = "Loading...";
+    [Parameter] public string? SecondaryText { get; set; }
+    [Parameter] public bool Visible { get; set; } = true;
+}
+

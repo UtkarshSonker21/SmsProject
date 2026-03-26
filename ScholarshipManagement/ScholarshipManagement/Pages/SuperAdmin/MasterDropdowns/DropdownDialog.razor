@@ -1,0 +1,311 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Common.HrStaff
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject MasterDropdownService MasterDropdownService
+@inject CommonService CommonService
+
+<style>
+    .dialog-btn {
+        background-color: #0080ff;
+        color: white;
+        border-radius: 6px;
+        padding: 8px 16px;
+        border: 1px solid #0080ff;
+        font-family: Inter, sans-serif;
+        font-weight: 700;
+        font-size: 9pt;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: all 0.2s ease;
+        width: 100px; /* ← fixed width */
+        text-align: center; /* keeps text centered */
+    }
+    
+    .dialog-btn:hover {
+        background-color: #006be0;
+        border-color: #006be0;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+
+</style>
+
+
+
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+
+    <DialogContent>
+
+        <!-- ⭐ Paper wrapper -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            @* <MudText Typo="Typo.h6">@Title</MudText> *@
+
+            <MudForm @ref="_form" Model="@Dropdown">
+
+                <MudGrid Spacing="3">
+
+
+
+                    <!-- Parent -->
+                    @* <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="Parent"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Clearable="true"
+                                   @bind-Value="Dropdown.ParentId" Disabled="@(Dropdown.UniqueId != null)">
+
+                            <MudSelectItem T="long?" Value="null">
+                                -- No Parent --
+                            </MudSelectItem>
+
+                            @foreach (var parent in ParentOptions.Where(x => x.ParentId == null))
+                            {
+                                <MudSelectItem T="long?" Value="@parent.UniqueId">
+                                    @($"{(parent.ParentId != null ? "— " : "")}{parent.DisplayText}")
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+                    </MudItem> *@
+
+
+                    @*   <MudItem xs="12" md="6">
+                        <MudNumericField T="int?"
+                                         Label="Display Sequence"
+                                         @bind-Value="Dropdown.DisplaySequence"
+                                         For="@(() => Dropdown.DisplaySequence)"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Disabled="@(Dropdown.UniqueId is null or 0)" />
+                    </MudItem> *@
+
+
+                    <!-- Display Text -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Display Text"
+                                      @bind-Value="Dropdown.DisplayText"
+                                      Required="true"
+                                      RequiredError="Display Text is required"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <!-- Module -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="Module"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Clearable="true"
+                                   @bind-Value="Dropdown.ModuleId" Disabled="@(Dropdown.ParentId != null)">
+
+                            <MudSelectItem T="long?" Value="null">
+                                -- None --
+                            </MudSelectItem>
+
+                            @foreach (var m in UsersModule)
+                            {
+                                <MudSelectItem T="long?" Value="@m.ModuleId">
+                                    @m.ModuleName
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+
+                        @if (Dropdown.ParentId != null)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                Child dropdowns use the same module as their parent.
+                            </MudText>
+                        }
+
+                    </MudItem>
+
+
+                    <!-- Active Status -->
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.subtitle2">Active Status</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="Dropdown.Status" Class="d-flex gap-2">
+                            <MudRadio Value="true" Color="Color.Primary">Active</MudRadio>
+                            <MudRadio Value="false" Color="Color.Default">Inactive</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.subtitle2">Is Editable</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="Dropdown.IsEditable" Class="d-flex gap-2">
+                            <MudRadio Value="true" Color="Color.Primary">Yes</MudRadio>
+                            <MudRadio Value="false" Color="Color.Default">No</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.subtitle2">Is Show</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="Dropdown.IsShow" Class="d-flex gap-2">
+                            <MudRadio Value="true" Color="Color.Primary">Yes</MudRadio>
+                            <MudRadio Value="false" Color="Color.Default">No</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+
+                    <!-- ACTION BUTTONS -->
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudForm>
+
+        </MudPaper>
+
+    </DialogContent>
+
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public MasterDropDownRequestDto Dropdown { get; set; } = new();
+
+
+
+    private string Title = "Add Master Dropdown";
+    private List<UsersModuleDto> UsersModule = new();
+    private List<MasterDropDownRequestDto> ParentOptions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+
+            if (Dropdown.UniqueId is null or 0)
+            {
+                Title = "Add Master Dropdown";
+
+                Dropdown.Status = true;
+                Dropdown.IsShow = true;
+                Dropdown.IsEditable = false;
+            }
+            else
+            {
+                Title = "Edit Master Dropdown";
+            }
+
+            await GetUsersModule();
+            await GetParent();
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid)
+                return;
+
+            if (Dropdown.UniqueId is null or 0)
+            {
+                Dropdown.DisplaySequence = 0;
+            }
+
+
+            var result = Dropdown.UniqueId is null or 0
+                ? await MasterDropdownService.AddMasterDropDown(Dropdown)
+                : await MasterDropdownService.UpdateMasterDropDown(Dropdown);
+
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+
+
+    private async Task GetParent()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+            {
+                PageNumber = 1,
+                PageSize = 0,
+                Status = true
+            }
+        );
+
+
+        if (result.Response.Success)
+        {
+            ParentOptions = result.Data.Items
+            .Where(x => x.UniqueId != Dropdown.UniqueId) // avoid self-parent
+            .ToList();
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+    }
+
+
+    private async Task GetUsersModule()
+    {
+        var result = await CommonService.GetAllUsersModule();
+
+        // if your CommonService already returns ApiResponseDto
+        if (result.Response.Success)
+        {
+            UsersModule = result.Data ?? new List<UsersModuleDto>();
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+    }
+
+
+}

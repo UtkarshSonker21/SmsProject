@@ -1,0 +1,38 @@
+﻿.dialog-btn {
+    background-color: #0080ff;
+    color: white;
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: 1px solid #0080ff;
+    font-family: Inter, sans-serif;
+    font-weight: 700;
+    font-size: 9pt;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    width: 100px; /* ← fixed width */
+    text-align: center; /* keeps text centered */
+}
+
+    .dialog-btn:hover {
+        background-color: #006be0;
+        border-color: #006be0;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+
+
+.smooth-switch .mud-switch-base {
+    transition: all 0.25s ease-in-out;
+}
+
+    .smooth-switch .mud-switch-base:active {
+        transform: scale(1.05);
+    }
+
+.smooth-switch .mud-switch-track {
+    transition: background-color 0.25s ease;
+}
+
+.smooth-switch .mud-switch-thumb {
+    transition: transform 0.25s ease;
+}

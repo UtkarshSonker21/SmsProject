@@ -1,0 +1,166 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.School.StudentRequirements
+@using ScholarshipManagement.DTOs.SuperAdmin.Labels
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.School
+@using ScholarshipManagement.Services.SuperAdmin
+@using ScholarshipManagement.Helper.Enums
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject LabelService LabelService
+@inject CommonService CommonService
+@inject StudentRequirementService StudentRequirementService
+
+
+<MudDialog>
+    <DialogContent>
+        <!-- ⭐ Paper wrapper -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            <MudForm @ref="_form" Model="@StdReq">
+
+                <MudGrid Spacing="3">
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int?"
+                                   @bind-Value="StdReq.UniAdmissionStatus"
+                                   Label="Document Status"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Required="true"
+                                   RequiredError="Please select document status">
+
+                            <MudSelectItem Value="@((int?)ApprovalStatus.Pending)">Pending</MudSelectItem>
+                            <MudSelectItem Value="@((int?)ApprovalStatus.Approved)">Approved</MudSelectItem>
+                            <MudSelectItem Value="@((int?)ApprovalStatus.Rejected)">Rejected</MudSelectItem>
+
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker @bind-Date="StdReq.SemesterStartDate"
+                                       Label="Semester Start Date"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       DateFormat="dd/MM/yyyy"
+                                       Required="true"
+                                       RequiredError="Semester start date is required"
+                                       MinDate="@DateTime.Today" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Letter of Acceptance Code"
+                                      @bind-Value="StdReq.LetterAccepCode"
+                                      Required="true"
+                                      RequiredError="Letter of Acceptance Code is required"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int?"
+                                   @bind-Value="StdReq.UniAwardingStatus"
+                                   Label="Awarding Status"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Required="true"
+                                   RequiredError="Please select awarding status">
+
+                            <MudSelectItem Value="@((int?)AwardingStatus.Pending)">Pending</MudSelectItem>
+                            <MudSelectItem Value="@((int?)AwardingStatus.Awarded)">Awarded</MudSelectItem>
+                            <MudSelectItem Value="@((int?)AwardingStatus.Rejected)">Rejected</MudSelectItem>
+
+                        </MudSelect>
+                    </MudItem>
+
+
+
+                    <!-- ACTION BUTTONS -->
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudForm>
+
+        </MudPaper>
+
+    </DialogContent>
+</MudDialog>
+
+
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public StudentRequirementRequestDto StdReq { get; set; } = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid)
+                return;
+
+
+            var result = await StudentRequirementService.UpdateStudentRequirementMapByUniversityAsync(StdReq);
+
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+
+}

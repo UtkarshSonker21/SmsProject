@@ -1,0 +1,279 @@
+﻿@page "/login"
+@attribute [AllowAnonymous]
+
+
+@layout EmptyLayout
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Common.Auth
+@using ScholarshipManagement.Helper
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Helper.Translations
+@using ScholarshipManagement.Services.Common
+@using static ScholarshipManagement.Helper.Constant
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject AuthService AuthService
+@inject CustomAuthStateProvider AuthStateProvider
+@inject TranslationManager TranslationManager
+
+<style>
+    .login-shell {
+        border-radius: 16px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .login-hero {
+        background: linear-gradient(135deg, rgba(90, 115, 255, 0.18) 0%, rgba(90, 115, 255, 0.06) 55%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .login-hero-img {
+        max-width: 240px;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .login-content {
+        background: white;
+    }
+
+    .login-avatar {
+        box-shadow: 0 10px 24px rgba(45, 55, 72, 0.18);
+    }
+
+
+    /* Social container */
+    .social-login {
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+    }
+
+    /* Base circle */
+    .social-circle {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+        background: linear-gradient(135deg, rgba(90,115,255,0.12), rgba(90,115,255,0.04)) !important;
+        border: 1px solid rgba(90,115,255,0.15) !important;
+        color: #4f5bd5 !important;
+        transition: all 0.25s ease;
+    }
+
+        /* Icon sizing */
+        .social-circle .mud-icon-root {
+            font-size: 18px;
+            color: #4f5bd5 !important;
+        }
+
+        /* Hover */
+        .social-circle:hover {
+            background: linear-gradient(135deg, rgba(90,115,255,0.22), rgba(90,115,255,0.10)) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(79,91,213,0.25);
+        }
+
+        /* Click */
+        .social-circle:active {
+            transform: scale(0.95);
+        }
+
+</style>
+
+<MudContainer Style="max-width:700px;" Class="d-flex justify-center">
+    <MudPaper Elevation="0" Outlined="true" Class="login-shell my-12 mud-width-full">
+       
+        <div class="login-hero pa-6 pa-sm-8">
+            <div class="d-flex align-center justify-space-between gap-4">
+                <img src="Images/kafat-logo.jpg"
+                     alt="Menu" style=" height:50px; width:50px;
+                         border-radius:50%; object-fit:cover;border:2px solid white;" class="login-avatar" />
+                <div>
+                    <MudText Typo="Typo.h5" Class="mud-text-primary">Kafa’at</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mt-1">Program Platform for Higher Education</MudText>
+                </div>
+                <img class="login-hero-img" src="images/profile-img.png" alt="Hero" />
+            </div>
+        </div>
+
+        <div class="login-content pa-6 pa-sm-8">
+
+            <MudForm @ref="form" Model="model" >
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Username</MudText>
+                <MudTextField @bind-Value="model.LoginName"
+                              Placeholder="Enter username"
+                              Variant="Variant.Outlined"
+                              Immediate="true"
+                              Required="true"
+                              RequiredError="Username is required"
+                              Adornment="Adornment.Start" IconSize="Size.Small"
+                              AdornmentIcon="@Icons.Material.Filled.Person"
+                              Class="mud-width-full" Dense="true" Margin="Margin.Dense" />
+
+                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Password</MudText>
+                <MudTextField @bind-Value="model.Password"
+                              Placeholder="Enter password"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Password is required"
+                              InputType="@(showPassword? InputType.Text: InputType.Password)"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@(showPassword? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                              IconSize="Size.Small"
+                              OnAdornmentClick="TogglePassword"
+                              Class="mud-width-full" Dense="true" Margin="Margin.Dense" />
+
+                <div class="d-flex flex-column flex-sm-row align-start align-sm-center justify-space-between gap-3 mt-4">
+                    <MudCheckBox @bind-Value="model.RememberMe" Color="Color.Primary" Label="Remember me" />
+                    <div class="d-flex align-center gap-2">
+                        <MudLink Href="@Routes.ForgotUserName" Underline="Underline.Hover" Class="mud-text-secondary">Forgot username?</MudLink>
+                        <span class="mud-text-secondary">•</span>
+                        <MudLink Href="@Routes.ForgotPassword" Underline="Underline.Hover" Class="mud-text-secondary">Forgot password?</MudLink>
+                    </div>
+                </div>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Class="mud-width-full mt-6"
+                           Size="Size.Large"
+                           Disabled="@isBusy"
+                           OnClick="SignIn" Dense="true" Margin="Margin.Dense">
+                    @if (isBusy)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="me-2" />
+                        <span>Signing in...</span>
+                    }
+                    else
+                    {
+                        <span>Log In</span>
+                    }
+                </MudButton>
+
+                <MudDivider Class="my-3" />
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           Class="mud-width-full"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.School"
+                           OnClick="GoToSignup" Dense="true" Margin="Margin.Dense">
+                    Schools — Sign up now
+                </MudButton>
+
+
+                <!-- OR Divider -->
+                <div class="text-center mt-5 position-relative">
+                    <hr class="text-muted">
+                    <span class="px-3 bg-white text-muted small position-absolute top-50 start-50 translate-middle">
+                        Or Sign Up With
+                    </span>
+                </div>
+
+                <!-- Social Icons -->
+                <div class="social-login mt-3">
+
+                    <MudIconButton Icon="@Icons.Material.Filled.MarkEmailUnread"
+                                   Class="social-circle soft"
+                                   Title="Login with Code" OnClick="LoginWithCode" />
+
+                    <MudIconButton Icon="@Icons.Custom.Brands.Google"
+                                   Class="social-circle soft"
+                                   Title="Login with Google" />
+
+                    @* <MudIconButton Icon="@Icons.Custom.Brands.Microsoft"
+                                   Class="social-circle soft"
+                                   Title="Login with Microsoft" />
+
+                    <MudIconButton Icon="@Icons.Custom.Brands.Apple"
+                                   Class="social-circle soft"
+                                   Title="Login with Apple" />
+                     *@
+
+                </div>
+
+
+
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-6 d-block text-center">
+                    Note: Internet Explorer is an unsupported browser. Open in Chrome, Mozilla or Safari.
+                </MudText>
+            </MudForm>
+        
+        </div>
+    
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm? form;
+    private readonly LoginRequestDto model = new();
+    private bool showPassword;
+    private bool isBusy;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isLoggedIn = await AuthService.IsUserLoggedIn();
+
+        if (isLoggedIn)
+        {
+            Nav.NavigateTo(Routes.Dashboard, replace: true);
+        }
+    }
+
+
+    private void TogglePassword()
+    {
+        showPassword = !showPassword;
+    }
+
+    private async Task SignIn()
+    {
+        await form!.Validate();
+
+        if (!form.IsValid)
+            return;
+
+        isBusy = true;
+        //StateHasChanged();
+
+        var ok = await AuthService.Login(model);
+        if (ok.Success)
+        {
+            AuthStateProvider.NotifyLogin();
+            await TranslationManager.Load(LanguageCode.En);
+
+            Nav.NavigateTo(Routes.Dashboard);
+        }
+        else
+        {
+            Snackbar.Add(ok.Message, Severity.Error);
+        }
+
+        isBusy = false;
+
+    }
+
+    private void GoToSignup()
+    {
+        Nav.NavigateTo(Routes.SchoolRegistration);
+    }
+
+
+
+    private sealed class LoginNewModel
+    {
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+        public bool RememberMe { get; set; }
+    }
+
+
+    private void LoginWithCode()
+    {
+        Nav.NavigateTo(Routes.LoginWithCode);
+    }
+
+}

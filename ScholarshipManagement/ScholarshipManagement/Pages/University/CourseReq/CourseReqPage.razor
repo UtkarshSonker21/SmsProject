@@ -1,0 +1,719 @@
+﻿@page "/course-req"
+@page "/course-req-update/{Id:long}"
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
+@using ScholarshipManagement.DTOs.University.CourseRequirement
+@using ScholarshipManagement.DTOs.University.MasterCourse
+@using ScholarshipManagement.DTOs.University.MasterCourseType
+@using ScholarshipManagement.DTOs.University.MasterDocuments
+@using ScholarshipManagement.DTOs.University.MasterUniversity
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Pages.Common
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@using ScholarshipManagement.Services.University
+@using static ScholarshipManagement.Helper.Constant
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject UniversityService UniversityService
+@inject CourseTypeService CourseTypeService
+@inject CourseService CourseService
+@inject CourseRequirementService CourseRequirementService
+@inject UniversityDocumentService UniversityDocumentService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject AuthService AuthService
+@inject PermissionService PermissionService
+@inject MasterDropdownService MasterDropdownService
+
+<style>
+
+    .full-height-paper {
+        min-height: 100%;
+    }
+
+</style>
+
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        @title
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+                    <MudChip T="string" Size="Size.Small"
+                             Variant="Variant.Outlined"
+                             Color="@GetApprovalChipColor(model.ApprovalStatus)"
+                             Style="min-width:90px; justify-content:center;">
+                        @GetApprovalChipText(model.ApprovalStatus)
+                    </MudChip>
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudForm Model="model" @ref="form" Class="mt-4" Style="margin:30px 0;">
+            <MudGrid Spacing="3">
+                <MudItem xs="12">
+
+                    <MudPaper Class="pa-4 full-height-paper" Elevation="2">
+                        <MudGrid Spacing="2">
+
+                            <MudItem xs="12" md="4">
+                                <MudDatePicker @bind-Date="StartDate" MaxDate="@(EndDate?.AddDays(-1))"
+                                               Label="Academic year start date" Variant="Variant.Outlined"
+                                               Margin="Margin.Dense" DateFormat="dd/MM/yyyy" Clearable="true" 
+                                               Required="true" RequiredError="Start date is required" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudDatePicker @bind-Date="EndDate" MinDate="@(StartDate?.AddDays(1))"
+                                               Label="Academic year end date" Variant="Variant.Outlined"
+                                               Margin="Margin.Dense" DateFormat="dd/MM/yyyy" Clearable="true"
+                                               Required="true" RequiredError="End date is required" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="int?"
+                                              Label="No.of Seats"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.NoSeats"
+                                              For="@(() => model.NoSeats)" Required="true" RequiredError="No.of Seats is required" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="long"
+                                           Label="Course"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Required="true"
+                                           RequiredError="Course type is required"
+                                           @bind-Value="model.CourseId">
+
+                                    <!-- Default placeholder -->
+                                    <MudSelectItem T="long" Value="0">
+                                        -- Select Course --
+                                    </MudSelectItem>
+
+                                    @foreach (var c in Courses)
+                                    {
+                                        <MudSelectItem T="long" Value="@(c.CourseId ?? 0)">
+                                            @c.CourseName
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Academic Year"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Required="true"
+                                           RequiredError="Academic year is required"
+                                           @bind-Value="model.AcademicYear"
+                                           For="@(() => model.AcademicYear)">
+
+                                    @foreach (var year in AcademicYears)
+                                    {
+                                        <MudSelectItem Value="@year">@year</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <!-- Line break + space -->
+                            <MudItem xs="12" Class="mt-4"></MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="High School Division"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Placeholder="--- Select ---"
+                                           @bind-Value="model.HsDivision" Clearable="true">
+
+                                    @foreach (var div in HsDivisions)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="College Score"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.CollegeScore"
+                                              For="@(() => model.CollegeScore)" />
+                            </MudItem>
+                           
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Tanzanian Students Combination"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Placeholder="--- Select ---"
+                                           @bind-Value="model.TzStuCombi"
+                                           For="@(() => model.TzStuCombi)" Clearable="true">
+
+                                    @foreach (var div in TzStudentCombinations)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="long"
+                                           Label="Required Documents"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           MultiSelection="true"
+                                           Required="true"
+                                           RequiredError="At least one document required"
+                                           SelectedValues="SelectedDocumentIds"
+                                           SelectedValuesChanged="OnDocumentsChanged">
+
+                                    @foreach (var d in Documents)
+                                    {
+                                        <MudSelectItem T="long" Value="@(d.UniversityDocsId ?? 0)">
+                                            @d.DocumentName
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+
+                            <!-- Line break + space -->
+                            <MudItem xs="12" Class="mt-4"></MudItem>
+
+
+                            <MudItem xs="12">
+
+                                <MudGrid AlignItems="AlignItems.Center">
+
+                                    <!-- Left Side : Heading -->
+                                    <MudItem xs="6">
+                                        <MudText Typo="Typo.h6">
+                                            ANNUAL COST PER STUDENT
+                                        </MudText>
+                                    </MudItem>
+
+                                    <!-- Right Side : Total Cost -->
+                                    <MudItem xs="6" Class="d-flex justify-end">
+                                        <MudText Typo="Typo.h6">
+                                            Total Cost : @TotalCost
+                                        </MudText>
+                                    </MudItem>
+
+
+                                </MudGrid>
+
+                            </MudItem>
+
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Registration Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.RegistrationCost"
+                                              For="@(() => model.RegistrationCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Tution Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.TutionCost"
+                                              For="@(() => model.TutionCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Text Books Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.TextBookCost"
+                                              For="@(() => model.TextBookCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Accomodation Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.AccomoCost"
+                                              For="@(() => model.AccomoCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Travelling Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.TravellingCost"
+                                              For="@(() => model.TravellingCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Transportation Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.TransportCost"
+                                              For="@(() => model.TransportCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Visa and Residency Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.VisaResiCost"
+                                              For="@(() => model.VisaResiCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Official Documents Attesting Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.DocuAttestCost"
+                                              For="@(() => model.DocuAttestCost)" />
+                            </MudItem>
+
+
+
+
+                            <!-- Line break -->
+                            <MudItem xs="12" Class="mt-2"></MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudText Typo="Typo.subtitle2">Active Status</MudText>
+                                <MudRadioGroup T="bool" @bind-Value="model.IsActive">
+                                    <MudRadio T="bool" Value="true" Color="Color.Primary">Active</MudRadio>
+                                    <MudRadio T="bool" Value="false" Color="Color.Primary">Inactive</MudRadio>
+                                </MudRadioGroup>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+
+                                <MudText Typo="Typo.subtitle2">
+                                    Approval Status
+                                </MudText>
+
+                                <MudRadioGroup T="int"
+                                               Value="model.ApprovalStatus"
+                                               Disabled="true"
+                                               Class="mt-1 d-flex gap-3">
+
+                                    <MudRadio T="int" Value="@((int)ApprovalStatus.Pending)" Color="Color.Warning">
+                                        Pending
+                                    </MudRadio>
+
+                                    <MudRadio T="int" Value="@((int)ApprovalStatus.Approved)" Color="Color.Success">
+                                        Approved
+                                    </MudRadio>
+
+                                    <MudRadio T="int" Value="@((int)ApprovalStatus.Rejected)" Color="Color.Error">
+                                        Rejected
+                                    </MudRadio>
+
+                                </MudRadioGroup>
+
+                                @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                        This course requirement is pending approval. Use the approval action from list screen.
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                        Approval is managed by the NGO
+                                    </MudText>
+                                }
+
+                            </MudItem>
+
+                            <MudItem xs="12" Class="mt-5">
+                                <div class="d-flex justify-end gap-2">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="SubmitAsync">Submit</MudButton>
+                                    <MudButton Variant="Variant.Filled" Style="background:#BDBDBD; color:#1F1F1F;" OnClick="Cancel">Cancel</MudButton>
+                                </div>
+                            </MudItem>
+                        
+                        </MudGrid>
+                    </MudPaper>
+
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudContainer>
+
+</div>
+
+
+
+
+@code {
+
+    private MudForm? form;
+    private CourseRequirementRequestDto model = new();
+
+    [Parameter]
+    public long Id { get; set; }
+    private string title = "Add Course Requirement";
+
+    private StaffType? CurrentStaffType;
+
+    bool canView => PermissionService.CanView("course requirements");
+    bool canAdd => PermissionService.CanInsert("currencies");
+    bool canEdit => PermissionService.CanUpdate("currencies");
+    bool canDelete => PermissionService.CanDelete("currencies");
+
+
+    private List<string> AcademicYears = new();
+    protected override async Task OnInitializedAsync()
+    {
+        // if (!canView)
+        // {
+        //     Navigation.NavigateTo(Routes.Dashboard);
+        // }
+
+        var currentYear = DateTime.Now.Year;
+
+        for (int i = 0; i <= 10; i++)
+        {
+            AcademicYears.Add($"{currentYear + i}");
+        }
+
+        //CurrentStaffType = await AuthService.GetStaffType();
+
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+        CurrentStaffType = user.StaffType;
+
+        await GetCourses();
+        await GetDocuments();
+        await GetHsDivisions();
+        await GetTzStudentCombinations();
+
+        model = new CourseRequirementRequestDto();
+
+        if (Id > 0)
+        {
+            await LoadCourseReq(Id);
+            title = "Edit Course Requirement";
+
+            SelectedDocumentIds = model.RequiredDocuments.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(long.Parse)
+            .ToHashSet();
+        }
+        else
+        {
+            model.IsActive = true;
+            //model.IsApproved = false;
+            title = "Add Course Requirement";
+        }
+    }
+
+
+    private async Task SubmitAsync()
+    {
+        if (form is null)
+            return;
+
+        await form.Validate();
+
+        if (form.IsValid)
+        {
+
+            if (model.CourseId == 0)
+            {
+                Snackbar.Add("Please select a course", Severity.Warning);
+                return;
+            }
+
+            if (!SelectedDocumentIds.Any())
+            {
+                Snackbar.Add("Please select at least one document", Severity.Error);
+                return;
+            }
+
+            model.RequiredDocuments = string.Join(",", SelectedDocumentIds);
+
+            // Set active by default on registration
+            model.IsActive = true; 
+
+            var ok = model.ReqId is null or 0
+                     ? await CourseRequirementService.AddCourseRequirement(model)
+                     : await CourseRequirementService.UpdateCourseRequirement(model);
+
+            if (ok.Success)
+            {
+                Navigation.NavigateTo(Routes.CourseRequirementList);
+                Snackbar.Add(ok.Message, Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(ok.Message, Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("Please fix validation errors.", Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo(Routes.CourseRequirementList);
+    }
+
+
+
+    private List<MasterCourseRequestDto> Courses = new();
+    private async Task GetCourses()
+    {
+        var result = await CourseService.GetCourse(new MasterCourseFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            IsActive = true,
+            ApprovalStatus = (int)ApprovalStatus.Approved
+        }
+        );
+
+
+        if (result.Response.Success)
+        {
+            Courses = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private List<UniversityDocumentRequestDto> Documents = new();
+    private async Task GetDocuments()
+    {
+        var result = await UniversityDocumentService.GetMasterUniversityDocuments(new UniversityDocumentFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            IsActive = true,
+        });
+
+
+        if (result.Response.Success)
+        {
+            Documents = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private bool IsLoading;
+    private async Task LoadCourseReq(long id)
+    {
+        IsLoading = true;
+        var result = await CourseRequirementService.GetCourseRequirementById(id);
+
+        if (!result.Response.Success)
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+            return;
+        }
+
+        if (result.Data == null)
+        {
+            Snackbar.Add("Course req not found", Severity.Warning);
+            return;
+        }
+
+        model = result.Data;
+        IsLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private DateTime? StartDate
+    {
+        get => model.ReqStartDate;
+        set
+        {
+            model.ReqStartDate = value;
+
+            // Auto-clear invalid end date
+            if (EndDate != null && value != null && EndDate <= value)
+            {
+                model.ReqEndDate = null;
+            }
+        }
+    }
+
+    private DateTime? EndDate
+    {
+        get => model.ReqEndDate;
+        set
+        {
+            model.ReqEndDate = value;
+
+            // Auto-clear invalid start date
+            if (StartDate != null && value != null && StartDate >= value)
+            {
+                model.ReqStartDate = null;
+            }
+        }
+    }
+
+
+    private void ResetDates()
+    {
+        StartDate = null;
+        EndDate = null;
+    }
+
+
+    private HashSet<long> SelectedDocumentIds = new();
+
+    private void OnDocumentsChanged(IEnumerable<long> values)
+    {
+        SelectedDocumentIds = values.ToHashSet();
+    }
+
+
+
+    private Color GetApprovalChipColor(int status)
+    {
+        return status switch
+        {
+            (int)ApprovalStatus.Approved => Color.Success,
+            (int)ApprovalStatus.Rejected => Color.Error,
+            _ => Color.Warning
+        };
+    }
+
+    private string GetApprovalChipText(int status)
+    {
+        return status switch
+        {
+            (int)ApprovalStatus.Approved => "Approved",
+            (int)ApprovalStatus.Rejected => "Rejected",
+            _ => "Pending"
+        };
+    }
+
+    private List<MasterDropDownRequestDto> HsDivisions = new();  
+
+    private async Task GetHsDivisions()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.HsDivision
+        });
+
+
+        if (result.Response.Success)
+        {
+            HsDivisions = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private List<MasterDropDownRequestDto> TzStudentCombinations = new();
+
+
+    private async Task GetTzStudentCombinations()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.TanzanianStudentsCombination
+        });
+
+
+        if (result.Response.Success)
+        {
+            TzStudentCombinations = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    double TotalCost =>
+    (model.RegistrationCost ?? 0) +
+    (model.TutionCost ?? 0) +
+    (model.TextBookCost ?? 0) +
+    (model.AccomoCost ?? 0) +
+    (model.TravellingCost ?? 0) +
+    (model.TransportCost ?? 0) +
+    (model.DocuAttestCost ?? 0) +
+    (model.VisaResiCost ?? 0);
+
+}

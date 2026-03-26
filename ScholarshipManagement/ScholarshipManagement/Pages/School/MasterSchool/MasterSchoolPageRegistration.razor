@@ -1,0 +1,480 @@
+﻿@page "/school-registration"
+
+
+@layout EmptyLayout
+@using MudBlazor
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.School.MasterSchool
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterCountry
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersMenu
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Pages.Common
+@using ScholarshipManagement.Services.School
+@using ScholarshipManagement.Services.SuperAdmin
+@using static ScholarshipManagement.Helper.Constant
+@inject MasterSchoolService MasterSchoolService
+@inject MasterCountryService MasterCountryService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<style>
+    .mud-main-content {
+        margin: 0;
+        flex: 1 1 auto;
+        padding-top: 15px!important;
+        padding-bottom: 15px !important;
+        transition: margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms;
+    }
+
+    .gap-2 {
+        gap: .5rem
+    }
+
+    .gap-4 {
+        gap: 1rem
+    }
+
+    .align-stretch {
+        align-items: stretch;
+    }
+
+    .full-height-paper {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+</style>
+
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    
+    <div class="d-flex align-items-center mb-3" Style="margin:0 5px;">
+        <MudText Typo="Typo.h6" Style="font-weight:600;">SCHOOL REGISTRATION</MudText>
+        <MudSpacer />
+        @* <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Style="@($"visibility:{(model.IsActive ? "visible" : "hidden")}")">Active</MudChip> *@
+    </div>
+
+    <MudForm Model="@model" @ref="form">
+        <MudGrid Spacing="3" Class="align-stretch">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4 full-height-paper" Elevation="2">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.SchoolName" For="@(() => model.SchoolName)" 
+                                          Label="School Name" Variant="Variant.Outlined" Margin="Margin.Dense" 
+                                          Required="true" RequiredError="School Name is required" />
+                        </MudItem>                       
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.ShortName" For="@(() => model.ShortName)" 
+                                          Label="Short Name" Variant="Variant.Outlined" Margin="Margin.Dense" 
+                                          Required="true" RequiredError="Short Name is required" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudSelect T="long" Label="Country" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                       Required="true" RequiredError="Country is required"
+                                       @bind-Value="model.CountryId">
+
+                                <!-- Default placeholder -->
+                                <MudSelectItem T="long" Value="0">
+                                    -- Select Country --
+                                </MudSelectItem>
+
+                                @foreach (var c in Countries.Where(x => x.CountryId.HasValue))
+                                {
+                                    <MudSelectItem T="long" Value="c.CountryId.Value">
+                                        @c.CountryName
+                                    </MudSelectItem>
+                                }
+
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.Area" For="@(() => model.Area)" Label="Area" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="StartDate" MaxDate="@(EndDate?.AddDays(-1))"
+                                           Label="Academic year start date" Variant="Variant.Outlined" 
+                                           Margin="Margin.Dense" DateFormat="dd/MM/yyyy" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="EndDate" MinDate="@(StartDate?.AddDays(1))"
+                                           Label="Academic year end date" Variant="Variant.Outlined" 
+                                           Margin="Margin.Dense" DateFormat="dd/MM/yyyy" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.CenterName" For="@(() => model.CenterName)" Label="Center name (for direct aid schools only)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.SchoolNumber" For="@(() => model.SchoolNumber)" Label="School number (for direct aid schools)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.SchoolYearOfEstablish" For="@(() => model.SchoolYearOfEstablish)" Label="School year of establishment" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.SchoolType" For="@(() => model.SchoolType)" Label="School type (school license)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.SchoolTeachingLanguage" For="@(() => model.SchoolTeachingLanguage)" Label="School teaching language" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle2" Class="mt-2">Graduates/ English language skills are not less than 80%</MudText>
+                            <MudRadioGroup T="bool?" @bind-Value="GraduatesEnglishLessThanBool">
+                                <MudRadio T="bool?" Value="@(true)" Color="Color.Primary">Yes</MudRadio>
+                                <MudRadio T="bool?" Value="@(false)" Color="Color.Primary">No</MudRadio>
+                            </MudRadioGroup>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.TotalNumberOfHighSchoolLevel" For="@(() => model.TotalNumberOfHighSchoolLevel)" Label="Total number of students at the high school level" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.AverageNumberOfStudentPerClass" For="@(() => model.AverageNumberOfStudentPerClass)" Label="Average number of students per class" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+
+                        
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4 full-height-paper" Elevation="2">
+                    <MudGrid Spacing="2">
+
+                        <MudItem xs="12">
+                            <MudSelect T="string"
+                                       @bind-Value="model.SchoolAccreditations"
+                                       For="@(() => model.SchoolAccreditations)"
+                                       Label="School accreditations (from the ministry of education)"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       Clearable="true" Required="true"
+                                       RequiredError="Please select accreditation status">
+
+                                <MudSelectItem T="string" Value="@("Available")">Available</MudSelectItem>
+                                <MudSelectItem T="string" Value="@("Unavailable")">Unavailable</MudSelectItem>
+
+                            </MudSelect>
+                        </MudItem>
+
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.SchoolSubjectCurriculum" For="@(() => model.SchoolSubjectCurriculum)" Label="School's religion subject curriculum" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle2" Class="mt-2">Students success average (during the last 3 years) above 80%</MudText>
+                            <MudRadioGroup T="bool?" @bind-Value="StudentsSuccessAverageAbove80Bool" Class="d-flex gap-4">
+                                <MudRadio T="bool?" Value="@(true)" Color="Color.Primary">Yes</MudRadio>
+                                <MudRadio T="bool?" Value="@(false)" Color="Color.Primary">No</MudRadio>
+                            </MudRadioGroup>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle2" Class="mt-2">Average school graduates eligible to enter universities is not less than 80%</MudText>
+                            <MudRadioGroup T="bool?" @bind-Value="AverageSchoolGraduatesEligibleAbove80Bool" Class="d-flex gap-4">
+                                <MudRadio T="bool?" Value="@(true)" Color="Color.Primary">Yes</MudRadio>
+                                <MudRadio T="bool?" Value="@(false)" Color="Color.Primary">No</MudRadio>
+                            </MudRadioGroup>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.SchoolLocalRank" For="@(() => model.SchoolLocalRank)" Label="The school local rank (if there is a local ranking list)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.OwningInstitution" For="@(() => model.OwningInstitution)" Label="Owning Institution" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="model.SchoolWebsite" For="@(() => model.SchoolWebsite)" Label="School Website" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="model.SchoolPhoneNo" For="@(() => model.SchoolPhoneNo)" Label="School Phone No." Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="model.EmailId" For="@(() => model.EmailId)" Label="School Email" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" @bind-Value="model.SchoolStatus" Label="School Status" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                                @foreach (var s in statuses)
+                                {
+                                    <MudSelectItem T="int?" Value="@s.Id">@s.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudDivider Class="my-2"  />
+                            <MudText Typo="Typo.subtitle2">Coordinator details</MudText>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="model.SchoolCoordinatorName" For="@(() => model.SchoolCoordinatorName)" Label="School Coordinator's Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="model.SchoolCoordinatorMobile" For="@(() => model.SchoolCoordinatorMobile)" Label="School Coordinator's Mobile" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="model.SchoolCoordinatorEmail" For="@(() => model.SchoolCoordinatorEmail)" Label="School Coordinator's Email" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudDivider Class="my-2" />
+                            <MudText Typo="Typo.subtitle2">Student code format (optional)</MudText>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="model.StudentCodeFormatPrefix" For="@(() => model.StudentCodeFormatPrefix)" Label="Prefix" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="model.StudentCodeFormatSufix" For="@(() => model.StudentCodeFormatSufix)" Label="Suffix" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="model.StudentCodeFormatStartingNo" For="@(() => model.StudentCodeFormatStartingNo)" Label="Starting No." Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+
+                        @* <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle2" Class="mt-2">
+                                Active Status
+                            </MudText>
+
+                            <MudRadioGroup T="bool" @bind-Value="model.IsActive" Class="d-flex gap-4">
+                                <MudRadio T="bool" Value="true" Color="Color.Success">Active</MudRadio>
+                                <MudRadio T="bool" Value="false" Color="Color.Error">Inactive</MudRadio>
+                            </MudRadioGroup>
+                        </MudItem> *@
+
+                        <MudItem xs="12" md="6">
+
+                            <MudText Typo="Typo.subtitle2">
+                                Approval Status
+                            </MudText>
+
+                            <MudRadioGroup T="int"
+                                           Value="model.ApprovalStatus"
+                                           Disabled="true"
+                                           Class="mt-1 d-flex gap-3">
+
+                                <MudRadio T="int" Value="@((int)ApprovalStatus.Pending)" Color="Color.Warning">
+                                    Pending
+                                </MudRadio>
+
+                                <MudRadio T="int" Value="@((int)ApprovalStatus.Approved)" Color="Color.Success">
+                                    Approved
+                                </MudRadio>
+
+                                <MudRadio T="int" Value="@((int)ApprovalStatus.Rejected)" Color="Color.Error">
+                                    Rejected
+                                </MudRadio>
+
+                            </MudRadioGroup>
+
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                Approval is managed by the NGO
+                            </MudText>
+
+                        </MudItem>
+
+                        <MudItem xs="12" Style="margin-top:10px;">
+                            <div class="d-flex justify-content-end gap-2 mt-2">
+                                <MudButton Variant="Variant.Filled"
+                                           Style="background: #1E88E5; color: white;"
+                                           OnClick="@(async () => await SubmitAsync())">
+                                    Submit
+                                </MudButton>
+
+                                <MudButton Variant="Variant.Filled"
+                                           Style="background-color:#6c757d; color:white; border:1px solid #6c757d;"
+                                           Class="cancel-btn"
+                                           OnClick="Cancel">
+                                    Cancel
+                                </MudButton>
+                            </div>
+                        </MudItem>
+
+
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+        
+        </MudGrid>
+    </MudForm>
+
+</MudContainer>
+
+
+
+@code {
+
+    private MudForm? form;
+    private MasterSchoolRequestDto model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        model = new MasterSchoolRequestDto();
+        model.ApprovalStatus = (int)ApprovalStatus.Pending;
+
+        await GetCountries();
+    }
+
+    private record StatusOption(int Id, string Name);
+
+    private readonly List<StatusOption> statuses =
+    [
+        new(1, "Draft"),
+        new(2, "Submitted"),
+        new(3, "Approved"),
+        new(4, "Rejected")
+    ];
+
+
+
+    private async Task SubmitAsync()
+    {
+        if (form is null)
+            return;
+
+        await form.Validate();
+
+        if (form.IsValid)
+        {
+            if (model.CountryId == 0)
+            {
+                Snackbar.Add("Please select a country", Severity.Warning);
+                return;
+            }
+
+			model.IsActive = true; // Set active by default on registration
+            var ok = await MasterSchoolService.AddMasterSchool(model);
+            if (ok.Success)
+            {
+                Navigation.NavigateTo(Routes.Login);
+                Snackbar.Add(ok.Message, Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(ok.Message, Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("Please fix validation errors.", Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo(Routes.Login);
+    }
+
+
+    private bool? GraduatesEnglishLessThanBool
+    {
+        get
+        {
+            if (model.GraduatesEnglishLessThan == null)
+                return null;
+
+            return model.GraduatesEnglishLessThan.Equals("Yes", StringComparison.OrdinalIgnoreCase);
+        }
+        set
+        {
+            model.GraduatesEnglishLessThan = value == null
+                ? null
+                : value == true ? "Yes" : "No";
+        }
+    }
+
+    private bool? StudentsSuccessAverageAbove80Bool
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(model.StudentSuccessAverage))
+                return null;
+
+            return model.StudentSuccessAverage.Equals("Yes", StringComparison.OrdinalIgnoreCase);
+        }
+        set
+        {
+            model.StudentSuccessAverage = value == null
+                ? null
+                : value == true ? "Yes" : "No";
+        }
+    }
+
+    private bool? AverageSchoolGraduatesEligibleAbove80Bool
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(model.AverageSchoolGraduates))
+                return null;
+
+            return model.AverageSchoolGraduates
+                .Equals("Yes", StringComparison.OrdinalIgnoreCase);
+        }
+        set
+        {
+            model.AverageSchoolGraduates = value == null
+                ? null
+                : value == true ? "Yes" : "No";
+        }
+    }
+
+
+    private DateTime? StartDate
+    {
+        get => model.AcademicYearStartDate;
+        set
+        {
+            model.AcademicYearStartDate = value;
+
+            // Auto-clear invalid end date
+            if (EndDate != null && value != null && EndDate <= value)
+            {
+                model.AcademicYearEndDate = null;
+            }
+        }
+    }
+
+    private DateTime? EndDate
+    {
+        get => model.AcademicYearEndDate;
+        set
+        {
+            model.AcademicYearEndDate = value;
+
+            // Auto-clear invalid start date
+            if (StartDate != null && value != null && StartDate >= value)
+            {
+                model.AcademicYearStartDate = null;
+            }
+        }
+    }
+
+
+    private List<MasterCountryRequestDto> Countries = new();
+    private async Task GetCountries()
+    {
+        var result = await MasterCountryService.GetMasterCountry(new MasterCountryFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+
+        if (result.Response.Success)
+        {
+            Countries = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+}

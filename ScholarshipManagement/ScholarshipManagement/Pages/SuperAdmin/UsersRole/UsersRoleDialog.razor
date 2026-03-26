@@ -1,0 +1,251 @@
+﻿@using MudBlazor
+@using MudBlazor.Components
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Common.HrStaff
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersMenu
+@using ScholarshipManagement.DTOs.SuperAdmin.UsersRole
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject UsersMenuService UsersMenuService
+@inject UsersRoleService UsersRoleService
+@inject CommonService CommonService
+
+
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+
+    <DialogContent>
+
+        <!-- ⭐ Paper wrapper -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            <MudForm @ref="_form" Model="@Role">
+
+                <MudGrid Spacing="3">
+
+                    <!-- Role Name -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      Label="Role Name"
+                                      @bind-Value="Role.RoleName"
+                                      For="@(() => Role.RoleName)"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <!-- Module -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?"
+                                   Label="Module"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Value="SelectedModuleId"
+                                   ValueChanged="OnModuleChanged"
+                                   Required="true"
+                                   RequiredError="Module is required">
+
+                            @foreach (var m in UsersModule)
+                            {
+                                <MudSelectItem T="long?" Value="@m.ModuleId">
+                                    @m.ModuleName
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Dashboard Menu -->
+                    <MudItem xs="12">
+                        <MudSelect T="long?"
+                                   Label="Dashboard Menu"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Clearable="true"
+                                   @bind-Value="Role.DashboardMenuLinkId">
+
+                            <MudSelectItem T="long?" Value="null">
+                                -- No Menu --
+                            </MudSelectItem>
+
+                            @foreach (var menu in UsersMenu)
+                            {
+                                <MudSelectItem T="long?" Value="@menu.MenuLinkId">
+                                    @($"{(menu.ParentId != null ? "— " : "")}{menu.PageHeading}")
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+
+                    <MudItem xs="12">
+                        <MudTextField T="string"
+                                      Label="Description"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      AutoGrow = "true"
+                                      Lines="4"
+                                      @bind-Value="Role.Description"
+                                      For="@(() => Role.Description)" />
+                    </MudItem>
+
+
+                    <!-- Active status (radio like other forms) -->
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.subtitle2">Active Status</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="Role.IsActive" Class="d-flex gap-2">
+                            <MudRadio Value="true" Color="Color.Primary">Active</MudRadio>
+                            <MudRadio Value="false" Color="Color.Default">Inactive</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+
+                    <!-- ACTION BUTTONS -->
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudForm>
+
+        </MudPaper>
+
+    </DialogContent>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public UsersRoleRequestDto Role { get; set; } = new();
+
+
+    private string Title = "Add Users Role";
+    private List<UsersModuleDto> UsersModule = new();
+    private List<UsersMenuRequestdto> UsersMenu = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+
+            await GetUsersModule();
+            await GetUsersMenu();
+
+            if (Role.RoleId is null or 0)
+            {
+                Title = "Add Users Role";
+                Role.IsActive = true;
+            }
+            else
+            {
+                Title = "Edit Users Role";
+                SelectedModuleId = Role.ModuleId;
+            }
+
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid || SelectedModuleId == null)
+                return;
+
+            Role.ModuleId = SelectedModuleId.Value;
+
+            var result = Role.RoleId is null or 0
+                ? await UsersRoleService.AddUsersRole(Role)
+                : await UsersRoleService.UpdateUsersRole(Role);
+
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+
+
+    private async Task GetUsersMenu()
+    {
+        var result = await UsersMenuService.GetUsersMenu(new UsersMenuFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0
+        }
+        );
+
+
+        if (result.Response.Success)
+        {
+            UsersMenu = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task GetUsersModule()
+    {
+        var result = await CommonService.GetAllUsersModule();
+
+        // if your CommonService already returns ApiResponseDto
+        if (result.Response.Success)
+        {
+            UsersModule = result.Data ?? new List<UsersModuleDto>();
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private long? SelectedModuleId { get; set; } = null;
+
+    private void OnModuleChanged(long? moduleId)
+    {
+        SelectedModuleId = moduleId;
+    }
+
+
+}

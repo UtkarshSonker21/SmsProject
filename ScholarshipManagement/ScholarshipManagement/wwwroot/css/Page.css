@@ -1,0 +1,224 @@
+﻿.add-btn {
+    background-color: #0080ff;
+    color: white;
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: 1px solid #0080ff;
+    font-family: Inter, sans-serif;
+    font-weight: 700;
+    font-size: 9pt;
+    cursor: pointer;
+    width: 120px;
+    height: 40px;
+    /* transition */
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+
+    .add-btn:hover {
+        background-color: #0066cc; /* 👈 slightly darker blue */
+        border-color: #0066cc;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 128, 255, 0.35);
+    }
+
+
+/* SEARCH CONTAINER */
+.appbar-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(59,130,246,0.08);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(59,130,246,0.25);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+    .appbar-search:focus-within {
+        background-color: rgba(59,130,246,0.14);
+        border-color: rgba(59,130,246,0.45);
+    }
+
+
+/* SEARCH INPUT */
+.search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    width: 350px;
+    height: 25px;
+    color: #1e293b;
+    font-family: Inter, sans-serif;
+}
+
+    .search-input::placeholder {
+        color: #64748b;
+    }
+
+
+/* SEARCH ICON */
+.search-icon {
+    width: 16px;
+    height: 16px;
+    color: #2563eb;
+}
+
+
+/* dropdown SELECT CONTAINER */
+.dropdown-filter {
+    height: 36px;
+    padding: 0 10px;
+}
+
+
+/* REMOVE MUD DEFAULT MARGIN */
+.dropdown-select .mud-input-root {
+    margin-top: 0 !important;
+}
+
+
+/* REMOVE UNDERLINE */
+.dropdown-select .mud-input-underline:before,
+.dropdown-select .mud-input-underline:after {
+    display: none !important;
+}
+
+
+/* FORCE MUDSELECT PLACEHOLDER TO MATCH SEARCH INPUT */
+.dropdown-select .mud-select-input {
+    font-size: 14px !important;
+    color: #64748b !important; /* same as search placeholder */
+    font-family: Inter, sans-serif;
+/*    opacity: 1 !important;*/
+}
+
+/* align text vertically */
+.dropdown-select .mud-input-slot {
+    display: flex;
+    align-items: center;
+    height: 25px;
+}
+
+/* remove mud default label spacing */
+.dropdown-select .mud-input-control {
+    margin-top: 0 !important;
+}
+
+/* WIDTH */
+.dropdown-select {
+    width: 200px;
+}
+
+
+    /* DROPDOWN ICON */
+    .dropdown-select .mud-select-icon {
+        color: #2563eb;
+    }
+
+
+.filter-label {
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 500;
+    margin-left: 4px;
+    display: flex;
+    align-items: center;
+}
+
+
+    .pg-btn {
+    background-color: #0080ff;
+    color: white;
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: 1px solid #0080ff;
+    font-family: Inter, sans-serif;
+    font-weight: 700;
+    font-size: 9pt;
+    cursor: pointer;
+}
+
+    .pg-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+.pg-input {
+    width: 70px;
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #dbdbdb;
+    border-radius: 6px;
+    font-family: Inter;
+    font-size: 11pt;
+    color: #555;
+}
+
+
+
+
+/* icon container */
+.nav-icon {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #64748b;
+    transition: all .2s ease;
+}
+
+    /* smaller icon */
+    .nav-icon svg {
+        font-size: 16px !important;
+    }
+
+    /* hover effect */
+    .nav-icon:hover {
+        background: #f1f5f9;
+        color: #2563eb;
+    }
+
+.settings-btn {
+    background: #0080ff;
+    color: #ffffff;
+    border: 1px solid #0080ff;
+    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.25s ease-in-out, border-color 0.25s ease-in-out, color 0.25s ease-in-out;
+}
+
+    /* HOVER STATE */
+    .settings-btn:hover {
+        background: #1d4ed8 !important; /* darker blue */
+        border-color: #1d4ed8 !important;
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35); /* soft blue glow */
+    }
+
+/* ICON */
+.settings-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.35s ease-in-out;
+    transform: translateY(-1px);
+}
+
+/* ICON ROTATION ON HOVER */
+.settings-btn:hover .settings-icon {
+    transform: rotate(90deg);
+}
+
+
+
+.badge{
+    width:45px !important;
+}
