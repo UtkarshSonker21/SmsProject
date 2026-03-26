@@ -482,3 +482,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+
+# Ignore client-side libraries (bootstrap, js, css packages)
+wwwroot/lib/
