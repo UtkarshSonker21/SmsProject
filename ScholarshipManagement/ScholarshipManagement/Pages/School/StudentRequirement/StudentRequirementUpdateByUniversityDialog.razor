@@ -16,7 +16,9 @@
 @inject ISnackbar Snackbar
 @inject LabelService LabelService
 @inject CommonService CommonService
+@inject CourseRequirementService CourseRequirementService
 @inject StudentRequirementService StudentRequirementService
+@inject CurrentUserProfileService CurrentUserProfileService
 
 
 <MudDialog>
@@ -26,119 +28,276 @@
 
             <MudForm @ref="_form" Model="@StdReq">
 
-                <MudGrid Spacing="3">
-
-                    <MudItem xs="12">
-                        <MudSelect T="int?"
-                                   @bind-Value="StdReq.DocumentStatus"
-                                   Label="Document Status"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Required="true"
-                                   RequiredError="Please select document status">
-
-                            <MudSelectItem Value="@((int?)DocumentStatus.Accepted)">Accepted</MudSelectItem>
-                            <MudSelectItem Value="@((int?)DocumentStatus.Rejected)">Rejected</MudSelectItem>
-                            <MudSelectItem Value="@((int?)DocumentStatus.InProcess)">In Process</MudSelectItem>
-
-                        </MudSelect>
-                    </MudItem>
-
-
-                    <!-- ✅ Show only when accepted -->
-                    @if (StdReq.DocumentStatus != (int)DocumentStatus.Rejected && StdReq.DocumentStatus != (int)DocumentStatus.InProcess)
-                    {
-                        <MudItem xs="12">
-                            <MudTextField T="string"
-                                          Label="Letter of Acceptance Code"
-                                          @bind-Value="StdReq.LetterAccepCode"
-                                          Required="true"
-                                          RequiredError="Letter of Acceptance Code is required"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense" />
-                        </MudItem>
-                    }
-
-
-
-
-                    <!-- ✅ Show only when accepted -->
-                    @if (StdReq.DocumentStatus == (int)DocumentStatus.Accepted)
-                    {
-                        <MudItem xs="12">
-                            <MudDatePicker @bind-Date="StdReq.SemesterStartDate"
-                                           Label="Semester Start Date"
-                                           Variant="Variant.Outlined"
-                                           Margin="Margin.Dense" IconSize="Size.Small"
-                                           DateFormat="dd/MM/yyyy" />
-                        </MudItem>
-
+                @if (CurrentStaffType == StaffType.University)
+                {
+                    <MudGrid Spacing="3">
 
                         <MudItem xs="12">
                             <MudSelect T="int?"
-                                       @bind-Value="StdReq.UniAwardingStatus"
-                                       Label="Awarding Status"
+                                       @bind-Value="StdReq.DocumentStatus"
+                                       Label="Document Status"
                                        Variant="Variant.Outlined"
-                                       Margin="Margin.Dense">
+                                       Margin="Margin.Dense"
+                                       Required="true"
+                                       RequiredError="Please select document status">
 
-                                <MudSelectItem Value="@((int?)AwardingStatus.Awarded)">Awarded</MudSelectItem>
-                                <MudSelectItem Value="@((int?)AwardingStatus.Rejected)">Rejected</MudSelectItem>
-                                <MudSelectItem Value="@((int?)AwardingStatus.InProcess)">In Process</MudSelectItem>
+                                <MudSelectItem Value="@((int?)DocumentStatus.Accepted)">Accepted</MudSelectItem>
+                                <MudSelectItem Value="@((int?)DocumentStatus.Rejected)">Rejected</MudSelectItem>
+                                <MudSelectItem Value="@((int?)DocumentStatus.InProcess)">In Process</MudSelectItem>
 
                             </MudSelect>
                         </MudItem>
-                    }
 
-                    <!-- ✅ Show only when Rejected -->
-                    @if (StdReq.DocumentStatus == (int)DocumentStatus.Rejected)
-                    {
+
+                        <!-- ✅ Show only when accepted -->
+                        @if (StdReq.DocumentStatus != (int)DocumentStatus.Rejected && StdReq.DocumentStatus != (int)DocumentStatus.InProcess)
+                        {
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Letter of Acceptance Code"
+                                              @bind-Value="StdReq.LetterAccepCode"
+                                              Required="true"
+                                              RequiredError="Letter of Acceptance Code is required"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" />
+                            </MudItem>
+                        }
+
+
+
+
+                        <!-- ✅ Show only when accepted -->
+                        @if (StdReq.DocumentStatus == (int)DocumentStatus.Accepted)
+                        {
+                            <MudItem xs="12">
+                                <MudDatePicker @bind-Date="StdReq.SemesterStartDate"
+                                               Label="Semester Start Date"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense" IconSize="Size.Small"
+                                               DateFormat="dd/MM/yyyy" />
+                            </MudItem>
+
+
+                            <MudItem xs="12">
+                                <MudSelect T="int?"
+                                           @bind-Value="StdReq.UniAwardingStatus"
+                                           Label="Awarding Status"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense">
+
+                                    <MudSelectItem Value="@((int?)AwardingStatus.Awarded)">Awarded</MudSelectItem>
+                                    <MudSelectItem Value="@((int?)AwardingStatus.Rejected)">Rejected</MudSelectItem>
+                                    <MudSelectItem Value="@((int?)AwardingStatus.InProcess)">In Process</MudSelectItem>
+
+                                </MudSelect>
+                            </MudItem>
+                        }
+
+                        <!-- ✅ Show only when Rejected -->
+                        @if (StdReq.DocumentStatus == (int)DocumentStatus.Rejected)
+                        {
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Reason for Rejection"
+                                              @bind-Value="StdReq.ReasonRejection"
+                                              Required="true"
+                                              RequiredError="Reason for rejection is required"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" />
+                            </MudItem>
+
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Missed Documents"
+                                              @bind-Value="StdReq.MissedDocuments"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" />
+                            </MudItem>
+                        }
+
+
+
+                        <!-- ✅ Show only when In Process -->
+                        @if (StdReq.DocumentStatus == (int)DocumentStatus.InProcess)
+                        {
+                            <MudItem xs="12">
+                                <MudTextField T="string"
+                                              Label="Reason for In Process"
+                                              @bind-Value="StdReq.ReasonInProgress"
+                                              Required="true"
+                                              RequiredError="Reason for in process is required"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" />
+                            </MudItem>
+                        }
+
+
+
+
+                        <!-- ACTION BUTTONS -->
                         <MudItem xs="12">
-                            <MudTextField T="string"
-                                          Label="Reason for Rejection"
-                                          @bind-Value="StdReq.ReasonRejection"
+                            <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                                <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                                <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                            </div>
+                        </MudItem>
+
+                    </MudGrid>
+                }
+
+
+                @if (CurrentStaffType == StaffType.Ngo)
+                {
+                    <MudGrid Spacing="3">
+
+
+                        <MudItem xs="12">
+
+                            <!-- Toggle -->
+                            <div class="d-flex align-items-center gap-1 text-primary small mt-1 approval-action"
+                                 style="cursor:pointer;"
+                                 @onclick="@(() => showCost = !showCost)">
+
+                                <MudIcon Icon="@(showCost? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                         Style="font-size:14px;" />
+
+                                <span>
+                                    @(showCost ? "Hide Cost Breakdown" : "View Cost Breakdown")
+                                </span>
+
+                            </div>
+
+                        </MudItem>
+
+                        @if (showCost)
+                        {
+                            <MudItem xs="12">
+                                <div style="background:#ecfdf5; padding:12px; border-radius:8px; border:1px solid #22c55e;">
+
+                                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                                        💰 Cost Breakdown
+                                    </MudText>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Registration</span>
+                                        <span>@(Req.RegistrationCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Tuition</span>
+                                        <span>@(Req.TutionCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>TextBook</span>
+                                        <span>@(Req.TextBookCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Accommodation</span>
+                                        <span>@(Req.AccomoCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Travelling</span>
+                                        <span>@(Req.TravellingCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Transport</span>
+                                        <span>@(Req.TransportCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Doc Attest</span>
+                                        <span>@(Req.DocuAttestCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Visa/Resi</span>
+                                        <span>@(Req.VisaResiCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <MudDivider Class="my-2" />
+
+                                    <div class="d-flex justify-space-between">
+                                        <b>Total</b>
+                                        <b>@TotalCost.ToString("N0") USD</b>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between mt-2">
+                                        <b>Total Cost + Administrative</b>
+                                        <b>@TotalAdministrativeCost.ToString("N0") USD</b>
+                                    </div>
+
+                                </div>
+                            </MudItem>
+                        }
+
+                        <MudItem xs="12">
+                            <MudSelect T="int?"
+                                       @bind-Value="StdReq.DaAdmissionStatus"
+                                       Label="Status"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       Required="true"
+                                       RequiredError="Please select status">
+
+                                <MudSelectItem Value="@((int?)SponsoredStatus.Sponsored)">Sponsored</MudSelectItem>
+                                <MudSelectItem Value="@((int?)SponsoredStatus.Rejected)">Rejected</MudSelectItem>
+                                <MudSelectItem Value="@((int?)DocumentStatus.InProcess)">In Process</MudSelectItem>
+
+                            </MudSelect>
+                        </MudItem>
+
+
+
+                        <MudItem xs="12">
+                            <MudTextField T="double?"
+                                          Label="Administrative Cost (%)"
+                                          @bind-Value="StdReq.UniAwardingStatusCost"
                                           Required="true"
-                                          RequiredError="Reason for rejection is required"
+                                          RequiredError="Administrative Cost is required"
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense" />
                         </MudItem>
 
+
+
+                        <!-- ✅ Show only when Sponsored -->
+                        @if (StdReq.DocumentStatus == (int)SponsoredStatus.Sponsored)
+                        {
+                            <MudItem xs="12">
+                                <MudSelect T="int?"
+                                           Label="Donor Name"
+                                           @bind-Value="SelectedDonorId"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense" Clearable="true">
+
+                                    <MudSelectItem Value="@((int?)null)">--- Select ---</MudSelectItem>
+
+                                    @foreach (var donor in DummyDonors)
+                                    {
+                                        <MudSelectItem Value="@donor.Id">@donor.Name</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+                        }
+
+
+                        <!-- ACTION BUTTONS -->
                         <MudItem xs="12">
-                            <MudTextField T="string"
-                                          Label="Missed Documents"
-                                          @bind-Value="StdReq.MissedDocuments"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense" />
+                            <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                                <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                                <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                            </div>
                         </MudItem>
-                    }
+
+                    </MudGrid>
+                }
 
 
-
-                    <!-- ✅ Show only when In Process -->
-                    @if (StdReq.DocumentStatus == (int)DocumentStatus.InProcess)
-                    {
-                        <MudItem xs="12">
-                            <MudTextField T="string"
-                                          Label="Reason for In Process"
-                                          @bind-Value="StdReq.ReasonInProgress"
-                                          Required="true"
-                                          RequiredError="Reason for in process is required"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense" />
-                        </MudItem>
-                    }
-
-
-
-
-                    <!-- ACTION BUTTONS -->
-                    <MudItem xs="12">
-                        <div class="d-flex justify-end gap-2" style="margin:10px 0;">
-                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
-                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
-                        </div>
-                    </MudItem>
-
-                </MudGrid>
 
             </MudForm>
 
@@ -158,6 +317,9 @@
     [Parameter]
     public StudentRequirementRequestDto StdReq { get; set; } = new();
 
+    private CourseRequirementRequestDto Req { get; set; } = new();
+
+    private StaffType? CurrentStaffType;
 
     // entity.UniAdmissionStatus = dto.UniAdmissionStatus;
 
@@ -179,14 +341,22 @@
     {
         try
         {
-            var result = await StudentRequirementService.GetStudentRequirements(new StudentRequirementFilterDto()
-            {
-				StudentID = StdReq.StudentID,
-				ReqId = StdReq.ReqId
-            });
+            //          var result = await StudentRequirementService.GetStudentRequirements(new StudentRequirementFilterDto()
+            //          {
+            // 	StudentID = StdReq.StudentID,
+            // 	ReqId = StdReq.ReqId
+            //          });
 
 
-			StdReq = result.Data.Items.FirstOrDefault() ?? new StudentRequirementRequestDto();
+            // StdReq = result.Data.Items.FirstOrDefault() ?? new StudentRequirementRequestDto();
+
+
+            await GetStdReqById(StdReq.ReqId, StdReq.StudentID);
+            await GetReqById(StdReq.ReqId);
+
+
+            var user = CurrentUserProfileService.GetCurrentUserProfile();
+            CurrentStaffType = user.StaffType;
 
             await InvokeAsync(StateHasChanged);
         }
@@ -197,8 +367,65 @@
     }
 
 
+
+    private async Task GetStdReqById(long reqID, long stdID)
+    {
+        var result = await StudentRequirementService.GetStudentRequirements(new StudentRequirementFilterDto()
+        {
+            StudentID = stdID,
+            ReqId = reqID
+        });
+
+        if (result.Response.Success)
+        {
+            StdReq = result.Data.Items.FirstOrDefault() ?? new StudentRequirementRequestDto();
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Error);
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+    }
+
+
+    private async Task GetReqById(long reqID)
+    {
+        var resultReq = await CourseRequirementService.GetCourseRequirementById(reqID);
+
+
+        if (resultReq.Response.Success)
+        {
+            Req = resultReq.Data ?? new CourseRequirementRequestDto();
+
+        }
+        else
+        {
+            Snackbar.Add(resultReq.Response.Message, Severity.Error);
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+    }
+
+
     private MudForm? _form;
+
     private async Task Save()
+    {
+        if (CurrentStaffType == StaffType.University)
+        {
+            await SaveByUniversity();
+        }
+        else if (CurrentStaffType == StaffType.Ngo)
+        {
+            await SaveByNgo();
+        }
+    }
+
+
+    private async Task SaveByUniversity()
     {
         try
         {
@@ -210,6 +437,37 @@
 
             var result = await StudentRequirementService.UpdateStudentRequirementMapByUniversityAsync(StdReq);
 
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+    private async Task SaveByNgo()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if (!_form.IsValid)
+                return;
+
+            StdReq.TotalCost = TotalAdministrativeCost;
+            var result = await StudentRequirementService.UpdateStudentRequirementMapByNgoAsync(StdReq);
 
             // Always show backend message
             Snackbar.Add(
@@ -236,5 +494,48 @@
     {
         DialogReference.Cancel();
     }
+
+
+
+    double TotalCost =>
+    (Req.RegistrationCost ?? 0) +
+    (Req.TutionCost ?? 0) +
+    (Req.TextBookCost ?? 0) +
+    (Req.AccomoCost ?? 0) +
+    (Req.TravellingCost ?? 0) +
+    (Req.TransportCost ?? 0) +
+    (Req.DocuAttestCost ?? 0) +
+    (Req.VisaResiCost ?? 0);
+
+
+
+
+    double AdminCostAmount =>
+    (StdReq.UniAwardingStatusCost ?? 0) * TotalCost / 100;
+
+
+    double TotalAdministrativeCost =>
+        TotalCost + AdminCostAmount;
+
+    private bool showCost = false;
+
+
+
+
+    class DonorDto
+    {
+        public int Id { get; set; }
+		public string? Name { get; set; } = string.Empty;
+    }
+
+    List<DonorDto> DummyDonors = new()
+{
+    new() { Id = 1, Name = "UNICEF" },
+    new() { Id = 2, Name = "WHO" },
+    new() { Id = 3, Name = "Red Cross" },
+    new() { Id = 4, Name = "World Bank" }
+};
+
+    private int? SelectedDonorId;
 
 }

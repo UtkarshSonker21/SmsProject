@@ -1,4 +1,5 @@
-﻿using ScholarshipManagementAPI.DTOs.Common.Response;
+﻿using ScholarshipManagementAPI.DTOs.Common.Auth;
+using ScholarshipManagementAPI.DTOs.Common.Response;
 using ScholarshipManagementAPI.DTOs.School.StudentRequirements;
 
 namespace ScholarshipManagementAPI.Services.Interface.School
@@ -12,8 +13,8 @@ namespace ScholarshipManagementAPI.Services.Interface.School
         Task<long> CreateStudentRequirementMapAsync(StudentRequirementMappingDto dto);
         Task<bool> UpdateStudentRequirementMapAsync(StudentRequirementMappingDto dto);
 
-        Task<bool> UpdateStudentRequirementMapByUniversityAsync(StudentRequirementRequestDto dto);
-
+        Task<bool> UpdateStudentRequirementMapByUniversityAsync(StudentRequirementRequestDto dto, LoggedInUserDto currentUser);
+        Task<bool> UpdateStudentRequirementMapByNgoAsync(StudentRequirementRequestDto dto, LoggedInUserDto currentUser);
 
         Task<bool> DeleteAsync(long id);
 

@@ -1,4 +1,5 @@
 ﻿@page "/enrolled/students/{reqId:long}"
+@page "/enrolled/students"
 
 @attribute [Authorize]
 @layout MainLayout
@@ -137,13 +138,17 @@
 
                 <div style="display: flex; align-items: center;">
 
-                    <MudTooltip Text="Back" Placement="Placement.Bottom">
+                    @if (reqId != 0)
+                    {
+                        <MudTooltip Text="Back" Placement="Placement.Bottom">
 
-                        <div class="nav-icon" @onclick="GoBack">
-                            <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
-                        </div>
+                            <div class="nav-icon" @onclick="GoBack">
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
+                            </div>
 
-                    </MudTooltip>
+                        </MudTooltip>
+                    }
+                   
 
                     <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
                           font-size: 18px; font-style: normal; font-weight: 600;
@@ -630,15 +635,14 @@
 
                         <div class="d-flex flex-column align-items-start">
 
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.DocStatus))
-                            {
-                                <span class="text-muted">N/A</span>
-                            }
-                            else
-                            {
+                            <MudChip Size="Size.Small"
+                                     Variant="Variant.Outlined"
+                                     Color="@GetDocStatusColor(ctx.Item.DocStatus)"
+                                     Style="min-width:90px; justify-content:center;">
 
-                                <span class="text-muted">N/A</span>
-                            }
+                                @(string.IsNullOrWhiteSpace(ctx.Item.DocStatus) ? "N/A" : ctx.Item.DocStatus)
+
+                            </MudChip>
                         </div>
                     </CellTemplate>
 
@@ -654,15 +658,16 @@
 
                         <div class="d-flex flex-column align-items-start">
 
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.AwardingStatus))
-                            {
-                                <span class="text-muted">N/A</span>
-                            }
-                            else
-                            {
+                            <MudChip Size="Size.Small"
+                                     Variant="Variant.Outlined"
+                                     Color="@GetAwardingStatusColor(ctx.Item.AwardingStatus)"
+                                     Style="min-width:90px; justify-content:center;">
 
-                                <span class="text-muted">N/A</span>
-                            }
+                                @(string.IsNullOrWhiteSpace(ctx.Item.AwardingStatus)
+                                                                ? "N/A"
+                                                                : ctx.Item.AwardingStatus)
+
+                            </MudChip>
                         </div>
                     </CellTemplate>
 
@@ -680,12 +685,17 @@
                                  Size="Size.Small"
                                  Variant="Variant.Outlined"
                                  Style="min-width:120px; justify-content:center;"
-                                 Color="@GetSponsoredColor(ctx.Item.SponsoredStatus)"
-                                 Icon="@(ctx.Item.SponsoredStatus == "Sponsored"
-                                             ? Icons.Material.Filled.CheckCircle
-                                             : Icons.Material.Filled.Cancel)">
+                                 Color="@GetSponsoredColor(ctx.Item.SponsoredStatus)">
 
-                            @ctx.Item.SponsoredStatus
+                            <MudIcon Icon="@(ctx.Item.SponsoredStatus == "Sponsored"
+                                                             ? Icons.Material.Filled.CheckCircle
+                                                             : Icons.Material.Filled.Cancel)"
+                                     Style="font-size:15px; margin-right:4px;" />
+
+
+                            @(string.IsNullOrWhiteSpace(ctx.Item.SponsoredStatus)
+                                                        ? "N/A"
+                                                        : ctx.Item.SponsoredStatus)
 
                         </MudChip>
 
@@ -894,12 +904,22 @@
             _loading = true;                 // start loading
             await InvokeAsync(StateHasChanged); // refresh UI immediately if needed
 
-            var result = await CourseRequirementService.GetEnrolledStudents(reqId,filter);
+
+
+            var result = reqId == 0 ?
+                         await CourseRequirementService.GetAllEnrolledStudents(filter) :
+                         await CourseRequirementService.GetEnrolledStudentsByReqId(reqId, filter);
 
             if (result.Response.Success)
             {
                 // Data already deserialized in service
                 Items = result.Data.Items;
+
+                if (CurrentStaffType == StaffType.Ngo && reqId == 0)
+                {
+                    Items = Items.Where(x => x.AwardingStatus == "Awarded").ToList();
+                }
+
                 TotalRecords = result.Data.TotalCount;
             }
             else
@@ -1014,7 +1034,7 @@
     {
         var url = Routes.EnrolledStudentData
             .Replace("{stdId:long}", dto.StudentId.ToString())
-            .Replace("{reqId:long}", reqId.ToString());
+            .Replace("{reqId:long}", dto.ReqId.ToString());
 
         Navigation.NavigateTo(url);
     }
@@ -1046,11 +1066,12 @@
 
     private Color GetSponsoredColor(string? status)
     {
-        return status switch
+        return status?.Trim().ToLower() switch
         {
-            "Sponsored" => Color.Success,     // 🟢 Green
-            "Not Sponsored" => Color.Error,   // 🔴 Red
-            _ => Color.Default                // ⚪ Default
+            "sponsored" => Color.Success,     // Green
+            "rejected" => Color.Error,        // Red
+            "in process" => Color.Warning,    // yellow
+            _ => Color.Default                // Default
         };
     }
 
@@ -1078,6 +1099,29 @@
         Navigation.NavigateTo(Routes.Enrollments);
     }
 
+
+    private Color GetDocStatusColor(string? status)
+    {
+        return status?.Trim().ToLower() switch
+        {
+            "accepted" => Color.Success,     // Green
+            "rejected" => Color.Error,       // Red
+            "in process" => Color.Warning,   // Yellow
+            _ => Color.Default               // Grey (fallback)
+        };
+    }
+
+
+    private Color GetAwardingStatusColor(string? status)
+    {
+        return status?.Trim().ToLower() switch
+        {
+            "awarded" => Color.Success,       // Green
+            "rejected" => Color.Error,        // Red
+            "in process" => Color.Warning,    // Yellow
+            _ => Color.Default                // Grey
+        };
+    }
 
 
 }

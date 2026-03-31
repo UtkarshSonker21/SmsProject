@@ -436,17 +436,30 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
 
 
         // ---------------- GET ALL Enrolled Students ----------------
-        public async Task<PagedResultDto<EnrolledStudentDto>> GetEnrolledStudentsAsync(long reqId, StudentFilterDto filter)
+        public async Task<PagedResultDto<EnrolledStudentDto>> GetEnrolledStudentsAsync(long? reqId, StudentFilterDto filter, LoggedInUserDto currentUser)
         {
             var query = _context.StudentReqLists
                 .AsNoTracking()
-                .Where(x => x.ReqId == reqId)
                 .Include(x => x.Student)
                     .ThenInclude(s => s.School)
                 .AsQueryable();
 
-            // ---------- Filters ----------
-            if (filter.SchoolId.HasValue)
+
+            // Apply reqId filter ONLY if provided
+            if (reqId.HasValue)
+            {
+                query = query.Where(x => x.ReqId == reqId.Value);
+            }
+
+            // ---------- DATA SCOPE FILTER ----------
+            //if (currentUser.StaffType == StaffType.Ngo)
+            //{ 
+            //    query = query.Where(x => x.UniAwardingstatus == (int)AwardingStatus.Awarded);
+            //}
+
+
+                // ---------- Filters ----------
+                if (filter.SchoolId.HasValue)
             {
                 query = query.Where(x => x.Student.SchoolId == filter.SchoolId.Value);
             }
@@ -520,7 +533,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                     x.UniAwardingstatus == (int)AwardingStatus.Rejected ? "Rejected" :
                     x.UniAwardingstatus == (int)AwardingStatus.InProcess ? "In Process" : "",
 
-                    SponsoredStatus = x.DonorId != null ? "Sponsored" : "Not Sponsored",
+                    SponsoredStatus = x.DaAdmissionStatus == (int)SponsoredStatus.Sponsored ? "Sponsored" :
+                    x.DaAdmissionStatus == (int)SponsoredStatus.Rejected ? "Rejected" :
+                    x.DaAdmissionStatus == (int)SponsoredStatus.InProcess ? "In Process" : "",
 
                     CreatedBy = x.CreatedBy,
                     CreatedDate = x.CreatedDate

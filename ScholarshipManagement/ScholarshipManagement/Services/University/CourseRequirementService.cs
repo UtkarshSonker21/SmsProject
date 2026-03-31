@@ -80,10 +80,23 @@ namespace ScholarshipManagement.Services.University
         }
 
 
-        public async Task<(PagedResultDto<EnrolledStudentDto> Data, ApiResponseDto Response)> GetEnrolledStudents(long reqId, StudentFilterDto filter)
+        public async Task<(PagedResultDto<EnrolledStudentDto> Data, ApiResponseDto Response)> GetEnrolledStudentsByReqId(long reqId, StudentFilterDto filter)
         {
             var response = await _http.PostAsJsonAsync(
                 $"university/master-course-requirement/enrollments/students/search/{reqId}", filter);
+
+            var apiResponse = await HandleResponse(response);
+
+            var data = GetPagedResult<EnrolledStudentDto>(apiResponse);
+            apiResponse.Result = data;
+
+            return (data, apiResponse);
+        }
+
+        public async Task<(PagedResultDto<EnrolledStudentDto> Data, ApiResponseDto Response)> GetAllEnrolledStudents(StudentFilterDto filter)
+        {
+            var response = await _http.PostAsJsonAsync(
+                "university/master-course-requirement/enrollments/students/search-all", filter);
 
             var apiResponse = await HandleResponse(response);
 

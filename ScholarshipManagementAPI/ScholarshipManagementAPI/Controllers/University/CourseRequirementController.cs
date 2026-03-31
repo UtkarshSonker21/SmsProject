@@ -164,9 +164,27 @@ namespace ScholarshipManagementAPI.Controllers.University
         // -------- ENROLLED STUDENTS --------
         [HttpPost("enrollments/students/search/{reqId}")]
         [Authorize]
-        public async Task<IActionResult> GetEnrolledStudents(long reqId, StudentFilterDto filter)
+        public async Task<IActionResult> GetEnrolledStudentsByReqId(long reqId, StudentFilterDto filter)
         {
-            var result = await _service.GetEnrolledStudentsAsync(reqId, filter);
+            var result = await _service.GetEnrolledStudentsAsync(reqId, filter, await _currentUser.GetCurrentUserAsync());
+
+            return Ok(new ApiResponseDto
+            {
+                Success = true,
+                Result = result,
+                Message = result.Items.Count == 0
+                    ? "No students found"
+                    : "Students fetched successfully"
+            });
+        }
+
+
+        // -------- All ENROLLED STUDENTS --------
+        [HttpPost("enrollments/students/search-all")]
+        [Authorize]
+        public async Task<IActionResult> GetAllEnrolledStudents(StudentFilterDto filter)
+        {
+            var result = await _service.GetEnrolledStudentsAsync(null , filter, await _currentUser.GetCurrentUserAsync());
 
             return Ok(new ApiResponseDto
             {

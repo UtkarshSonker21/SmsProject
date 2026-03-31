@@ -27,9 +27,8 @@
 @inject StudentService StudentService
 @inject CurrentUserProfileService CurrentUserProfileService
 @inject CourseRequirementService CourseRequirementService
-@inject UniversityDocumentService UniversityDocumentService
+@inject StudentRequirementService StudentRequirementService
 @inject PermissionService PermissionService
-@inject ApprovalService ApprovalService
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
@@ -47,6 +46,11 @@
     .approval-action:hover {
         text-decoration: underline;
         opacity: 0.85;
+    }
+
+    .clickable-text:hover {
+        text-decoration: underline;
+        opacity: 0.8;
     }
 
 </style>
@@ -122,25 +126,34 @@
                         <MudText Typo="Typo.h6">
                             @model.StudentSalutation @model.StudentFirstName @model.StudentLastName
                         </MudText>
-                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
+                        <MudText Typo="Typo.subtitle2" Class="clickable-text"
+                                 Color="Color.Primary"
+                                 Style="cursor:pointer; color:1E88E5"
+                                 @onclick="() => GoToSchoolProfile(model.SchoolId)">
+
                             @model.SchoolName - @model.ShortName
+
                         </MudText>
                     </div>
 
                 </div>
 
                 <!-- RIGHT SIDE BUTTON -->
-                <div class="d-flex align-items-center gap-1 text-primary small mt-1 approval-action"
-                     style="cursor:pointer;"
-                     @onclick="@OpenStatusDialog">
+                @if (showUpdateStatus)
+                {
+                    <div class="d-flex align-items-center gap-1 text-primary small mt-1 approval-action"
+                         style="cursor:pointer;"
+                         @onclick="@OpenStatusDialog">
 
-                    <MudIcon Icon="@Icons.Material.Filled.Edit"
-                             Style="font-size:14px;" />
+                        <MudIcon Icon="@Icons.Material.Filled.Edit"
+                                 Style="font-size:14px;" />
 
-                    <span>
-                        Update status
-                    </span>
-                </div>
+                        <span>
+                            Update status
+                        </span>
+                    </div>
+                }
+
 
             </div>
 
@@ -148,8 +161,56 @@
 
             <MudDivider Class="mb-4" />
 
+
+
             <MudGrid Spacing="3">
 
+                @if (CurrentStaffType == StaffType.Ngo)
+                {
+                    <!-- ================= Requiremnet Details ================= -->
+                    <MudItem xs="12" Class="mb-2">
+                        <MudText Typo="Typo.h6" Style="font-size:15px; font-weight:600;">
+                            Requiremnet Details
+                        </MudText>
+                        <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                        <MudDivider />
+                    </MudItem>
+
+
+                    <MudItem xs="12" md="4">
+                        <span style="color:#334155; font-weight:500;">University Name:</span>
+                        <span style="color:#64748B;">
+                            @(string.IsNullOrWhiteSpace(Req.UniversityName) ? "N/A" : Req.UniversityName)
+                        </span>
+                    </MudItem>
+
+
+                    <MudItem xs="12" md="4">
+                        <span style="color:#334155; font-weight:500;">Course Name:</span>
+                        <span style="color:#64748B;">
+                            @(string.IsNullOrWhiteSpace(Req.CourseName) ? "N/A" : Req.CourseName)
+                        </span>
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <span style="color:#334155; font-weight:500;">Duration:</span>
+                        <span style="color:#64748B;">
+                            @(
+                                                    Req.ReqStartDate.HasValue && Req.ReqEndDate.HasValue
+                                                    ? $"{Req.ReqStartDate.Value:dd MMM yyyy} - {Req.ReqEndDate.Value:dd MMM yyyy}"
+                                                    : Req.ReqStartDate.HasValue
+                                                    ? $"From {Req.ReqStartDate.Value:dd MMM yyyy}"
+                                                    : Req.ReqEndDate.HasValue
+                                                    ? $"Until {Req.ReqEndDate.Value:dd MMM yyyy}"
+                                                    : "N/A"
+                                                    )
+                        </span>
+                    </MudItem>
+
+                    <MudDivider Class="mb-4" />
+                }
+
+             
                 <!-- ================= BASIC ================= -->
                 <MudItem xs="12" Class="mb-2">
                     <MudText Typo="Typo.h6"
@@ -438,6 +499,27 @@
                     </span>
                 </MudItem>
 
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Self Determination:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SelfDettoSuccess) ? "N/A" : model.SelfDettoSuccess)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Motivation Level:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.MotLevelToOverComedStudying) ? "N/A" : model.MotLevelToOverComedStudying)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Future Goals:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.ClearTargetsFutureGoals) ? "N/A" : model.ClearTargetsFutureGoals)
+                    </span>
+                </MudItem>
+
                 <MudDivider Class="mb-4" />
 
             </MudGrid>
@@ -471,6 +553,11 @@
     public long reqId { get; set; }
 
 
+    private CourseRequirementRequestDto Req { get; set; } = new();
+    public StudentRequirementRequestDto StdReq { get; set; } = new();
+
+
+
     protected override async Task OnInitializedAsync()
     {
         if (!canView)
@@ -483,15 +570,25 @@
 
         if (stdId > 0)
         {
-            await GetStudentsById(stdId);
+            await GetStudentById(stdId);
         }
 
-        //await GetDocuments();
+        if (reqId > 0)
+        {
+            await GetReqById(reqId);
+        }
+
+        if (stdId > 0 && reqId > 0)
+        {
+            await GetStdReqById(reqId,stdId);
+        }
+
+
     }
 
 
 
-    private async Task GetStudentsById(long stdID)
+    private async Task GetStudentById(long stdID)
     {
         var result = await StudentService.GetStudentById(stdID);
         if (result.Response.Success)
@@ -504,7 +601,58 @@
         }
 
         await InvokeAsync(StateHasChanged);
-	}
+    }
+
+
+    private async Task GetReqById(long reqID)
+    {
+        var resultReq = await CourseRequirementService.GetCourseRequirementById(reqID);
+
+
+        if (resultReq.Response.Success)
+        {
+            Req = resultReq.Data ?? new CourseRequirementRequestDto();
+
+        }
+        else
+        {
+            Snackbar.Add(resultReq.Response.Message, Severity.Error);
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+    }
+
+    private bool showUpdateStatus = false;
+    private async Task GetStdReqById(long reqID, long stdID)
+    {
+        var result = await StudentRequirementService.GetStudentRequirements(new StudentRequirementFilterDto()
+        {
+            StudentID = stdID,
+            ReqId = reqID
+        });
+
+        if (result.Response.Success)
+        {
+            StdReq = result.Data.Items.FirstOrDefault() ?? new StudentRequirementRequestDto();
+
+            if (StdReq.UniAwardingStatus != (int)AwardingStatus.Awarded)
+            {
+                showUpdateStatus = false;
+            }
+            else
+            {
+                showUpdateStatus = true;
+            }
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Error);
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+    }
 
 
     private async Task OpenStatusDialog()
@@ -536,7 +684,7 @@
         // Reload only if Save was successful
         if (result is not null && !result.Canceled)
         {
-            await GetStudentsById(stdId);
+            await GetStudentById(stdId);
         }
     }
 
@@ -547,6 +695,11 @@
         await JS.InvokeVoidAsync("history.back");
     }
 
+
+    private void GoToSchoolProfile(long id)
+    {
+        Navigation.NavigateTo($"/school/profile/{id}");
+    }
 
 
 }

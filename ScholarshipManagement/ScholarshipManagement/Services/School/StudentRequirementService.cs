@@ -69,6 +69,14 @@ namespace ScholarshipManagement.Services.School
             return await HandleResponse(response);
         }
 
+        public async Task<ApiResponseDto> UpdateStudentRequirementMapByNgoAsync(StudentRequirementRequestDto dto)
+        {
+            var response = await _http.PutAsJsonAsync(
+                $"school/student-req/update-by-ngo/{dto.StudentReqID}", dto);
+
+            return await HandleResponse(response);
+        }
+
 
         public async Task<ApiResponseDto> DeleteStudentRequirement(long id)
         {
