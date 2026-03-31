@@ -102,14 +102,23 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             if (exists)
                 throw new CustomException("Student already applied in this university.");
 
-            // studentId is not updatable, 
             // entity.StudentId = dto.StudentID;
             // entity.ReqId = dto.ReqId;
 
-            entity.UniAdmissionStatus = dto.UniAdmissionStatus;
+            entity.DocumentStatus = dto.DocumentStatus;
+
+            // accepted 
             entity.SemesterStartDate = dto.SemesterStartDate;
             entity.LetterAccepCode = dto.LetterAccepCode;
             entity.UniAwardingstatus = dto.UniAwardingStatus;
+            // entity.UniAwardingstatusCost = dto.UniAwardingStatusCost;
+
+            // rejected
+            entity.ReasonRejection = dto.ReasonRejection;
+            entity.MissedDocuments = dto.MissedDocuments;
+
+            // pending
+            entity.ReasonInProgress = dto.ReasonInProgress;
 
             await _context.SaveChangesAsync();
 
@@ -153,7 +162,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     StudentReqID = x.StudentReqId,
                     StudentID = x.StudentId,
                     ReqId = x.ReqId,
-                    UniAdmissionStatus = x.UniAdmissionStatus,
+                    DocumentStatus = x.DocumentStatus,
                     ReasonRejection = x.ReasonRejection,
                     MissedDocuments = x.MissedDocuments,
                     SemesterStartDate = x.SemesterStartDate,
@@ -213,9 +222,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             }
 
             // University Admission Status
-            if (filter.UniAdmissionStatus.HasValue)
+            if (filter.DocumentStatus.HasValue)
             {
-                query = query.Where(x => x.UniAdmissionStatus == filter.UniAdmissionStatus.Value);
+                query = query.Where(x => x.DocumentStatus == filter.DocumentStatus.Value);
             }
 
             // DA Admission Status
@@ -317,7 +326,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     StudentReqID = x.StudentReqId,
                     StudentID = x.StudentId,
                     ReqId = x.ReqId,
-                    UniAdmissionStatus = x.UniAdmissionStatus,
+                    DocumentStatus = x.DocumentStatus,
                     ReasonRejection = x.ReasonRejection,
                     MissedDocuments = x.MissedDocuments,
                     SemesterStartDate = x.SemesterStartDate,

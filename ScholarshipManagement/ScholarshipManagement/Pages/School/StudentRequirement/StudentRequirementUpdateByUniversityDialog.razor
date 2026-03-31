@@ -5,10 +5,12 @@
 @using ScholarshipManagement.DTOs.School.StudentRequirements
 @using ScholarshipManagement.DTOs.SuperAdmin.Labels
 @using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
+@using ScholarshipManagement.DTOs.University.CourseRequirement
 @using ScholarshipManagement.Services.Common
 @using ScholarshipManagement.Services.School
 @using ScholarshipManagement.Services.SuperAdmin
 @using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Services.University
 @inject IJSRuntime JS
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -26,58 +28,105 @@
 
                 <MudGrid Spacing="3">
 
-                    <MudItem xs="12" md="6">
+                    <MudItem xs="12">
                         <MudSelect T="int?"
-                                   @bind-Value="StdReq.UniAdmissionStatus"
+                                   @bind-Value="StdReq.DocumentStatus"
                                    Label="Document Status"
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
                                    Required="true"
                                    RequiredError="Please select document status">
 
-                            <MudSelectItem Value="@((int?)ApprovalStatus.Pending)">Pending</MudSelectItem>
-                            <MudSelectItem Value="@((int?)ApprovalStatus.Approved)">Approved</MudSelectItem>
-                            <MudSelectItem Value="@((int?)ApprovalStatus.Rejected)">Rejected</MudSelectItem>
+                            <MudSelectItem Value="@((int?)DocumentStatus.Accepted)">Accepted</MudSelectItem>
+                            <MudSelectItem Value="@((int?)DocumentStatus.Rejected)">Rejected</MudSelectItem>
+                            <MudSelectItem Value="@((int?)DocumentStatus.InProcess)">In Process</MudSelectItem>
 
                         </MudSelect>
                     </MudItem>
 
-                    <MudItem xs="12" md="6">
-                        <MudDatePicker @bind-Date="StdReq.SemesterStartDate"
-                                       Label="Semester Start Date"
+
+                    <!-- ✅ Show only when accepted -->
+                    @if (StdReq.DocumentStatus != (int)DocumentStatus.Rejected && StdReq.DocumentStatus != (int)DocumentStatus.InProcess)
+                    {
+                        <MudItem xs="12">
+                            <MudTextField T="string"
+                                          Label="Letter of Acceptance Code"
+                                          @bind-Value="StdReq.LetterAccepCode"
+                                          Required="true"
+                                          RequiredError="Letter of Acceptance Code is required"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </MudItem>
+                    }
+
+
+
+
+                    <!-- ✅ Show only when accepted -->
+                    @if (StdReq.DocumentStatus == (int)DocumentStatus.Accepted)
+                    {
+                        <MudItem xs="12">
+                            <MudDatePicker @bind-Date="StdReq.SemesterStartDate"
+                                           Label="Semester Start Date"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense" IconSize="Size.Small"
+                                           DateFormat="dd/MM/yyyy" />
+                        </MudItem>
+
+
+                        <MudItem xs="12">
+                            <MudSelect T="int?"
+                                       @bind-Value="StdReq.UniAwardingStatus"
+                                       Label="Awarding Status"
                                        Variant="Variant.Outlined"
-                                       Margin="Margin.Dense"
-                                       DateFormat="dd/MM/yyyy"
-                                       Required="true"
-                                       RequiredError="Semester start date is required"
-                                       MinDate="@DateTime.Today" />
-                    </MudItem>
+                                       Margin="Margin.Dense">
 
-                    <MudItem xs="12" md="6">
-                        <MudTextField T="string"
-                                      Label="Letter of Acceptance Code"
-                                      @bind-Value="StdReq.LetterAccepCode"
-                                      Required="true"
-                                      RequiredError="Letter of Acceptance Code is required"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense" />
-                    </MudItem>
+                                <MudSelectItem Value="@((int?)AwardingStatus.Awarded)">Awarded</MudSelectItem>
+                                <MudSelectItem Value="@((int?)AwardingStatus.Rejected)">Rejected</MudSelectItem>
+                                <MudSelectItem Value="@((int?)AwardingStatus.InProcess)">In Process</MudSelectItem>
 
-                    <MudItem xs="12" md="6">
-                        <MudSelect T="int?"
-                                   @bind-Value="StdReq.UniAwardingStatus"
-                                   Label="Awarding Status"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Required="true"
-                                   RequiredError="Please select awarding status">
+                            </MudSelect>
+                        </MudItem>
+                    }
 
-                            <MudSelectItem Value="@((int?)AwardingStatus.Pending)">Pending</MudSelectItem>
-                            <MudSelectItem Value="@((int?)AwardingStatus.Awarded)">Awarded</MudSelectItem>
-                            <MudSelectItem Value="@((int?)AwardingStatus.Rejected)">Rejected</MudSelectItem>
+                    <!-- ✅ Show only when Rejected -->
+                    @if (StdReq.DocumentStatus == (int)DocumentStatus.Rejected)
+                    {
+                        <MudItem xs="12">
+                            <MudTextField T="string"
+                                          Label="Reason for Rejection"
+                                          @bind-Value="StdReq.ReasonRejection"
+                                          Required="true"
+                                          RequiredError="Reason for rejection is required"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </MudItem>
 
-                        </MudSelect>
-                    </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="string"
+                                          Label="Missed Documents"
+                                          @bind-Value="StdReq.MissedDocuments"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </MudItem>
+                    }
+
+
+
+                    <!-- ✅ Show only when In Process -->
+                    @if (StdReq.DocumentStatus == (int)DocumentStatus.InProcess)
+                    {
+                        <MudItem xs="12">
+                            <MudTextField T="string"
+                                          Label="Reason for In Process"
+                                          @bind-Value="StdReq.ReasonInProgress"
+                                          Required="true"
+                                          RequiredError="Reason for in process is required"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense" />
+                        </MudItem>
+                    }
+
 
 
 
@@ -110,10 +159,35 @@
     public StudentRequirementRequestDto StdReq { get; set; } = new();
 
 
+    // entity.UniAdmissionStatus = dto.UniAdmissionStatus;
+
+    //         accepted
+    //         entity.SemesterStartDate = dto.SemesterStartDate;
+    //         entity.LetterAccepCode = dto.LetterAccepCode;
+    //         entity.UniAwardingstatus = dto.UniAwardingStatus;
+    //         entity.UniAwardingstatusCost = dto.UniAwardingStatusCost;
+
+    //         rejected
+    //         entity.ReasonRejection = dto.ReasonRejection;
+    //         entity.MissedDocuments = dto.MissedDocuments;
+
+    //         pending
+    //         entity.ReasonInProgress = dto.ReasonInProgress;
+
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            var result = await StudentRequirementService.GetStudentRequirements(new StudentRequirementFilterDto()
+            {
+				StudentID = StdReq.StudentID,
+				ReqId = StdReq.ReqId
+            });
+
+
+			StdReq = result.Data.Items.FirstOrDefault() ?? new StudentRequirementRequestDto();
+
             await InvokeAsync(StateHasChanged);
         }
         finally

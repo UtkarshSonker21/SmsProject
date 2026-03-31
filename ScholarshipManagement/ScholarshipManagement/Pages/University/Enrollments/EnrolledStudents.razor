@@ -1004,9 +1004,19 @@
     }
 
 
+    // void OpenStudentDetails(EnrolledStudentDto dto)
+    // {
+    //     Navigation.NavigateTo(Routes.EnrolledStudentData.Replace("{stdId:long}", dto.StudentId.ToString()));
+    // }
+
+
     void OpenStudentDetails(EnrolledStudentDto dto)
     {
-        Navigation.NavigateTo(Routes.EnrolledStudentData.Replace("{stdId:long}", dto.StudentId.ToString()));
+        var url = Routes.EnrolledStudentData
+            .Replace("{stdId:long}", dto.StudentId.ToString())
+            .Replace("{reqId:long}", reqId.ToString());
+
+        Navigation.NavigateTo(url);
     }
 
 

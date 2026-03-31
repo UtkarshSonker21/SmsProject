@@ -481,7 +481,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                 .Select(x => new EnrolledStudentDto
                 {
                     StudentId = x.StudentId,
-
+                    ReqId = x.ReqId,
                     StudentFullName = x.Student.StudentFirstName + " " + (x.Student.StudentLastName ?? ""),
                     StudentNumber = x.Student.StudentNumber,
                     StudentPhoto = x.Student.Photo,
@@ -512,10 +512,13 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                     SchoolWebsite = x.Student.School != null ? x.Student.School.SchoolWebsite : null,
 
                     // Status mapping
-                    DocStatus = x.UniAdmissionStatus == 1 ? "Accepted" :
-                                x.UniAdmissionStatus == 2 ? "Rejected" : "Pending",
+                    DocStatus = x.DocumentStatus == (int)DocumentStatus.Accepted ? "Accepted" :
+                    x.DocumentStatus == (int)DocumentStatus.Rejected ? "Rejected" :
+                    x.DocumentStatus == (int)DocumentStatus.InProcess ? "In Process" : "",
 
-                    AwardingStatus = x.UniAwardingstatus == 1 ? "Awarded" : "Pending",
+                    AwardingStatus = x.UniAwardingstatus == (int)AwardingStatus.Awarded ? "Awarded" :
+                    x.UniAwardingstatus == (int)AwardingStatus.Rejected ? "Rejected" :
+                    x.UniAwardingstatus == (int)AwardingStatus.InProcess ? "In Process" : "",
 
                     SponsoredStatus = x.DonorId != null ? "Sponsored" : "Not Sponsored",
 

@@ -1,4 +1,6 @@
-﻿@page "/enrolled/student/data/{stdId:long}"
+﻿@* @page "/enrolled/student/data/{stdId:long}" *@
+
+@page "/enrolled/student/data/{stdId:long}/{reqId:long}"
 
 @attribute [Authorize]
 @layout MainLayout
@@ -465,6 +467,9 @@
     [Parameter]
     public long stdId { get; set; }
 
+    [Parameter]
+    public long reqId { get; set; }
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -510,7 +515,9 @@
                 "StdReq",
                 new StudentRequirementRequestDto
                 {
-                    //StudentReqID = model.StudentReqID,
+                    // StudentReqID = model.StudentReqID,
+                    StudentID = stdId,
+                    ReqId = reqId,
                 }
             } //label model for edit
         };
@@ -518,7 +525,7 @@
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Medium,
+            MaxWidth = MaxWidth.Small,
             FullWidth = true
         };
 

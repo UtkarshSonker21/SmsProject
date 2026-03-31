@@ -72,7 +72,7 @@ namespace ScholarshipManagementAPI.Controllers.Common
 
 
 
-        [HttpPost("media/users/{userId}/profile")]
+        [HttpPost("media/users/profile/{userId}")]
         public async Task<IActionResult> UploadProfileImage(int userId, IFormFile file)
         {
             var fileKey = await _service.UploadUserProfileImageAsync(userId, file);
@@ -86,7 +86,7 @@ namespace ScholarshipManagementAPI.Controllers.Common
         }
 
 
-        [HttpPost("media/users/{userId}/documents")]
+        [HttpPost("media/users/documents/{userId}")]
         public async Task<IActionResult> UploadUserDocument(int userId, IFormFile file)
         {
             var fileKey = await _service

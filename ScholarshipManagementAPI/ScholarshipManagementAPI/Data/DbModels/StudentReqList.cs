@@ -11,7 +11,7 @@ public partial class StudentReqList
 
     public long ReqId { get; set; }
 
-    public int? UniAdmissionStatus { get; set; }
+    public int? DocumentStatus { get; set; }
 
     public string? ReasonRejection { get; set; }
 

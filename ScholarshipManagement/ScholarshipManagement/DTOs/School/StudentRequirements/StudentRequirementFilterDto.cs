@@ -9,7 +9,7 @@ namespace ScholarshipManagement.DTOs.School.StudentRequirements
         public long? ReqId { get; set; }
 
 
-        public int? UniAdmissionStatus { get; set; }
+        public int? DocumentStatus { get; set; }
         public int? DaAdmissionStatus { get; set; }
         public int? UniAwardingStatus { get; set; }
 

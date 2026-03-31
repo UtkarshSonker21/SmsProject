@@ -2,8 +2,8 @@
 {
     public enum AwardingStatus
     {
-        Pending = 0,
-        Awarded = 1,
-        Rejected = 2
+        Awarded = 0,
+        Rejected = 1,
+        InProcess = 2
     }
 }

@@ -113,7 +113,7 @@
             public const string StudentRequiremntList = "/student-req-list";
             public const string Enrollments = "/enrollments";
             public const string EnrolledStudents = "/enrolled/students/{reqId}";
-            public const string EnrolledStudentData = "/enrolled/student/data/{stdId:long}";
+            public const string EnrolledStudentData = "/enrolled/student/data/{stdId:long}/{reqId:long}";
 
         }
 

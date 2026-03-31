@@ -102,5 +102,14 @@ namespace ScholarshipManagementAPI.Helper.Utilities
 
 
 
+
+
+
+        public static class CacheKeys
+        {
+            public const string GeneralConfig = "GENERAL_CONFIG";
+        }
+
+
     }
 }
