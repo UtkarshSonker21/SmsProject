@@ -11,5 +11,13 @@ namespace ScholarshipManagementAPI.Services.Interface.SuperAdmin
 
         Task<GeneralSettingRequestDto?> GetByIdAsync(long id);
         Task<PagedResultDto<GeneralSettingRequestDto>> GetByFilterAsync(GeneralSettingFilterDto filter);
+
+
+
+
+        // ADD THESE (Important)
+        Task<GeneralConfigDto> GetGeneralConfigAsync();
+
+
     }
 }

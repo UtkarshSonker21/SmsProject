@@ -1,8 +1,8 @@
 ﻿namespace ScholarshipManagement.Helper.Enums
 {
-    public enum AwardingStatus
+    public enum DocumentStatus
     {
-        Awarded = 0,
+        Accepted = 0,
         Rejected = 1,
         InProcess = 2
     }

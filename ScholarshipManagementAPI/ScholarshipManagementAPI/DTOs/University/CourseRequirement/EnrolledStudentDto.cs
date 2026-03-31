@@ -5,6 +5,7 @@ namespace ScholarshipManagementAPI.DTOs.University.CourseRequirement
     public class EnrolledStudentDto
     {
         public long StudentId { get; set; }
+        public long ReqId { get; set; }
 
         public string? StudentFullName { get; set; }
         public string? StudentNumber { get; set; }

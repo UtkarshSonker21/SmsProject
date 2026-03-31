@@ -195,6 +195,14 @@
         border-bottom: 2px solid #e5e7eb; /* light gray divider */
     }
 
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
 
 </style>
 
@@ -665,16 +673,18 @@
                 <MudDivider />
             </MudItem>
 
+     
+
             <MudTable Items="Items" Dense="true" Hover="true" Bordered="true" Striped="true" Elevation="2" Height="550px">
 
                 <HeaderContent>
-                    <MudTh Class="fw-bold" Style="width:250px; min-width:200px; max-width:300px;">User</MudTh>
-                    <MudTh Class="fw-bold" >IP</MudTh>
-                    <MudTh Class="fw-bold" Style="width:200px; min-width:200px; max-width:200px;">Browser</MudTh>
-                    <MudTh Class="fw-bold" Style="width:200px; min-width:200px; max-width:200px;">OS</MudTh>
-                    <MudTh Class="fw-bold" Style="width:200px; min-width:200px; max-width:200px;">Device</MudTh>
-                    <MudTh Class="fw-bold" Style="width:280px; min-width:230px; max-width:300px;">Login</MudTh>
-                    <MudTh Class="fw-bold" Style="width:280px; min-width:230px; max-width:300px;">Status</MudTh>
+                        <MudTh Class="fw-bold sticky-header" Style="width:250px; min-width:200px; max-width:300px;">User</MudTh>
+                        <MudTh Class="fw-bold sticky-header">IP</MudTh>
+                        <MudTh Class="fw-bold sticky-header sticky-header" Style="width:200px; min-width:200px; max-width:200px;">Browser</MudTh>
+                        <MudTh Class="fw-bold sticky-header" Style="width:200px; min-width:200px; max-width:200px;">OS</MudTh>
+                        <MudTh Class="fw-bold sticky-header" Style="width:200px; min-width:200px; max-width:200px;">Device</MudTh>
+                        <MudTh Class="fw-bold sticky-header" Style="width:280px; min-width:230px; max-width:300px;">Login</MudTh>
+                        <MudTh Class="fw-bold sticky-header" Style="width:280px; min-width:230px; max-width:300px;">Status</MudTh>
                 </HeaderContent>
 
                 <RowTemplate>
@@ -766,6 +776,8 @@
                 </RowTemplate>
 
             </MudTable>
+      
+            
         </MudPaper>
     }
 

@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Amazon.Runtime.Internal.Util;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ScholarshipManagementAPI.Data.Contexts;
 using ScholarshipManagementAPI.Data.DbModels;
 using ScholarshipManagementAPI.DTOs.Common.Response;
@@ -6,16 +8,19 @@ using ScholarshipManagementAPI.DTOs.SuperAdmin.GeneralSettings;
 using ScholarshipManagementAPI.Helper;
 using ScholarshipManagementAPI.Helper.Utilities;
 using ScholarshipManagementAPI.Services.Interface.SuperAdmin;
+using static ScholarshipManagementAPI.Helper.Utilities.Constant;
 
 namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
 {
     public class GeneralSettingsService : IGeneralSettingsService
     {
         private readonly AppDbContext _context;
+        private readonly IMemoryCache _cache;
 
-        public GeneralSettingsService(AppDbContext context)
+        public GeneralSettingsService(AppDbContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
 
@@ -69,6 +74,11 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
             // CreatedDate NOT updated on purpose
 
             await _context.SaveChangesAsync();
+
+
+            // Invalidate cache for general config when any setting is updated
+            _cache.Remove(CacheKeys.GeneralConfig);
+
             return true;
         }
 
@@ -84,6 +94,10 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
 
             _context.ZzGeneralSettings.Remove(entity);
             await _context.SaveChangesAsync();
+
+
+            // Invalidate cache for general config when any setting is updated
+            _cache.Remove(CacheKeys.GeneralConfig);
 
             return true;
         }
@@ -174,6 +188,33 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
             };
         }
 
+
+
+        public async Task<GeneralConfigDto> GetGeneralConfigAsync()
+        {
+            var result = await _cache.GetOrCreateAsync(CacheKeys.GeneralConfig, async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+
+                var configs = await _context.ZzGeneralSettings
+                    .AsNoTracking()
+                    .ToDictionaryAsync(x => x.ConfigKey, x => x.ConfigValue);
+
+                return new GeneralConfigDto
+                {
+                    FullNameFormat = configs.GetValueOrDefault("FullNameFormat") ?? "FirstName LastName",
+                    DateFormat = configs.GetValueOrDefault("DateFormat") ?? "dd-MM-yyyy",
+                    TimeFormat = configs.GetValueOrDefault("TimeFormat") ?? "HH:mm"
+                };
+            });
+
+            return result ?? new GeneralConfigDto
+            {
+                FullNameFormat = "FirstName LastName",
+                DateFormat = "dd-MM-yyyy",
+                TimeFormat = "HH:mm"
+            };
+        }
 
 
     }

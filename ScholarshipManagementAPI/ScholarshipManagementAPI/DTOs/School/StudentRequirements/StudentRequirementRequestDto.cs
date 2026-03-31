@@ -19,8 +19,8 @@ namespace ScholarshipManagementAPI.DTOs.School.StudentRequirements
         /// it will be used to track the status of the application
         /// </summary>
 
-        [Range(0, 10, ErrorMessage = "Invalid University Admission Status")]
-        public int? UniAdmissionStatus { get; set; }
+        [Range(0, 10, ErrorMessage = "Invalid Document Status")]
+        public int? DocumentStatus { get; set; }
 
         [StringLength(500, ErrorMessage = "Max 500 characters allowed")]
         public string? ReasonRejection { get; set; }

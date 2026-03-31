@@ -14,10 +14,12 @@ namespace ScholarshipManagementAPI.Controllers.School
     public class StudentRequiremntController : ControllerBase
     {
         private readonly IStudentRequirementService _service;
+        private readonly CurrentUserContextService _currentUser;
 
-        public StudentRequiremntController(IStudentRequirementService service)
+        public StudentRequiremntController(IStudentRequirementService service, CurrentUserContextService currentUser)
         {
             _service = service;
+            _currentUser = currentUser;
         }
 
 
@@ -72,7 +74,34 @@ namespace ScholarshipManagementAPI.Controllers.School
         public async Task<IActionResult> UpdateStudentRequirementMapByUniversityAsync(long id, [FromBody] StudentRequirementRequestDto dto)
         {
             dto.StudentReqID = id;
-            var updated = await _service.UpdateStudentRequirementMapByUniversityAsync(dto);
+            var updated = await _service.UpdateStudentRequirementMapByUniversityAsync(dto, await _currentUser.GetCurrentUserAsync());
+
+            if (!updated)
+            {
+                return NotFound(new ApiResponseDto
+                {
+                    Success = false,
+                    Message = "Record not found",
+                    Result = null,
+                });
+            }
+
+            return Ok(new ApiResponseDto
+            {
+                Success = true,
+                Message = "Student status updated successfully",
+                Result = updated,
+            });
+        }
+
+
+        // -------- UPDATE --------
+        [HttpPut("update-by-ngo/{id:long}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateStudentRequirementMapByNgoAsync(long id, [FromBody] StudentRequirementRequestDto dto)
+        {
+            dto.StudentReqID = id;
+            var updated = await _service.UpdateStudentRequirementMapByNgoAsync(dto, await _currentUser.GetCurrentUserAsync());
 
             if (!updated)
             {

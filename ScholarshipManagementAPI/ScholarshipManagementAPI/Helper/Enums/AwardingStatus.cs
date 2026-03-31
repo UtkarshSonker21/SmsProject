@@ -1,4 +1,4 @@
-﻿namespace ScholarshipManagement.Helper.Enums
+﻿namespace ScholarshipManagementAPI.Helper.Enums
 {
     public enum AwardingStatus
     {

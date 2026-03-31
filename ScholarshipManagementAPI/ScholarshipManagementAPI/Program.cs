@@ -146,6 +146,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 
+// Caching : In-memory caching for frequently accessed data
+// (e.g., dropdown lists, country/currency lists)
+builder.Services.AddMemoryCache();
+
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IJwtService, JwtService>();
 

@@ -1,0 +1,381 @@
+﻿@page "/school/profile/{Id:long}"
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs.School.MasterSchool
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.School
+@using ScholarshipManagement.Services.SuperAdmin
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject MasterSchoolService MasterSchoolService
+@inject MasterCountryService MasterCountryService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<style>
+
+    .border-bottom-only {
+        box-shadow: none !important; /* remove elevation shadow */
+        border-radius: 0; /* optional: flat look */
+        border-bottom: 2px solid #e5e7eb; /* light gray divider */
+    }
+
+    .approval-action:hover {
+        text-decoration: underline;
+        opacity: 0.85;
+    }
+
+</style>
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+
+                    <MudTooltip Text="Back" Placement="Placement.Bottom">
+
+                        <div class="nav-icon" @onclick="GoBack">
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
+                        </div>
+
+                    </MudTooltip>
+
+                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
+                          font-size: 18px; font-style: normal; font-weight: 600;
+                          line-height: 24px; text-transform: uppercase;">
+                        School Profile
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+                    @* Total Records : <span id="totalRecords">@TotalRecords</span> *@
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-4">
+
+        <MudPaper Class="pa-6" Elevation="2">
+
+            <!-- ================= HEADER ================= -->
+            <div class="d-flex align-center justify-space-between mb-4">
+
+                <!-- LEFT -->
+                <div class="d-flex align-center">
+
+                    @* <MudAvatar Size="Size.Small"
+                               Style="width:48px;height:48px; margin-right:15px;">
+
+                        <img src="/images/school.png"
+                             style="width:100%;height:100%;object-fit:cover;" />
+
+                    </MudAvatar> *@
+
+                    <MudAvatar Size="Size.Small"
+                               Style="width:48px;height:48px; margin-right:15px; background-color:#E3F2FD;">
+
+                        <MudIcon Icon="@Icons.Material.Filled.School"
+                                 Style="font-size:28px; color:#1E88E5;" />
+
+                    </MudAvatar>
+
+                    <div>
+                        <MudText Typo="Typo.h6">
+                            @model.SchoolName
+                        </MudText>
+                        <MudText Typo="Typo.subtitle2" Color="Color.Primary">
+                            @model.ShortName - @model.CountryName
+                        </MudText>
+                    </div>
+
+                </div>
+
+                <!-- ACTION -->
+                <div class="d-flex align-items-center gap-1 text-primary small mt-1 approval-action"
+                     style="cursor:pointer;">
+                    @* <MudIcon Icon="@Icons.Material.Filled.Edit" Style="font-size:14px;" />
+                    <span>Update status</span> *@
+                </div>
+
+            </div>
+
+            <MudDivider Class="mb-4" />
+
+            <MudGrid Spacing="3">
+
+
+
+                <!-- ================= BASIC ================= -->
+                <MudItem xs="12" Class="mb-2">
+                    <MudText Typo="Typo.h6" Style="font-size:15px; font-weight:600;">
+                        Basic Information
+                    </MudText>
+                    <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                    <MudDivider />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">School Name:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolName) ? "N/A" : model.SchoolName)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Short Name:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.ShortName) ? "N/A" : model.ShortName)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Country:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.CountryName) ? "N/A" : model.CountryName)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">School Type:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolType) ? "N/A" : model.SchoolType)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Year Established:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolYearOfEstablish) ? "N/A" : model.SchoolYearOfEstablish)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Status:</span>
+                    <span style="color:#64748B;">
+                        @(model.SchoolStatus.HasValue? model.SchoolStatus.ToString() : "N/A")
+                    </span>
+                </MudItem>
+
+                <MudDivider Class="mb-4" />
+
+                <!-- ================= CONTACT ================= -->
+                <MudItem xs="12" Class="mb-2">
+                    <MudText Typo="Typo.h6" Style="font-size:15px; font-weight:600;">
+                        Contact Details
+                    </MudText>
+                    <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                    <MudDivider />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Phone:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolPhoneNo) ? "N/A" : model.SchoolPhoneNo)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Email:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.EmailId) ? "N/A" : model.EmailId)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Website:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolWebsite) ? "N/A" : model.SchoolWebsite)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Area:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.Area) ? "N/A" : model.Area)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Center Name:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.CenterName) ? "N/A" : model.CenterName)
+                    </span>
+                </MudItem>
+
+                <MudDivider Class="mb-4" />
+
+                <!-- ================= ACADEMIC ================= -->
+                <MudItem xs="12" Class="mb-2">
+                    <MudText Typo="Typo.h6" Style="font-size:15px; font-weight:600;">
+                        Academic Details
+                    </MudText>
+                    <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                    <MudDivider />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Teaching Language:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolTeachingLanguage) ? "N/A" : model.SchoolTeachingLanguage)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Curriculum:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolSubjectCurriculum) ? "N/A" : model.SchoolSubjectCurriculum)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Accreditations:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolAccreditations) ? "N/A" : model.SchoolAccreditations)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Student Success Avg:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.StudentSuccessAverage) ? "N/A" : model.StudentSuccessAverage)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Avg Students/Class:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.AverageNumberOfStudentPerClass) ? "N/A" : model.AverageNumberOfStudentPerClass)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Total High School:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.TotalNumberOfHighSchoolLevel) ? "N/A" : model.TotalNumberOfHighSchoolLevel)
+                    </span>
+                </MudItem>
+
+                <MudDivider Class="mb-4" />
+
+                <!-- ================= COORDINATOR ================= -->
+                <MudItem xs="12" Class="mb-2">
+                    <MudText Typo="Typo.h6" Style="font-size:15px; font-weight:600;">
+                        Coordinator Details
+                    </MudText>
+                    <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                    <MudDivider />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Name:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolCoordinatorName) ? "N/A" : model.SchoolCoordinatorName)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Mobile:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolCoordinatorMobile) ? "N/A" : model.SchoolCoordinatorMobile)
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Email:</span>
+                    <span style="color:#64748B;">
+                        @(string.IsNullOrWhiteSpace(model.SchoolCoordinatorEmail) ? "N/A" : model.SchoolCoordinatorEmail)
+                    </span>
+                </MudItem>
+
+            </MudGrid>
+
+        </MudPaper>
+
+    </MudContainer>
+
+</div>
+
+
+@code {
+
+
+	private MasterSchoolRequestDto model = new();
+
+
+    private StaffType? CurrentStaffType;
+
+    [Parameter]
+    public long Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        //CurrentStaffType = await AuthService.GetStaffType();
+        model = new MasterSchoolRequestDto();
+
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+        CurrentStaffType = user.StaffType;
+
+        if (Id > 0)
+        {
+            await LoadSchool(Id);
+        }
+    }
+
+
+    private bool IsLoading;
+    private async Task LoadSchool(long id)
+    {
+        IsLoading = true;
+        var result = await MasterSchoolService.GetMasterSchoolById(id);
+
+        if (!result.Response.Success)
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+            return;
+        }
+
+        if (result.Data == null)
+        {
+            Snackbar.Add("School not found", Severity.Warning);
+            return;
+        }
+
+        model = result.Data;
+        IsLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private async Task GoBack()
+    {
+        await JS.InvokeVoidAsync("history.back");
+    }
+
+}

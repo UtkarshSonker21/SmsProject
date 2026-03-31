@@ -730,7 +730,8 @@
 
     void OpenEnrolledStudents(CourseRequirementEnrollmentDto dto)
     {
-        Navigation.NavigateTo(Routes.EnrolledStudents.Replace("{reqId}", dto.ReqId.ToString()));
+         Navigation.NavigateTo(Routes.EnrolledStudentsByReqId.Replace("{reqId}", dto.ReqId.ToString()));
+        // Navigation.NavigateTo(Routes.EnrolledStudents);
     }
 
 

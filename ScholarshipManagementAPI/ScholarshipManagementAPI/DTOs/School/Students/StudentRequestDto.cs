@@ -127,6 +127,9 @@ namespace ScholarshipManagementAPI.DTOs.School.Students
         public string? SchoolName { get; set; }
         public string? ShortName { get; set; }
 
+        public string? FullName { get; set; }
+        public string? FormatedCreatedBy { get; set; }
+        public string? FormattedCreatedDate { get; set; }
 
     }
 }

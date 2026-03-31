@@ -18,7 +18,7 @@ namespace ScholarshipManagementAPI.Services.Interface.University
 
         Task<PagedResultDto<CourseRequirementEnrollmentDto>> GetEnrollmentsAsync(CourseRequirementFilterDto filter, LoggedInUserDto currentUser);
 
-        Task<PagedResultDto<EnrolledStudentDto>> GetEnrolledStudentsAsync(long reqId, StudentFilterDto filter);
+        Task<PagedResultDto<EnrolledStudentDto>> GetEnrolledStudentsAsync(long? reqId, StudentFilterDto filter, LoggedInUserDto currentUser);
 
     }
 }

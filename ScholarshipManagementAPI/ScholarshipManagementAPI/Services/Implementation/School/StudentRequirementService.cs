@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ScholarshipManagementAPI.Data.Contexts;
 using ScholarshipManagementAPI.Data.DbModels;
+using ScholarshipManagementAPI.DTOs.Common.Auth;
 using ScholarshipManagementAPI.DTOs.Common.Response;
 using ScholarshipManagementAPI.DTOs.School.MasterSchool;
 using ScholarshipManagementAPI.DTOs.School.StudentRequirements;
@@ -83,7 +84,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
         }
 
 
-        public async Task<bool> UpdateStudentRequirementMapByUniversityAsync(StudentRequirementRequestDto dto)
+        public async Task<bool> UpdateStudentRequirementMapByUniversityAsync(StudentRequirementRequestDto dto, LoggedInUserDto currentUser)
         {
             var entity = await _context.StudentReqLists
                 .FirstOrDefaultAsync(x => x.StudentReqId == dto.StudentReqID);
@@ -102,14 +103,92 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             if (exists)
                 throw new CustomException("Student already applied in this university.");
 
-            // studentId is not updatable, 
             // entity.StudentId = dto.StudentID;
             // entity.ReqId = dto.ReqId;
 
-            entity.UniAdmissionStatus = dto.UniAdmissionStatus;
-            entity.SemesterStartDate = dto.SemesterStartDate;
-            entity.LetterAccepCode = dto.LetterAccepCode;
-            entity.UniAwardingstatus = dto.UniAwardingStatus;
+            entity.DocumentStatus = dto.DocumentStatus;
+
+            if (dto.DocumentStatus == (int)DocumentStatus.Accepted)
+            {
+                // Accepted
+                entity.SemesterStartDate = dto.SemesterStartDate;
+                entity.LetterAccepCode = dto.LetterAccepCode;
+                entity.UniAwardingstatus = dto.UniAwardingStatus;
+
+                // reset others
+                entity.ReasonRejection = null;
+                entity.MissedDocuments = null;
+                entity.ReasonInProgress = null;
+            }
+            else if (dto.DocumentStatus == (int)DocumentStatus.Rejected)
+            {
+                // Rejected
+                entity.ReasonRejection = dto.ReasonRejection;
+                entity.MissedDocuments = dto.MissedDocuments;
+
+                // reset others
+                entity.SemesterStartDate = null;
+                entity.LetterAccepCode = null;
+                entity.UniAwardingstatus = null;
+                entity.ReasonInProgress = null;
+            }
+            else if (dto.DocumentStatus == (int)DocumentStatus.InProcess)
+            {
+                // In Process
+                entity.ReasonInProgress = dto.ReasonInProgress;
+
+                // reset others
+                entity.SemesterStartDate = null;
+                entity.LetterAccepCode = null;
+                entity.UniAwardingstatus = null;
+                entity.ReasonRejection = null;
+                entity.MissedDocuments = null;
+            }
+
+            entity.UniStatusBy = currentUser.LoginId;
+            entity.UniStatusDate = DateTime.UtcNow;
+
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> UpdateStudentRequirementMapByNgoAsync(StudentRequirementRequestDto dto, LoggedInUserDto currentUser)
+        {
+            var entity = await _context.StudentReqLists
+                .FirstOrDefaultAsync(x => x.StudentReqId == dto.StudentReqID);
+
+            if (entity == null)
+                return false;
+
+            // Optional: prevent duplicate again
+            var exists = await _context.StudentReqLists
+                .Include(x => x.Req)
+                .ThenInclude(r => r.Course)
+                .AnyAsync(x => x.StudentId == dto.StudentID 
+                               && x.Req.Course.UniversityId == dto.UniversityId 
+                               && x.StudentReqId != dto.StudentReqID);
+
+            if (exists)
+                throw new CustomException("Student already applied in this university.");
+
+            // entity.StudentId = dto.StudentID;
+            // entity.ReqId = dto.ReqId;
+
+
+            // Only when Awarded
+            if (dto.UniAwardingStatus == (int)AwardingStatus.Awarded)
+            {
+                entity.DaAdmissionStatus = dto.DaAdmissionStatus;
+                entity.TotalCost = dto.TotalCost;
+                entity.UniAwardingstatusCost = dto.UniAwardingStatusCost;
+                entity.DonorId = dto.DonorId;
+
+                entity.DaStatusBy = currentUser.LoginId;
+                entity.DaStatusDate = DateTime.UtcNow;
+            }
+
 
             await _context.SaveChangesAsync();
 
@@ -153,7 +232,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     StudentReqID = x.StudentReqId,
                     StudentID = x.StudentId,
                     ReqId = x.ReqId,
-                    UniAdmissionStatus = x.UniAdmissionStatus,
+                    DocumentStatus = x.DocumentStatus,
                     ReasonRejection = x.ReasonRejection,
                     MissedDocuments = x.MissedDocuments,
                     SemesterStartDate = x.SemesterStartDate,
@@ -213,9 +292,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             }
 
             // University Admission Status
-            if (filter.UniAdmissionStatus.HasValue)
+            if (filter.DocumentStatus.HasValue)
             {
-                query = query.Where(x => x.UniAdmissionStatus == filter.UniAdmissionStatus.Value);
+                query = query.Where(x => x.DocumentStatus == filter.DocumentStatus.Value);
             }
 
             // DA Admission Status
@@ -317,7 +396,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     StudentReqID = x.StudentReqId,
                     StudentID = x.StudentId,
                     ReqId = x.ReqId,
-                    UniAdmissionStatus = x.UniAdmissionStatus,
+                    DocumentStatus = x.DocumentStatus,
                     ReasonRejection = x.ReasonRejection,
                     MissedDocuments = x.MissedDocuments,
                     SemesterStartDate = x.SemesterStartDate,
