@@ -29,7 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\Ngo\" />
     <Folder Include="Shared\" />
     <Folder Include="wwwroot\Images\" />
   </ItemGroup>

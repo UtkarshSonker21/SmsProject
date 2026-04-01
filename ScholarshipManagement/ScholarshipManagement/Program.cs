@@ -78,6 +78,7 @@ builder.Services.AddScoped<CourseRequirementService>();
 builder.Services.AddScoped<UniversityDocumentService>();
 
 builder.Services.AddScoped<ApprovalService>();
+builder.Services.AddScoped<DonorService>();
 
 // Permission Check
 builder.Services.AddScoped<PermissionState>();

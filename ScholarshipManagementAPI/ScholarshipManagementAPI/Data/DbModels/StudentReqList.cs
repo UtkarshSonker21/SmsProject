@@ -47,6 +47,8 @@ public partial class StudentReqList
 
     public DateTime CreatedDate { get; set; }
 
+    public virtual MasterDonorList? Donor { get; set; }
+
     public virtual UnCourseReq Req { get; set; } = null!;
 
     public virtual StudentDatum Student { get; set; } = null!;

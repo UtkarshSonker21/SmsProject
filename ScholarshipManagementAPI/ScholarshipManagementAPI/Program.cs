@@ -222,6 +222,7 @@ builder.Services.AddScoped<ICourseRequirementService, CourseRequirementService>(
 builder.Services.AddScoped<IUniversityDocumentService, UniversityDocumentService>();
 
 builder.Services.AddScoped<IApprovalService, ApprovalService>();
+builder.Services.AddScoped<IDonorService, DonorService>();
 
 
 

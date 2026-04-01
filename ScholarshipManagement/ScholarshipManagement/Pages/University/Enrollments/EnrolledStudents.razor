@@ -416,262 +416,58 @@
 
                 </TemplateColumn>
 
+                @if (CurrentStaffType != StaffType.Marketing)
+                {
+                    <TemplateColumn Title="Doc Status"
+                    HeaderClass="fw-bold"
+                    HeaderStyle="width:200px; min-width:200px; max-width:200px;"
+                    CellStyle="width:200px; min-width:200px; max-width:200px;"
+                    Hideable="true">
 
-              @*   <TemplateColumn Title="Gender"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:120px; min-width:120px; max-width:120px;"
-                                CellStyle="width:120px; min-width:120px; max-width:120px;"
-                                Hideable="true">
+                        <CellTemplate Context="ctx">
 
-                    <CellTemplate Context="ctx">
+                            <div class="d-flex flex-column align-items-start">
 
-                        <MudChip T="string"
-                                 Size="Size.Small"
-                                 Variant="Variant.Outlined"
-                                 Style="min-width:70px; justify-content:center;"
-                                 Color="@GetGenderColor(ctx.Item.Gender)">
+                                <MudChip Size="Size.Small"
+                                Variant="Variant.Outlined"
+                                Color="@GetDocStatusColor(ctx.Item.DocStatus)"
+                                Style="min-width:90px; justify-content:center;">
 
-                            @GetGenderText(ctx.Item.Gender)
+                                    @(string.IsNullOrWhiteSpace(ctx.Item.DocStatus) ? "N/A" : ctx.Item.DocStatus)
 
-                        </MudChip>
+                                </MudChip>
+                            </div>
+                        </CellTemplate>
 
-                    </CellTemplate>
-                </TemplateColumn>
- *@
+                    </TemplateColumn>
 
-                @* <TemplateColumn Title="Address"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:250px; min-width:250px; max-width:250px;"
-                                CellStyle="width:250px; min-width:250px; max-width:250px;"
-                                Hideable="true" Hidden="true">
+                    <TemplateColumn Title="Awardings Status"
+                    HeaderClass="fw-bold"
+                    HeaderStyle="width:200px; min-width:200px; max-width:200px;"
+                    CellStyle="width:200px; min-width:200px; max-width:200px;"
+                    Hideable="true">
 
-                    <CellTemplate Context="ctx">
+                        <CellTemplate Context="ctx">
 
-                        <div class="d-flex flex-column">
+                            <div class="d-flex flex-column align-items-start">
 
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.Address) ||
-                                                        !string.IsNullOrWhiteSpace(ctx.Item.AddressCity) ||
-                                                        !string.IsNullOrWhiteSpace(ctx.Item.MasterState) ||
-                                                        !string.IsNullOrWhiteSpace(ctx.Item.ZipCode) ||
-                                                        !string.IsNullOrWhiteSpace(ctx.Item.MasterCountry))
-                            {
-                                <!-- Line 1 -->
-                                @if (!string.IsNullOrWhiteSpace(ctx.Item.Address))
-                                {
-                                    <div>@ctx.Item.Address</div>
-                                }
+                                <MudChip Size="Size.Small"
+                                Variant="Variant.Outlined"
+                                Color="@GetAwardingStatusColor(ctx.Item.AwardingStatus)"
+                                Style="min-width:90px; justify-content:center;">
 
-                                <!-- Line 2 -->
-                                <div class="text-muted small">
-                                    @ctx.Item.AddressCity
+                                    @(
+                                        string.IsNullOrWhiteSpace(ctx.Item.AwardingStatus)
+                                                                            ? "N/A"
+                                                                            : ctx.Item.AwardingStatus
+                                        )
 
-                                    @if (!string.IsNullOrWhiteSpace(ctx.Item.AddressCity) &&
-                                                                    !string.IsNullOrWhiteSpace(ctx.Item.MasterState))
-                                    {
-                                        <span>, </span>
-                                    }
+                                </MudChip>
+                            </div>
+                        </CellTemplate>
 
-                                    @ctx.Item.MasterState
-
-                                    @if (!string.IsNullOrWhiteSpace(ctx.Item.ZipCode))
-                                    {
-                                        <span> - @ctx.Item.ZipCode</span>
-                                    }
-                                </div>
-
-                                <!-- Country -->
-                                @if (!string.IsNullOrWhiteSpace(ctx.Item.MasterCountry))
-                                {
-                                    <div class="small fw-semibold mt-1" style="color:#6b21a8;">
-                                        @ctx.Item.MasterCountry
-                                    </div>
-                                }
-                            }
-                            else
-                            {
-                                <span class="text-muted fst-italic">No address available</span>
-                            }
-
-                        </div>
-
-                    </CellTemplate>
-                </TemplateColumn> *@
-
-
-                <TemplateColumn Title="Student Contact"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:250px; min-width:250px; max-width:250px;"
-                                CellStyle="width:250px; min-width:250px; max-width:250px;"
-                                Hideable="true" Hidden="true">
-
-                    <CellTemplate Context="ctx">
-
-                        <div class="contact-compact">
-
-                            <!-- Office Email -->
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.StudentEmail))
-                            {
-                                <div class="contact-line">
-                                    <MudIcon Icon="@Icons.Material.Filled.Business"
-                                             Class="contact-icon office" />
-
-                                    <a href="mailto:@ctx.Item.StudentEmail"
-                                       class="contact-text"
-                                       title="@ctx.Item.StudentEmail">
-                                        @ctx.Item.StudentEmail
-                                    </a>
-                                </div>
-                            }
-
-                            <!-- Mobile -->
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.StudentMobileNo))
-                            {
-                                <div class="contact-line">
-                                    <MudIcon Icon="@Icons.Material.Filled.Phone"
-                                             Class="contact-icon phone" />
-
-                                    <a href="tel:@ctx.Item.StudentMobileNo"
-                                       class="contact-text">
-                                        @ctx.Item.StudentMobileNo
-                                    </a>
-                                </div>
-                            }
-
-                            <!-- Empty -->
-                            @if (string.IsNullOrWhiteSpace(ctx.Item.StudentEmail) &&
-                                                        string.IsNullOrWhiteSpace(ctx.Item.StudentMobileNo))
-                            {
-                                <span class="contact-empty">
-                                    No contact information
-                                </span>
-                            }
-
-                        </div>
-
-                    </CellTemplate>
-
-                </TemplateColumn>
-
-
-                <TemplateColumn Title="School Contact"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:250px; min-width:250px; max-width:250px;"
-                                CellStyle="width:250px; min-width:250px; max-width:250px;"
-                                Hideable="true" Hidden="true">
-
-                    <CellTemplate Context="ctx">
-
-                        <div class="contact-compact">
-
-                            <!-- Website -->
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.SchoolWebsite))
-                            {
-                                <div class="contact-line">
-                                    <MudIcon Icon="@Icons.Material.Filled.Language"
-                                             Class="contact-icon website" />
-
-                                    <a href="@ctx.Item.SchoolWebsite"
-                                       target="_blank"
-                                       class="contact-text">
-                                        @GetDomain(ctx.Item.SchoolWebsite)
-                                    </a>
-                                </div>
-                            }
-
-                            <!-- Email -->
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.SchoolEmail))
-                            {
-                                <div class="contact-line">
-                                    <MudIcon Icon="@Icons.Material.Filled.Email"
-                                             Class="contact-icon email" />
-
-                                    <a href="mailto:@ctx.Item.SchoolEmail"
-                                       class="contact-text">
-                                        @ctx.Item.SchoolEmail
-                                    </a>
-                                </div>
-                            }
-
-                            <!-- Phone -->
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.SchoolMobileNo))
-                            {
-                                <div class="contact-line">
-                                    <MudIcon Icon="@Icons.Material.Filled.Phone"
-                                             Class="contact-icon phone" />
-
-                                    <a href="tel:@ctx.Item.SchoolMobileNo"
-                                       class="contact-text">
-                                        @ctx.Item.SchoolMobileNo
-                                    </a>
-                                </div>
-                            }
-
-                            <!-- Empty fallback -->
-                            @if (string.IsNullOrWhiteSpace(ctx.Item.SchoolEmail) &&
-                                                        string.IsNullOrWhiteSpace(ctx.Item.SchoolMobileNo) &&
-                                                        string.IsNullOrWhiteSpace(ctx.Item.SchoolWebsite))
-                            {
-                                <span class="contact-empty">
-                                    No contact info
-                                </span>
-                            }
-
-                        </div>
-
-                    </CellTemplate>
-
-                </TemplateColumn>
-
-
-
-
-                <TemplateColumn Title="Doc Status"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
-                                CellStyle="width:200px; min-width:200px; max-width:200px;"
-                                Hideable="true">
-
-                    <CellTemplate Context="ctx">
-
-                        <div class="d-flex flex-column align-items-start">
-
-                            <MudChip Size="Size.Small"
-                                     Variant="Variant.Outlined"
-                                     Color="@GetDocStatusColor(ctx.Item.DocStatus)"
-                                     Style="min-width:90px; justify-content:center;">
-
-                                @(string.IsNullOrWhiteSpace(ctx.Item.DocStatus) ? "N/A" : ctx.Item.DocStatus)
-
-                            </MudChip>
-                        </div>
-                    </CellTemplate>
-
-                </TemplateColumn>
-
-                <TemplateColumn Title="Awardings Status"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
-                                CellStyle="width:200px; min-width:200px; max-width:200px;"
-                                Hideable="true">
-
-                    <CellTemplate Context="ctx">
-
-                        <div class="d-flex flex-column align-items-start">
-
-                            <MudChip Size="Size.Small"
-                                     Variant="Variant.Outlined"
-                                     Color="@GetAwardingStatusColor(ctx.Item.AwardingStatus)"
-                                     Style="min-width:90px; justify-content:center;">
-
-                                @(string.IsNullOrWhiteSpace(ctx.Item.AwardingStatus)
-                                                                ? "N/A"
-                                                                : ctx.Item.AwardingStatus)
-
-                            </MudChip>
-                        </div>
-                    </CellTemplate>
-
-                </TemplateColumn>
+                    </TemplateColumn>
+                }
 
                 <TemplateColumn Title="Sponsored"
                                 HeaderClass="fw-bold"
@@ -701,6 +497,65 @@
 
                     </CellTemplate>
                 </TemplateColumn>
+
+
+                @if (CurrentStaffType == StaffType.Marketing && reqId == 0)
+                {
+                    <TemplateColumn Title="Donor Name"
+                                    HeaderClass="fw-bold"
+                                    HeaderStyle="width:200px; min-width:200px; max-width:200px;"
+                                    CellStyle="width:200px; min-width:200px; max-width:200px;">
+
+                        <CellTemplate Context="ctx">
+
+                            <span class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.VolunteerActivism"
+                                         Color="Color.Success"
+                                         Style="font-size:16px;"
+                                         Class="me-1 text-muted" />
+
+                                @if (!string.IsNullOrWhiteSpace(ctx.Item.DonorName))
+                                {
+                                    <span>@ctx.Item.DonorName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic small">N/A</span>
+                                }
+
+                            </span>
+
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                    <TemplateColumn Title="Total Cost"
+                                    HeaderClass="fw-bold"
+                                    HeaderStyle="width:200px; min-width:200px; max-width:200px;"
+                                    CellStyle="width:200px; min-width:200px; max-width:200px;">
+
+                        <CellTemplate Context="ctx">
+
+                            <span class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Payments"
+                                         Color="Color.Primary"
+                                         Style="font-size:16px;"
+                                         Class="me-1 text-muted" />
+
+                                @if (ctx.Item.TotalCost > 0)
+                                {
+                                    <span>@ctx.Item.TotalCost</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic small">N/A</span>
+                                }
+
+                            </span>
+
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                }
 
 
                 <TemplateColumn Title="Created Info"
@@ -834,10 +689,10 @@
     private StudentFilterDto Filter = new StudentFilterDto();
 
     private StaffType? CurrentStaffType;
-    bool canView => PermissionService.CanView("course-enrollment");
-    bool canAdd => PermissionService.CanInsert("course-enrollment");
-    bool canEdit => PermissionService.CanUpdate("course-enrollment");
-    bool canDelete => PermissionService.CanDelete("course-enrollment");
+    bool canView => PermissionService.CanView("course-enrollment") || PermissionService.CanView("enrolled-students");
+    bool canAdd => PermissionService.CanInsert("course-enrollment") || PermissionService.CanInsert("enrolled-students");
+    bool canEdit => PermissionService.CanUpdate("course-enrollment") || PermissionService.CanUpdate("enrolled-students");
+    bool canDelete => PermissionService.CanDelete("course-enrollment") || PermissionService.CanDelete("enrolled-students");
 
 
     [Parameter]
@@ -918,6 +773,11 @@
                 if (CurrentStaffType == StaffType.Ngo && reqId == 0)
                 {
                     Items = Items.Where(x => x.AwardingStatus == "Awarded").ToList();
+                }
+
+                if (CurrentStaffType == StaffType.Marketing && reqId == 0)
+                {
+                    Items = Items.Where(x => x.AwardingStatus == "Awarded" && x.SponsoredStatus == "Sponsored").ToList();
                 }
 
                 TotalRecords = result.Data.TotalCount;
@@ -1024,12 +884,6 @@
     }
 
 
-    // void OpenStudentDetails(EnrolledStudentDto dto)
-    // {
-    //     Navigation.NavigateTo(Routes.EnrolledStudentData.Replace("{stdId:long}", dto.StudentId.ToString()));
-    // }
-
-
     void OpenStudentDetails(EnrolledStudentDto dto)
     {
         var url = Routes.EnrolledStudentData
@@ -1124,4 +978,155 @@
     }
 
 
+
+    private CourseRequirementRequestDto Req { get; set; } = new();
+
+    private async Task GetReqById(long reqID)
+    {
+        var resultReq = await CourseRequirementService.GetCourseRequirementById(reqID);
+
+
+        if (resultReq.Response.Success)
+        {
+            Req = resultReq.Data ?? new CourseRequirementRequestDto();
+
+        }
+        else
+        {
+            Snackbar.Add(resultReq.Response.Message, Severity.Error);
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+    }
+
+
 }
+
+
+
+
+@*   <TemplateColumn Title="Student Contact"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:250px; min-width:250px; max-width:250px;"
+                                CellStyle="width:250px; min-width:250px; max-width:250px;"
+                                Hideable="true" Hidden="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="contact-compact">
+
+                            <!-- Office Email -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.StudentEmail))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Business"
+                                             Class="contact-icon office" />
+
+                                    <a href="mailto:@ctx.Item.StudentEmail"
+                                       class="contact-text"
+                                       title="@ctx.Item.StudentEmail">
+                                        @ctx.Item.StudentEmail
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Mobile -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.StudentMobileNo))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Phone"
+                                             Class="contact-icon phone" />
+
+                                    <a href="tel:@ctx.Item.StudentMobileNo"
+                                       class="contact-text">
+                                        @ctx.Item.StudentMobileNo
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Empty -->
+                            @if (string.IsNullOrWhiteSpace(ctx.Item.StudentEmail) &&
+                                                        string.IsNullOrWhiteSpace(ctx.Item.StudentMobileNo))
+                            {
+                                <span class="contact-empty">
+                                    No contact information
+                                </span>
+                            }
+
+                        </div>
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="School Contact"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:250px; min-width:250px; max-width:250px;"
+                                CellStyle="width:250px; min-width:250px; max-width:250px;"
+                                Hideable="true" Hidden="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="contact-compact">
+
+                            <!-- Website -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.SchoolWebsite))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Language"
+                                             Class="contact-icon website" />
+
+                                    <a href="@ctx.Item.SchoolWebsite"
+                                       target="_blank"
+                                       class="contact-text">
+                                        @GetDomain(ctx.Item.SchoolWebsite)
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Email -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.SchoolEmail))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Email"
+                                             Class="contact-icon email" />
+
+                                    <a href="mailto:@ctx.Item.SchoolEmail"
+                                       class="contact-text">
+                                        @ctx.Item.SchoolEmail
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Phone -->
+                            @if (!string.IsNullOrWhiteSpace(ctx.Item.SchoolMobileNo))
+                            {
+                                <div class="contact-line">
+                                    <MudIcon Icon="@Icons.Material.Filled.Phone"
+                                             Class="contact-icon phone" />
+
+                                    <a href="tel:@ctx.Item.SchoolMobileNo"
+                                       class="contact-text">
+                                        @ctx.Item.SchoolMobileNo
+                                    </a>
+                                </div>
+                            }
+
+                            <!-- Empty fallback -->
+                            @if (string.IsNullOrWhiteSpace(ctx.Item.SchoolEmail) &&
+                                                        string.IsNullOrWhiteSpace(ctx.Item.SchoolMobileNo) &&
+                                                        string.IsNullOrWhiteSpace(ctx.Item.SchoolWebsite))
+                            {
+                                <span class="contact-empty">
+                                    No contact info
+                                </span>
+                            }
+
+                        </div>
+
+                    </CellTemplate>
+
+                </TemplateColumn>
+ *@

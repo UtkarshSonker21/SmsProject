@@ -1,66 +1,29 @@
-﻿@page "/hr-staff-list"
-
+﻿@page "/donor-list"
 
 @attribute [Authorize]
 @layout MainLayout
 @using Microsoft.AspNetCore.Authorization
 @using MudBlazor
-@using ScholarshipManagement.DTOs
-@using ScholarshipManagement.DTOs.Common
-@using ScholarshipManagement.DTOs.Common.HrStaff
-@using ScholarshipManagement.DTOs.University.CourseRequirement
+@using ScholarshipManagement.DTOs.Ngo.Donor
 @using ScholarshipManagement.Helper.Enums
 @using ScholarshipManagement.Pages.Common
 @using ScholarshipManagement.Pages.Common.Shared
 @using ScholarshipManagement.Services.Common
-@using ScholarshipManagement.Services.SuperAdmin
-@using ScholarshipManagement.Services.University
-@using ScholarshipManagementAPI.DTOs.Common.HrStaff
+@using ScholarshipManagement.Services.Ngo
 @using static ScholarshipManagement.Helper.Constant
+@inject DonorService DonorService
 @inject PermissionService PermissionService
 @inject CurrentUserProfileService CurrentUserProfileService
-@inject HrStaffService HrStaffService
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
-
 <style>
-    .contact-compact {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        font-size: 13px;
-        line-height: 1.2;
-    }
-
-    .contact-line {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .contact-icon {
-        font-size: 13px !important;
-    }
-
-        .contact-icon.office {
-            color: #2563eb;
-        }
-
-        .contact-icon.email {
-            color: #ef4444;
-        }
-
-        .contact-icon.phone {
-            color: #22c55e;
-        }
-
     .contact-text {
         color: #6b7280;
         text-decoration: none;
         font-size: 13px;
-        max-width: 230px;
+        max-width: 210px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -69,12 +32,6 @@
         .contact-text:hover {
             text-decoration: underline;
         }
-
-    .contact-empty {
-        font-size: 13px;
-        color: #9ca3af;
-        font-style: italic;
-    }
 </style>
 
 
@@ -95,7 +52,7 @@
                     <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
                           font-size: 18px; font-style: normal; font-weight: 600;
                           line-height: 24px; text-transform: uppercase;">
-                        Hr Staffs
+                        Donors
                     </span>
                 </div>
 
@@ -156,7 +113,7 @@
             <div style="display: flex; align-items: center; gap: 5px; font-family: Inter, sans-serif; font-size: 13px;">
                 @if (canAdd)
                 {
-                    <button @onclick="AddHrStaff" class="add-btn">Add HrStaff</button>
+                    <button @onclick="AddDonor" class="add-btn">Add Donor</button>
                 }
             </div>
 
@@ -227,7 +184,7 @@
 
     <MudPaper Class="pa-4">
 
-        <MudDataGrid T="StaffRequestDto" @key="GridKey" RowsPerPage="@PageSize" @ref="dataGrid"
+        <MudDataGrid T="DonorRequestDto" @key="GridKey" RowsPerPage="@PageSize" @ref="dataGrid"
                      ColumnsPanelReordering='true' DragDropColumnReordering='true'
                      Hover="true" Bordered="true" Elevation="2" Loading="_loading"
                      Class="blue-hover-grid"
@@ -237,283 +194,114 @@
 
             <Columns>
 
-                <TemplateColumn Title="Staff Information"
+
+
+                <TemplateColumn Title="Donor"
                                 HeaderClass="fw-bold"
                                 Hideable="true">
 
                     <CellTemplate Context="ctx">
 
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.VolunteerActivism"
+                                     Color="Color.Primary"
+                                     Style="font-size:15px;" />
 
-                            <!-- Staff Photo -->
-                            <img src="@(string.IsNullOrEmpty(ctx.Item.Photo)
-                                                         ? "/images/male-icon.png"
-                                                         : ctx.Item.Photo)"
-                                 alt="Staff Photo"
-                                 style="width:35px;height:35px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;" />
+                            <span class="fw-semibold text-primary"
+                                  style="cursor:pointer;">
+								@ctx.Item.DonorName
+                            </span>
+                        </div>
 
-                            <!-- Staff Details -->
-                            <div class="flex-grow-1">
+                    </CellTemplate>
+                </TemplateColumn>
 
-                                <!-- Login Name -->
-                                @if (!string.IsNullOrWhiteSpace(ctx.Item.LoginName))
-                                {
-                                    <div class="d-flex align-items-center gap-1 small text-muted">
-                                        <MudIcon Icon="@Icons.Material.Filled.Person"
-                                                 Style="font-size:15px; color:#9e9e9e;" />
-                                        <span style="color:#374151; font-weight:500;">
-                                            @ctx.Item.LoginName
-                                        </span>
-                                    </div>
-                                }
+                <TemplateColumn Title="Donor Code"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:180px; min-width:180px; max-width:180px;"
+                                CellStyle="width:180px; min-width:180px; max-width:180px;"
+                                Hideable="true">
 
-                              
-                                <!-- Clickable Full Name -->
-                                <div class="fw-bold text-primary"
-                                     style="cursor:pointer;"
-                                     @onclick="@(() => EditHrStaff(ctx.Item))">
-                                    @ctx.Item.StaffSalutation
-                                    @ctx.Item.StaffFirstName
-                                    @ctx.Item.StaffLastName
-                                </div>
+                    <CellTemplate Context="ctx">
 
-                                <!-- Staff Type Pill -->
-                                @* <div class="mt-1">
-                                    <span style=" background-color:#f3e8ff; color:#6b21a8; padding:4px 10px;
-                                          border-radius:20px; font-size:12px; font-weight:500;">
-                                        Staff Type: @ctx.Item.StaffTypeName
-                                    </span>
-                                </div> *@
+                        <div class="d-flex align-items-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Badge"
+                                     Style="font-size:15px; color:#6b7280;" />
+                            @ctx.Item.DonorCode
+                        </div>
 
-                            </div>
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Email"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:280px; min-width:280px; max-width:280px;"
+                                CellStyle="width:280px; min-width:280px; max-width:280px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="d-flex align-items-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Email"
+                                     Style="font-size:15px; color:#ef4444;" />
+                            <a href="mailto:@ctx.Item.DonorEmail"
+                               class="contact-text">
+                                @ctx.Item.DonorEmail
+                            </a>
+                        </div>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Phone"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
+                                CellStyle="width:200px; min-width:200px; max-width:200px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        <div class="d-flex align-items-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Phone"
+                                     Style="font-size:15px; color:#22c55e;" />
+                            <a href="tel:@ctx.Item.DonorPhone"
+                               class="contact-text">
+                                @ctx.Item.DonorPhone
+                            </a>
                         </div>
 
                     </CellTemplate>
                 </TemplateColumn>
 
 
-                <TemplateColumn Title="Organisation"
+
+                <TemplateColumn Title="Remarks"
                                 HeaderClass="fw-bold"
-                                Style="min-width:260px"
-                                Hideable="true">
+                                Style="min-width:100px"
+                                Hideable="true" CellClass="text-center"
+                                HeaderStyle="width:100px; min-width:100px; max-width:100px;"
+                                CellStyle="width:100px; min-width:100px; max-width:100px;">
 
                     <CellTemplate Context="ctx">
 
-                        <div class="d-flex flex-column gap-1">
-
-                            @* SUPERADMIN *@
-                            @if (ctx.Item.StaffType == 1)
-                            {
-
-                                <div class="d-flex align-items-center gap-2">
-                                    <MudIcon Icon="@Icons.Material.Filled.CorporateFare"
-                                             Style="font-size:15px;"
-                                             Color="Color.Error" />
-                                    @(string.IsNullOrWhiteSpace(ctx.Item.OrganisationName)
-                                                                    ? "Super Administrator"
-                                                                    : ctx.Item.OrganisationName)
-                                </div>
-
-                            }
-
-                            @* NGO *@
-                            else if (ctx.Item.StaffType == 2)
-                            {
-
-                                <div class="d-flex align-items-center gap-2">
-                                    <MudIcon Icon="@Icons.Material.Filled.CorporateFare"
-                                             Style="font-size:15px;"
-                                             Color="Color.Warning" />
-                                    @(string.IsNullOrWhiteSpace(ctx.Item.OrganisationName)
-                                                                    ? "NGO Administrator"
-                                                                    : ctx.Item.OrganisationName)
-                                </div>
-                            }
-
-                            @* SCHOOL *@
-                            else if (ctx.Item.StaffType == 3)
-                            {
-
-                                <div class="d-flex align-items-center gap-2">
-                                    <MudIcon Icon="@Icons.Material.Filled.CorporateFare"
-                                             Style="font-size:15px;"
-                                             Color="Color.Success" />
-                                    School : @ctx.Item.OrganisationName
-                                </div>
-                            }
-
-                            @* UNIVERSITY *@
-                            else if (ctx.Item.StaffType == 4)
-                            {
-                                <div class="d-flex align-items-center gap-2">
-                                    <MudIcon Icon="@Icons.Material.Filled.CorporateFare"
-                                             Style="font-size:15px;"
-                                             Color="Color.Info" />
-                                    University : @ctx.Item.OrganisationName
-                                </div>
-                            }
-
-                            @* Marketing *@
-                            else if (ctx.Item.StaffType == 5)
-                            {
-                                <div class="d-flex align-items-center gap-2">
-                                    <MudIcon Icon="@Icons.Material.Filled.CorporateFare"
-                                             Style="font-size:15px;"
-                                             Color="Color.Default" />
-                                    @ctx.Item.OrganisationName
-                                </div>
-                            }
-
-                        </div>
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.Remarks))
+                        {
+                            <MudTooltip Text="@ctx.Item.Remarks" Placement="Placement.Top">
+                                <MudIcon Icon="@Icons.Material.Filled.Comment"
+                                         Color="Color.Info"
+                                         Style="cursor:pointer;" />
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="No remarks available" Placement="Placement.Top">
+                                <MudIcon Icon="@Icons.Material.Filled.Comment"
+                                         Style="color:#c4c4c4; cursor:default;" />
+                            </MudTooltip>
+                        }
 
                     </CellTemplate>
                 </TemplateColumn>
-
-
-                <TemplateColumn Title="Gender"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:120px; min-width:120px; max-width:120px;"
-                                CellStyle="width:120px; min-width:120px; max-width:120px;"
-                                Hideable="true">
-
-                    <CellTemplate Context="ctx">
-
-                        <MudChip T="string"
-                                 Size="Size.Small"
-                                 Variant="Variant.Outlined"
-                                 Style="min-width:70px; justify-content:center;"
-                                 Color="@(ctx.Item.Gender == "Male" ? Color.Info :
-                                                           ctx.Item.Gender == "Female" ? Color.Secondary :
-                                                           Color.Default)">
-                            @(ctx.Item.Gender)
-                        </MudChip>
-
-                    </CellTemplate>
-                </TemplateColumn>
-
-
-                <TemplateColumn Title="Permanent Address"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:260px;"
-                                CellStyle="width:260px;"
-                                Hideable="true" Hidden ="true">
-
-                    <CellTemplate Context="ctx">
-
-                        <div class="d-flex flex-column">
-
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.PermAddress) ||
-                                                        !string.IsNullOrWhiteSpace(ctx.Item.PermCity) ||
-                                                        !string.IsNullOrWhiteSpace(ctx.Item.PermState) ||
-                                                        !string.IsNullOrWhiteSpace(ctx.Item.PermZipCode) ||
-                                                        !string.IsNullOrWhiteSpace(ctx.Item.PermCountry))
-                            {
-                                <!-- Line 1 -->
-                                <div>
-                                    @ctx.Item.PermAddress
-                                </div>
-
-                                <!-- Line 2 -->
-                                <div class="text-muted small">
-                                    @ctx.Item.PermCity
-                                    @if (!string.IsNullOrWhiteSpace(ctx.Item.PermCity) &&
-                                                                    !string.IsNullOrWhiteSpace(ctx.Item.PermState))
-                                    {
-                                        <span>, </span>
-                                    }
-                                    @ctx.Item.PermState
-                                    @if (!string.IsNullOrWhiteSpace(ctx.Item.PermZipCode))
-                                    {
-                                        <span> - @ctx.Item.PermZipCode</span>
-                                    }
-                                </div>
-
-                                <!-- Country -->
-                                <div class="small fw-semibold mt-1" style="color:#6b21a8;">
-                                    @ctx.Item.PermCountry
-                                </div>
-                            }
-                            else
-                            {
-                                <span class="text-muted fst-italic">No address available</span>
-                            }
-
-                        </div>
-
-                    </CellTemplate>
-                </TemplateColumn>
-
-
-                <TemplateColumn Title="Contact Information"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:260px;"
-                                CellStyle="width:260px;"
-                                Hideable="true">
-
-                    <CellTemplate Context="ctx">
-
-                        <div class="contact-compact">
-
-                            <!-- Office Email -->
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.OfficeEmail))
-                            {
-                                <div class="contact-line">
-                                    <MudIcon Icon="@Icons.Material.Filled.Business"
-                                             Class="contact-icon office" />
-
-                                    <a href="mailto:@ctx.Item.OfficeEmail"
-                                       class="contact-text"
-                                       title="@ctx.Item.OfficeEmail">
-                                        @ctx.Item.OfficeEmail
-                                    </a>
-                                </div>
-                            }
-
-                            <!-- Personal Email -->
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.PersonelEmail))
-                            {
-                                <div class="contact-line">
-                                    <MudIcon Icon="@Icons.Material.Filled.Email"
-                                             Class="contact-icon email" />
-
-                                    <a href="mailto:@ctx.Item.PersonelEmail"
-                                       class="contact-text"
-                                       title="@ctx.Item.PersonelEmail">
-                                        @ctx.Item.PersonelEmail
-                                    </a>
-                                </div>
-                            }
-
-                            <!-- Mobile -->
-                            @if (!string.IsNullOrWhiteSpace(ctx.Item.MobileNo))
-                            {
-                                <div class="contact-line">
-                                    <MudIcon Icon="@Icons.Material.Filled.Phone"
-                                             Class="contact-icon phone" />
-
-                                    <a href="tel:@ctx.Item.MobileNo"
-                                       class="contact-text">
-                                        @ctx.Item.MobileNo
-                                    </a>
-                                </div>
-                            }
-
-                            <!-- Empty -->
-                            @if (string.IsNullOrWhiteSpace(ctx.Item.OfficeEmail) &&
-                                                        string.IsNullOrWhiteSpace(ctx.Item.PersonelEmail) &&
-                                                        string.IsNullOrWhiteSpace(ctx.Item.MobileNo))
-                            {
-                                <span class="contact-empty">
-                                    No contact information
-                                </span>
-                            }
-
-                        </div>
-
-                    </CellTemplate>
-
-                </TemplateColumn>
-
 
                 <TemplateColumn Title="Created Info"
                                 HeaderClass="fw-bold"
@@ -545,54 +333,6 @@
                     </CellTemplate>
                 </TemplateColumn>
 
-                <TemplateColumn Title="Remarks"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:100px; min-width:100px; max-width:100px;"
-                                CellStyle="width:100px; min-width:100px; max-width:100px;"
-                                Hideable="true">
-
-                    <CellTemplate Context="ctx">
-
-                        @if (!string.IsNullOrWhiteSpace(ctx.Item.Remarks))
-                        {
-                            <MudTooltip Text="@ctx.Item.Remarks" Placement="Placement.Top">
-                                <MudIcon Icon="@Icons.Material.Filled.Comment"
-                                         Color="Color.Info"
-                                         Style="cursor:pointer;" />
-                            </MudTooltip>
-                        }
-                        else
-                        {
-                            <MudTooltip Text="No remarks available" Placement="Placement.Top">
-                                <MudIcon Icon="@Icons.Material.Filled.Comment"
-                                         Style="color:#c4c4c4; cursor:default;" />
-                            </MudTooltip>
-                        }
-
-                    </CellTemplate>
-                </TemplateColumn>
-
-                <TemplateColumn Title="Active"
-                                HeaderClass="fw-bold"
-                                Style="min-width:140px"
-                                CellClass="text-center"
-                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
-                                CellStyle="width:80px; min-width:80px; max-width:80px;">
-
-                    <CellTemplate Context="ctx">
-
-                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
-
-                            <span style="width:15px;height:15px;border-radius:50%;
-                 display:inline-block;
-                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
-                            </span>
-
-                        </MudTooltip>
-
-                    </CellTemplate>
-                </TemplateColumn>
-
 
                 <!-- Action -->
                 @if (canEdit || canDelete)
@@ -617,20 +357,20 @@
                                          stroke="currentColor"
                                          style="width:20px; height:20px; cursor:pointer; color:#0d6efd"
                                          title="Edit"
-                                         @onclick="@(() => EditHrStaff(ctx.Item))">
+                                         @onclick="@(() => EditDonor(ctx.Item))">
                                         <path stroke-linecap="round"
                                               stroke-linejoin="round"
                                               d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652
-                                     L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13
-                                     L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897
-                                     l8.932-8.931ZM18 14v4.75
-                                     A2.25 2.25 0 0 1 15.75 21H5.25
-                                     A2.25 2.25 0 0 1 3 18.75V8.25
-                                     A2.25 2.25 0 0 1 5.25 6H10" />
+                                             L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13
+                                             L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897
+                                             l8.932-8.931ZM18 14v4.75
+                                             A2.25 2.25 0 0 1 15.75 21H5.25
+                                             A2.25 2.25 0 0 1 3 18.75V8.25
+                                             A2.25 2.25 0 0 1 5.25 6H10" />
                                     </svg>
-
                                 }
-                                
+
+
                                 <!-- DELETE -->
                                 @if (canDelete)
                                 {
@@ -641,32 +381,29 @@
                                          stroke="currentColor"
                                          style="width:20px; height:20px; cursor:pointer; color:#dc3545"
                                          title="Delete"
-                                         @onclick="@(() => DeleteHrStaff(ctx.Item))">
+                                         @onclick="@(() => DeleteDonor(ctx.Item))">
                                         <path stroke-linecap="round"
                                               stroke-linejoin="round"
                                               d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21
-                                     c.342.052.682.107 1.022.166m-1.022-.165
-                                     L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077
-                                     H8.084a2.25 2.25 0 0 1-2.244-2.077
-                                     L4.772 5.79m14.456 0
-                                     a48.108 48.108 0 0 0-3.478-.397m-12 .562
-                                     c.34-.059.68-.114 1.022-.165m0 0
-                                     a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916
-                                     c0-1.18-.91-2.164-2.09-2.201
-                                     a51.964 51.964 0 0 0-3.32 0
-                                     c-1.18.037-2.09 1.022-2.09 2.201v.916
-                                     m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                             c.342.052.682.107 1.022.166m-1.022-.165
+                                             L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077
+                                             H8.084a2.25 2.25 0 0 1-2.244-2.077
+                                             L4.772 5.79m14.456 0
+                                             a48.108 48.108 0 0 0-3.478-.397m-12 .562
+                                             c.34-.059.68-.114 1.022-.165m0 0
+                                             a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916
+                                             c0-1.18-.91-2.164-2.09-2.201
+                                             a51.964 51.964 0 0 0-3.32 0
+                                             c-1.18.037-2.09 1.022-2.09 2.201v.916
+                                             m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                     </svg>
-
                                 }
-                                
+
                             </div>
                         </CellTemplate>
 
                     </TemplateColumn>
-
                 }
-
 
             </Columns>
 
@@ -724,36 +461,38 @@
 </div>
 
 
-@code {
 
+
+@code {
 
     int PageNumber = 1;       // current page
     int PageSize = 25;        // rows per page
     int TotalRecords = 0;     // total records returned by API
     int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize); // calculated
-    private List<StaffRequestDto> Items = new();
-    private MudDataGrid<StaffRequestDto>? dataGrid;
-    private StaffFilterDto Filter = new StaffFilterDto();
+    private List<DonorRequestDto> Items = new();
+    private MudDataGrid<DonorRequestDto>? dataGrid;
+    private DonorFilterDto Filter = new DonorFilterDto();
 
 
     private StaffType? CurrentStaffType;
-    bool canView => PermissionService.CanView("schools");
-    bool canAdd => PermissionService.CanInsert("schools");
-    bool canEdit => PermissionService.CanUpdate("schools");
-    bool canDelete => PermissionService.CanDelete("schools");
+    bool canView => PermissionService.CanView("donors");
+    bool canAdd => PermissionService.CanInsert("donors");
+    bool canEdit => PermissionService.CanUpdate("donors");
+    bool canDelete => PermissionService.CanDelete("donors");
 
     protected override async Task OnInitializedAsync()
     {
-        if (!canView)
-        {
-            Navigation.NavigateTo(Routes.Dashboard);
-        }
+        // if (!canView)
+        // {
+        //     Navigation.NavigateTo(Routes.Dashboard);
+        // }
 
         var user = CurrentUserProfileService.GetCurrentUserProfile();
         CurrentStaffType = user.StaffType;
 
         await LoadData(Filter);
     }
+
 
     // global search
     private string _search = "";
@@ -793,14 +532,14 @@
 
 
     private bool _loading = false;
-    private async Task LoadData(StaffFilterDto filter)
+    private async Task LoadData(DonorFilterDto filter)
     {
         try
         {
             _loading = true;                 // start loading
             await InvokeAsync(StateHasChanged); // refresh UI immediately if needed
 
-            var result = await HrStaffService.GetHrStaffs(filter);
+            var result = await DonorService.GetDonor(filter);
 
             if (result.Response.Success)
             {
@@ -850,7 +589,7 @@
     // hide / show coloumns
     private bool showColumnsPopup = false;
     private string columnFilter = "";
-    private List<Column<StaffRequestDto>> allColumns = new();
+    private List<Column<DonorRequestDto>> allColumns = new();
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -874,7 +613,7 @@
         showColumnsPopup = false;
     }
 
-    private async Task ToggleColumn(Column<StaffRequestDto> col, bool makeVisible)
+    private async Task ToggleColumn(Column<DonorRequestDto> col, bool makeVisible)
     {
         if (makeVisible)
             await col.ShowAsync();
@@ -910,23 +649,81 @@
     }
 
 
-    private void AddHrStaff()
-    {
-        Navigation.NavigateTo(Routes.HrStaff);
-    }
-
-
-    private void EditHrStaff(StaffRequestDto dto)
-    {
-        Navigation.NavigateTo(Routes.HrStaffUpdate.Replace("{Id:long}", dto.StaffId.ToString()));
-    }
-
-
-    private async Task DeleteHrStaff(StaffRequestDto dto)
+    private async Task AddDonor()
     {
         var parameters = new DialogParameters
         {
-            { "Message", $"Are you sure you want to delete '{dto.StaffId}'?" }
+            { "Donor", new DonorRequestDto() } // empty model for ADD
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<DonorDialog>("Add Donor", parameters, options);
+
+        var result = await dialog.Result;
+
+        // Reload only if Save was successful
+        if (result is not null && !result.Canceled)
+        {
+            PageNumber = 1;
+            PageSize = 25;
+            var filter = new DonorFilterDto();
+            await LoadData(filter);   // your grid reload method
+        }
+    }
+
+
+    private async Task EditDonor(DonorRequestDto dto)
+    {
+        var parameters = new DialogParameters
+        {
+            {
+                "Donor",
+                new DonorRequestDto
+                {
+                    DonorId = dto.DonorId,
+                    DonorName = dto.DonorName,
+                    DonorCode = dto.DonorCode,
+                    DonorEmail = dto.DonorEmail,
+                    DonorPhone = dto.DonorPhone,
+					Remarks = dto.Remarks,
+                    CreatedBy = dto.CreatedBy,
+                    CreatedDate = dto.CreatedDate
+                }
+            } // model for edit
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<DonorDialog>("Edit Donor", parameters, options);
+
+        var result = await dialog.Result;
+
+        // Reload only if Save was successful
+        if (result is not null && !result.Canceled)
+        {
+            PageNumber = 1;
+            PageSize = 25;
+            var filter = new DonorFilterDto();
+            await LoadData(filter);   // your grid reload method
+        }
+    }
+
+    private async Task DeleteDonor(DonorRequestDto dto)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Message", $"Are you sure you want to delete '{dto.DonorName}-{dto.DonorCode}'?" }
         };
 
         var options = new DialogOptions
@@ -938,9 +735,9 @@
         var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters, options);
         var result = await dialog.Result;
 
-        if (result != null && !result.Canceled && dto.StaffId.HasValue)
+        if (result != null && !result.Canceled && dto.DonorId.HasValue)
         {
-            var response = await HrStaffService.DeleteHrStaff(dto.StaffId.Value);
+            var response = await DonorService.DeleteDonor(dto.DonorId.Value);
 
             Snackbar.Add(
                 response.Message,
@@ -951,12 +748,13 @@
             {
                 PageNumber = 1;
                 PageSize = 25;
-                var filter = new StaffFilterDto();
+                var filter = new DonorFilterDto();
                 await LoadData(filter);
             }
         }
 
     }
+
 
 
 
@@ -970,8 +768,6 @@
     {
 
     }
-
-
 
 
 }

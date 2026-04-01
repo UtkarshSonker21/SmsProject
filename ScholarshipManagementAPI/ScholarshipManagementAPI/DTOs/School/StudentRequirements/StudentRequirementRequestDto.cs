@@ -90,5 +90,8 @@ namespace ScholarshipManagementAPI.DTOs.School.StudentRequirements
 
 
         public string? RequiredDocuments { get; set; }
+
+        public string? DonorName { get; set; }
+
     }
 }
