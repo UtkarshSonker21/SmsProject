@@ -440,8 +440,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
         {
             var query = _context.StudentReqLists
                 .AsNoTracking()
+                .Include(x => x.Donor)
                 .Include(x => x.Student)
-                    .ThenInclude(s => s.School)
+                .ThenInclude(s => s.School)
                 .AsQueryable();
 
 
@@ -536,6 +537,10 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                     SponsoredStatus = x.DaAdmissionStatus == (int)SponsoredStatus.Sponsored ? "Sponsored" :
                     x.DaAdmissionStatus == (int)SponsoredStatus.Rejected ? "Rejected" :
                     x.DaAdmissionStatus == (int)SponsoredStatus.InProcess ? "In Process" : "",
+
+                    DonorName = x.Donor != null ? x.Donor.DonorName : null,
+                    DonorId = x.DonorId,
+                    TotalCost = x.TotalCost,
 
                     CreatedBy = x.CreatedBy,
                     CreatedDate = x.CreatedDate

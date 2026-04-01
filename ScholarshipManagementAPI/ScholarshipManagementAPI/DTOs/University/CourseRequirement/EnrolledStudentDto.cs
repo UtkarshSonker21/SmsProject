@@ -43,6 +43,9 @@ namespace ScholarshipManagementAPI.DTOs.University.CourseRequirement
         public string? AwardingStatus { get; set; }
 
         public string? SponsoredStatus { get; set; }
+        public string? DonorName { get; set; }
+        public long? DonorId { get; set; }
+        public double? TotalCost { get; set; }
 
         public string? CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; }

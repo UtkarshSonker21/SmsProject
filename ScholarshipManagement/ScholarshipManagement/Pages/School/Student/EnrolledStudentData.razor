@@ -165,7 +165,7 @@
 
             <MudGrid Spacing="3">
 
-                @if (CurrentStaffType == StaffType.Ngo)
+                @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.Marketing)
                 {
                     <!-- ================= Requiremnet Details ================= -->
                     <MudItem xs="12" Class="mb-2">
@@ -540,10 +540,10 @@
     private StudentFilterDto Filter = new StudentFilterDto();
 
     private StaffType? CurrentStaffType;
-    bool canView => PermissionService.CanView("course-enrollment");
-    bool canAdd => PermissionService.CanInsert("course-enrollment");
-    bool canEdit => PermissionService.CanUpdate("course-enrollment");
-    bool canDelete => PermissionService.CanDelete("course-enrollment");
+    bool canView => PermissionService.CanView("course-enrollment") || PermissionService.CanView("enrolled-students");
+    bool canAdd => PermissionService.CanInsert("course-enrollment") || PermissionService.CanInsert("enrolled-students");
+    bool canEdit => PermissionService.CanUpdate("course-enrollment") || PermissionService.CanUpdate("enrolled-students");
+    bool canDelete => PermissionService.CanDelete("course-enrollment") || PermissionService.CanDelete("enrolled-students");
 
 
     [Parameter]
@@ -642,7 +642,10 @@
             }
             else
             {
-                showUpdateStatus = true;
+                if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.University)
+                {
+                    showUpdateStatus = true;
+                }
             }
         }
         else
@@ -677,7 +680,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<StudentRequirementUpdateByUniversityDialog>("Update Student Status", parameters, options);
+        var dialog = await DialogService.ShowAsync<StudentRequirementUpdateDialog>("Update Student Status", parameters, options);
 
         var result = await dialog.Result;
 

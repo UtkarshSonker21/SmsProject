@@ -448,8 +448,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
                     // organisation name (CLEAN)
                     OrganisationName = x.StaffType == (long)StaffType.University ? x.University!.UniversityName :
                                        x.StaffType == (long)StaffType.School ? x.School!.SchoolName :
-                                       x.StaffType == (long)StaffType.SuperAdmin ? "Super Administrator" :
-                                       x.StaffType == (long)StaffType.Ngo ? "NGO Administrator" :
+                                       x.StaffType == (long)StaffType.SuperAdmin ? "Super Admin" :
+                                       x.StaffType == (long)StaffType.Ngo ? "NGO Admin" :
+                                       x.StaffType == (long)StaffType.Marketing ? "Marketing" :
                                        null,
 
                     StaffSalutation = x.StaffSalutation,

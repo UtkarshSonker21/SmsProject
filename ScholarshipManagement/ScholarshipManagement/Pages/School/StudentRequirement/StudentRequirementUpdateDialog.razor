@@ -2,11 +2,13 @@
 @using MudBlazor.Components
 @using ScholarshipManagement.DTOs
 @using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.Ngo.Donor
 @using ScholarshipManagement.DTOs.School.StudentRequirements
 @using ScholarshipManagement.DTOs.SuperAdmin.Labels
 @using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
 @using ScholarshipManagement.DTOs.University.CourseRequirement
 @using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.Ngo
 @using ScholarshipManagement.Services.School
 @using ScholarshipManagement.Services.SuperAdmin
 @using ScholarshipManagement.Helper.Enums
@@ -16,6 +18,7 @@
 @inject ISnackbar Snackbar
 @inject LabelService LabelService
 @inject CommonService CommonService
+@inject DonorService DonorService
 @inject CourseRequirementService CourseRequirementService
 @inject StudentRequirementService StudentRequirementService
 @inject CurrentUserProfileService CurrentUserProfileService
@@ -117,7 +120,7 @@
 
 
 
-                        <!-- ✅ Show only when In Process -->
+                        <!-- Show only when In Process -->
                         @if (StdReq.DocumentStatus == (int)DocumentStatus.InProcess)
                         {
                             <MudItem xs="12">
@@ -264,21 +267,22 @@
 
 
 
-                        <!-- ✅ Show only when Sponsored -->
+                        <!-- Show only when Sponsored -->
                         @if (StdReq.DocumentStatus == (int)SponsoredStatus.Sponsored)
                         {
                             <MudItem xs="12">
-                                <MudSelect T="int?"
-                                           Label="Donor Name"
-                                           @bind-Value="SelectedDonorId"
+                                <MudSelect T="long?"
+                                           Label="Donor"
+                                           Value="SelectedDonorId"
+                                           ValueChanged="OnDonorChanged"
                                            Variant="Variant.Outlined"
                                            Margin="Margin.Dense" Clearable="true">
 
-                                    <MudSelectItem Value="@((int?)null)">--- Select ---</MudSelectItem>
+                                    <MudSelectItem Value="@((long?)null)">--- Select ---</MudSelectItem>
 
-                                    @foreach (var donor in DummyDonors)
+                                    @foreach (var donor in Donors)
                                     {
-                                        <MudSelectItem Value="@donor.Id">@donor.Name</MudSelectItem>
+                                        <MudSelectItem Value="@donor.DonorId">@donor.DonorName</MudSelectItem>
                                     }
 
                                 </MudSelect>
@@ -353,6 +357,7 @@
 
             await GetStdReqById(StdReq.ReqId, StdReq.StudentID);
             await GetReqById(StdReq.ReqId);
+            await GetAllDonors();
 
 
             var user = CurrentUserProfileService.GetCurrentUserProfile();
@@ -379,6 +384,8 @@
         if (result.Response.Success)
         {
             StdReq = result.Data.Items.FirstOrDefault() ?? new StudentRequirementRequestDto();
+
+            SelectedDonorId = StdReq.DonorId;
         }
         else
         {
@@ -521,21 +528,45 @@
 
 
 
-
-    class DonorDto
+    List<DonorRequestDto> Donors = new();
+    public async Task GetAllDonors()
     {
-        public int Id { get; set; }
-		public string? Name { get; set; } = string.Empty;
+        var result = await DonorService.GetDonor(new DonorFilterDto()
+        {
+            PageNumber = 1,
+            PageSize = 0
+        });
+
+        if (result.Response.Success)
+        {
+            Donors = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Error);
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 
-    List<DonorDto> DummyDonors = new()
-{
-    new() { Id = 1, Name = "UNICEF" },
-    new() { Id = 2, Name = "WHO" },
-    new() { Id = 3, Name = "Red Cross" },
-    new() { Id = 4, Name = "World Bank" }
-};
 
-    private int? SelectedDonorId;
+
+    private long? SelectedDonorId;
+
+    public async Task OnDonorChanged(long? donorID)
+    {
+        if (donorID.HasValue)
+        {
+            SelectedDonorId = donorID;
+            StdReq.DonorId = donorID;
+        }
+        else
+        {
+            SelectedDonorId = null;
+            StdReq.DonorId = null;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
 
 }

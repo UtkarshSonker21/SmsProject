@@ -55,7 +55,7 @@ namespace ScholarshipManagementAPI.Helper.Utilities
             return value;
         }
 
-        // LoginName
+        // UserName == LoginName
         public static string UserName(ClaimsPrincipal user)
         {
             var value = user.FindFirst(JwtClaimTypes.UserName)?.Value;

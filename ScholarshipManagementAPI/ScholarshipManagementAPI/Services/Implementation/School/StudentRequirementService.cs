@@ -220,6 +220,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
         public async Task<StudentRequirementRequestDto?> GetByIdAsync(long id)
         {
             return await _context.StudentReqLists
+                .Include(x => x.Donor)
                 .Include(x => x.Student)
                 .Include(x => x.Req)
                 .ThenInclude(x => x.Course)
@@ -260,7 +261,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     CourseTypeName = x.Req != null && x.Req.Course != null && x.Req.Course.CourseType != null ? x.Req.Course.CourseType.CourseTypeName : null,
                     UniversityId = x.Req != null && x.Req.Course != null && x.Req.Course.CourseType != null && x.Req.Course.CourseType.University != null ? x.Req.Course.CourseType.University.UniversityId : (long?)null,
                     UniversityName = x.Req != null && x.Req.Course != null && x.Req.Course.CourseType != null && x.Req.Course.CourseType.University != null ? x.Req.Course.CourseType.University.UniversityName : null,
-                    RequiredDocuments = x.Req != null ? x.Req.RequiredDocuments : null
+                    RequiredDocuments = x.Req != null ? x.Req.RequiredDocuments : null,
+                    DonorName = x.Donor != null ? x.Donor.DonorName : null
                 })
                 .FirstOrDefaultAsync();
         }
@@ -271,6 +273,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
         public async Task<PagedResultDto<StudentRequirementRequestDto>> GetByFilterAsync(StudentRequirementFilterDto filter)
         {
             var query = _context.StudentReqLists
+                .Include(x => x.Donor)
                 .Include(x => x.Student)
                 .Include(x => x.Req)
                 .ThenInclude(x => x.Course)
@@ -424,7 +427,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     CourseTypeName = x.Req != null && x.Req.Course != null && x.Req.Course.CourseType != null ? x.Req.Course.CourseType.CourseTypeName : null,
                     UniversityId = x.Req != null && x.Req.Course != null && x.Req.Course.CourseType != null && x.Req.Course.CourseType.University != null ? x.Req.Course.CourseType.University.UniversityId : (long?)null,
                     UniversityName = x.Req != null && x.Req.Course != null && x.Req.Course.CourseType != null && x.Req.Course.CourseType.University != null ? x.Req.Course.CourseType.University.UniversityName : null,
-                    RequiredDocuments = x.Req != null ? x.Req.RequiredDocuments : null
+                    RequiredDocuments = x.Req != null ? x.Req.RequiredDocuments : null,
+                    DonorName = x.Donor != null ? x.Donor.DonorName : null
                 })
                 .ToListAsync();
 

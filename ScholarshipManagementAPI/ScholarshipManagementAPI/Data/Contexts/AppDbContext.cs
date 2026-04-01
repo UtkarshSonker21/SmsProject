@@ -22,6 +22,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<HrStaffMaster> HrStaffMasters { get; set; }
 
+    public virtual DbSet<MasterDonorList> MasterDonorLists { get; set; }
+
     public virtual DbSet<MasterSchoolList> MasterSchoolLists { get; set; }
 
     public virtual DbSet<StudentDatum> StudentData { get; set; }
@@ -63,7 +65,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<ZzMasterCurrency> ZzMasterCurrencies { get; set; }
 
     public virtual DbSet<ZzMasterDropDown> ZzMasterDropDowns { get; set; }
-
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -147,6 +148,22 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.University).WithMany(p => p.HrStaffMasters)
                 .HasForeignKey(d => d.UniversityId)
                 .HasConstraintName("FK_Staff_University");
+        });
+
+        modelBuilder.Entity<MasterDonorList>(entity =>
+        {
+            entity.HasKey(e => e.DonorId).HasName("PK__MasterDo__052E3F781454C3D8");
+
+            entity.ToTable("MasterDonorList");
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(200);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.DonorCode).HasMaxLength(50);
+            entity.Property(e => e.DonorEmail).HasMaxLength(100);
+            entity.Property(e => e.DonorName).HasMaxLength(200);
+            entity.Property(e => e.DonorPhone).HasMaxLength(50);
         });
 
         modelBuilder.Entity<MasterSchoolList>(entity =>
@@ -305,6 +322,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.SemesterStartDate).HasColumnType("datetime");
             entity.Property(e => e.StudentId).HasColumnName("StudentID");
             entity.Property(e => e.UniStatusDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Donor).WithMany(p => p.StudentReqLists)
+                .HasForeignKey(d => d.DonorId)
+                .HasConstraintName("FK_StudentReqList_MasterDonorList");
 
             entity.HasOne(d => d.Req).WithMany(p => p.StudentReqLists)
                 .HasForeignKey(d => d.ReqId)
@@ -537,7 +558,6 @@ public partial class AppDbContext : DbContext
 
             entity.ToTable("UsersModule");
 
-            entity.Property(e => e.ModuleId).ValueGeneratedNever();
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.ModuleName).HasMaxLength(200);
         });
