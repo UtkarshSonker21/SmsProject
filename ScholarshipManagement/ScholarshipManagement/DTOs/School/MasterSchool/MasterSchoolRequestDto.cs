@@ -108,5 +108,6 @@ namespace ScholarshipManagement.DTOs.School.MasterSchool
         // For response only
         public string? CountryName { get; set; }
         public string? ApprovedByName { get; set; }
+        public int TotalStudents { get; set; }
     }
 }

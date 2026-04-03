@@ -216,7 +216,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
             var totalCount = await query.CountAsync();
 
             // ---------- Ordering ----------
-            query = query.OrderBy(x => x.DisplaySequence);
+            query = query.OrderByDescending(x => x.DisplaySequence);
 
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)

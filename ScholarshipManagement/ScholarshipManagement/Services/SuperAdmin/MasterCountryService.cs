@@ -1,4 +1,5 @@
 ﻿using ScholarshipManagement.DTOs.Common.Response;
+using ScholarshipManagement.DTOs.Ngo.CountrySchoolsSummary;
 using ScholarshipManagement.DTOs.SuperAdmin.MasterCountry;
 using ScholarshipManagement.Services.Common;
 using System.Net.Http.Json;
@@ -61,6 +62,20 @@ namespace ScholarshipManagement.Services.SuperAdmin
                 $"superadmin/master-country/delete/{id}");
 
             return await HandleResponse(response);
+        }
+
+
+        public async Task<(PagedResultDto<CountrySchoolCountDto> Data, ApiResponseDto Response)> GetCountryWiseSchoolCountAsync(MasterCountryFilterDto filter)
+        {
+            var response = await _http.PostAsJsonAsync(
+                "superadmin/master-country/country-schools", filter);
+
+            var apiResponse = await HandleResponse(response);
+
+            var data = GetPagedResult<CountrySchoolCountDto>(apiResponse);
+            apiResponse.Result = data;
+
+            return (data, apiResponse);
         }
 
 

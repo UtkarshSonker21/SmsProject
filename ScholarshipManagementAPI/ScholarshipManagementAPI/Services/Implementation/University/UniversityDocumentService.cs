@@ -163,7 +163,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             var totalCount = await query.CountAsync();
 
             // ---------- Ordering ----------
-            query = query.OrderBy(x => x.UniversityDocsId);
+            query = query.OrderByDescending(x => x.UniversityDocsId);
 
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)

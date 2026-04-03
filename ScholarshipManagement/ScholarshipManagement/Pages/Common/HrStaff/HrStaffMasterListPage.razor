@@ -737,10 +737,10 @@
 
 
     private StaffType? CurrentStaffType;
-    bool canView => PermissionService.CanView("schools");
-    bool canAdd => PermissionService.CanInsert("schools");
-    bool canEdit => PermissionService.CanUpdate("schools");
-    bool canDelete => PermissionService.CanDelete("schools");
+    bool canView => PermissionService.CanView("users");
+    bool canAdd => PermissionService.CanInsert("users");
+    bool canEdit => PermissionService.CanUpdate("users");
+    bool canDelete => PermissionService.CanDelete("users");
 
     protected override async Task OnInitializedAsync()
     {

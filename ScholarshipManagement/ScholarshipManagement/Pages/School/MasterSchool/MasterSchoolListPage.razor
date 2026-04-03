@@ -1,4 +1,5 @@
 ﻿@page "/school-lists"
+@page "/school-lists/{countryId:long}"
 
 @attribute [Authorize]
 @layout MainLayout
@@ -130,14 +131,37 @@
             <!-- Left Section (Inside Page Title Bar) -->
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
+                @if (countryId != 0)
+                {
+                    <MudTooltip Text="Back" Placement="Placement.Bottom">
+
+                        <div class="nav-icon" @onclick="GoBack">
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
+                        </div>
+
+                    </MudTooltip>
+                }
+
                 <div style="display: flex; align-items: center;">
                     <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
                           font-size: 18px; font-style: normal; font-weight: 600;
                           line-height: 24px; text-transform: uppercase;">
-                        Schools
+                        Schools 
                     </span>
                 </div>
 
+                @if (countryId != 0 && Items?.Any() == true)
+                {
+                    var countryName = Items.FirstOrDefault()?.CountryName;
+
+                    <div style="display:flex; align-items:center;">
+                        <span style="color:#000; font-family:Inter, sans-serif;
+                         font-size:18px; font-weight:600;
+                         line-height:24px; text-transform:uppercase; margin-left:3px;">
+                            : @countryName
+                        </span>
+                    </div>
+                }
             </div>
 
             <!-- Right Section (Inside Page Title Bar) -->
@@ -193,7 +217,7 @@
         <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 10px;position: relative;">
 
             <div style="display: flex; align-items: center; gap: 5px; font-family: Inter, sans-serif; font-size: 13px;">
-                @if (canAdd)
+                @if (canAdd && countryId == 0)
                 {
                     <button @onclick="AddSchool" class="add-btn">Add School</button>
                 }
@@ -264,61 +288,64 @@
 
     </div>
 
-    <MudTabs Elevation="0" Rounded="true" ActivePanelIndex="_activeTabIndex" ActivePanelIndexChanged="OnTabChanged"
-             style="padding: 0 24px;">
+    @if (countryId == 0)
+    {
+        <MudTabs Elevation="0" Rounded="true" ActivePanelIndex="_activeTabIndex" ActivePanelIndexChanged="OnTabChanged"
+                 style="padding: 0 24px;">
 
-        <MudTabPanel>
-            <TabContent>
+            <MudTabPanel>
+                <TabContent>
 
-                <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" />
-                All
+                    <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" />
+                    All
 
-            </TabContent>
-        </MudTabPanel>
+                </TabContent>
+            </MudTabPanel>
 
-        <MudTabPanel>
-            <TabContent>
+            <MudTabPanel>
+                <TabContent>
 
-                <MudIcon Icon="@Icons.Material.Filled.HourglassTop"
-                         Color="Color.Warning"
-                         Class="mr-2" />
+                    <MudIcon Icon="@Icons.Material.Filled.HourglassTop"
+                             Color="Color.Warning"
+                             Class="mr-2" />
 
-                <MudText Color="Color.Warning" Typo="Typo.subtitle2">
-                    Pending
-                </MudText>
+                    <MudText Color="Color.Warning" Typo="Typo.subtitle2">
+                        Pending
+                    </MudText>
 
-            </TabContent>
-        </MudTabPanel>
+                </TabContent>
+            </MudTabPanel>
 
-        <MudTabPanel>
-            <TabContent>
+            <MudTabPanel>
+                <TabContent>
 
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
-                         Color="Color.Success"
-                         Class="mr-2" />
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                             Color="Color.Success"
+                             Class="mr-2" />
 
-                <MudText Color="Color.Success" Typo="Typo.subtitle2">
-                    Approved
-                </MudText>
+                    <MudText Color="Color.Success" Typo="Typo.subtitle2">
+                        Approved
+                    </MudText>
 
-            </TabContent>
-        </MudTabPanel>
+                </TabContent>
+            </MudTabPanel>
 
-        <MudTabPanel>
-            <TabContent>
+            <MudTabPanel>
+                <TabContent>
 
-                <MudIcon Icon="@Icons.Material.Filled.Cancel"
-                         Color="Color.Error"
-                         Class="mr-2" />
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel"
+                             Color="Color.Error"
+                             Class="mr-2" />
 
-                <MudText Color="Color.Error" Typo="Typo.subtitle2">
-                    Rejected
-                </MudText>
+                    <MudText Color="Color.Error" Typo="Typo.subtitle2">
+                        Rejected
+                    </MudText>
 
-            </TabContent>
-        </MudTabPanel>
+                </TabContent>
+            </MudTabPanel>
 
-    </MudTabs>
+        </MudTabs>
+    }
 
 
     <MudPaper Class="pa-4">
@@ -864,14 +891,16 @@
                             @if (ctx.Item.ApprovalStatus != (int)ApprovalStatus.Pending &&
                                                         !string.IsNullOrWhiteSpace(ctx.Item.ApprovedByName))
                             {
-                                <div class="d-flex align-items-center gap-1 text-muted small mt-1"
-                                     title="Action By">
+                                <MudTooltip Text="Action By">
+                                    <div class="d-flex align-items-center gap-1 text-muted small mt-1">
 
-                                    <MudIcon Icon="@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
-                                             Style="font-size:13px;" />
+                                        <MudIcon Icon="@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                                 Style="font-size:13px;" />
 
-                                    @ctx.Item.ApprovedByName
-                                </div>
+                                        @ctx.Item.ApprovedByName
+                                    </div>
+
+                                </MudTooltip>
                             }
 
                             <!-- ⭐ APPROVE / REJECT ACTION -->
@@ -948,6 +977,33 @@
                     </CellTemplate>
                 </TemplateColumn>
 
+                @if (countryId != 0)
+                {
+                    <TemplateColumn Title="Total Student"
+                                    HeaderClass="fw-bold"
+                                    Style="min-width:140px"
+                                    CellClass="text-center"
+                                    HeaderStyle="width:130px; min-width:130px; max-width:130px;"
+                                    CellStyle="width:130px; min-width:130px; max-width:130px;">
+
+                        <CellTemplate Context="ctx">
+
+                            <MudChip T="int"
+                                     Size="Size.Small"
+                                     Color="@(ctx.Item.TotalStudents == 0 ? Color.Default : Color.Success)"
+                                     Variant="@(ctx.Item.TotalStudents == 0 ? Variant.Outlined : Variant.Filled)"
+                                     Style="min-width:50px; justify-content:center;">
+
+                                @ctx.Item.TotalStudents
+
+                            </MudChip>
+
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                }
+
+
                 <!-- Action -->
                 @if (canEdit || canDelete)
                 {
@@ -956,13 +1012,27 @@
                                     Filterable="false"
                                     HeaderClass="text-center fw-bold"
                                     CellClass="text-center"
-                                    HeaderStyle="width:100px; min-width:100px; max-width:100px;"
-                                    CellStyle="width:100px; min-width:100px; max-width:100px;">
+                                    HeaderStyle="width:130px; min-width:130px; max-width:130px;"
+                                    CellStyle="width:130px; min-width:130px; max-width:130px;">
 
                         <CellTemplate Context="ctx">
                             <div style="display:flex; gap:12px; justify-content:center; align-items:center; height:100%;" class="action-btn">
 
                                 <div style="display:flex; align-items:center; gap:10px;">
+
+
+                                    @if (countryId != 0)
+                                    {
+                                        <MudTooltip Text="@(ctx.Item.TotalStudents == 0 ? "No students available" : "View students")">
+
+                                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                           Color="Color.Primary"
+                                                           Size="Size.Small"
+                                                           Disabled="@(ctx.Item.TotalStudents == 0)"
+                                                           OnClick="@(() => OpenStudentList(ctx.Item))" />
+
+                                        </MudTooltip>
+                                    }
 
                                     <!-- EDIT -->
                                     @if (canEdit)
@@ -1046,6 +1116,7 @@
 
                                         </MudTooltip>
                                     }
+                                    
 
                                 </div>
 
@@ -1124,11 +1195,12 @@
     private MudDataGrid<MasterSchoolRequestDto>? dataGrid;
     private MasterSchoolFilterDto Filter = new MasterSchoolFilterDto();
 
-
+    [Parameter]
+    public long countryId { get; set; }
 
     private StaffType? CurrentStaffType;
     bool canView => PermissionService.CanView("schools");
-    bool canAdd => PermissionService.CanInsert("schools");
+    bool canAdd => PermissionService.CanInsert("schools") ;
     bool canEdit => PermissionService.CanUpdate("schools");
     bool canDelete => PermissionService.CanDelete("schools");
 
@@ -1142,7 +1214,15 @@
         var user = CurrentUserProfileService.GetCurrentUserProfile();
         CurrentStaffType = user.StaffType;
 
-        await LoadData(Filter);
+
+        @if (countryId == 0)
+        {
+            await LoadData(Filter);
+        }
+        else
+        {
+            await GetCountrySchoolList(Filter);
+        }
     }
 
     // global search
@@ -1384,7 +1464,7 @@
 
         if (result != null && result.Data is int selectedStatus && !result.Canceled && dto.SchoolId.HasValue)
         {
-			approvalRequestDto.EntityId = dto.SchoolId.Value;
+            approvalRequestDto.EntityId = dto.SchoolId.Value;
             approvalRequestDto.ApprovalStatus = selectedStatus;
 
             var response = await ApprovalService.ApproveSchool(approvalRequestDto);
@@ -1470,6 +1550,37 @@
         {
             return url;
         }
+    }
+
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo(Routes.CountrySchoolSummary);
+    }
+
+
+    private async Task GetCountrySchoolList(MasterSchoolFilterDto filter)
+    {
+        PageNumber = 1;       // current page
+        PageSize = 25;        // rows per page
+        TotalRecords = 0;     // total records returned by API
+
+        filter.PageNumber = PageNumber;
+        filter.PageSize = PageSize;
+        filter.ApprovalStatus = (int)ApprovalStatus.Approved;
+        filter.CountryId = countryId;
+
+        await LoadData(filter);
+    }
+
+
+
+    private void OpenStudentList(MasterSchoolRequestDto dto)
+    {
+        var url = Routes.StudentListBySchoolId
+        .Replace("{schoolId:long}", dto.SchoolId.ToString());
+
+        Navigation.NavigateTo(url);
     }
 
 }

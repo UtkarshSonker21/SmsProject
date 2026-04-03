@@ -35,7 +35,7 @@ namespace ScholarshipManagementAPI.DTOs.SuperAdmin.UsersLogin
         public DateTime? CreatedDate { get; set; }   // server-side preferred
 
         [StringLength(200)]
-        public string? CreatedBy { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;   // server-side preferred (from JWT claim)
 
 
 

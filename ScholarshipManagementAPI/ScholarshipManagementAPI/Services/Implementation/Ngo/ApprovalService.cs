@@ -187,6 +187,46 @@ namespace ScholarshipManagementAPI.Services.Implementation.Ngo
         }
 
 
+        //public async Task<bool> ApproveUniversityAsync(long id, int approvalStatus, long approvedBy)
+        //{
+        //    var entity = await _context.UnUniversityLists
+        //        .FirstOrDefaultAsync(x => x.UniversityId == id);
+
+        //    if (entity == null)
+        //        throw new CustomException("University not found");
+
+        //    // validate enum
+        //    if (!Enum.IsDefined(typeof(ApprovalStatus), approvalStatus))
+        //        throw new CustomException("Invalid approval status");
+
+        //    // block pending
+        //    if (approvalStatus == (int)ApprovalStatus.Pending)
+        //        throw new CustomException("Pending status cannot be set from approval action");
+
+        //    // prevent re-approval
+        //    if (entity.ApprovalStatus == (int)ApprovalStatus.Approved &&
+        //        approvalStatus == (int)ApprovalStatus.Approved)
+        //        throw new CustomException("University already approved");
+
+        //    // prevent re-reject 
+        //    if (entity.ApprovalStatus == (int)ApprovalStatus.Rejected &&
+        //        approvalStatus == (int)ApprovalStatus.Rejected)
+        //        throw new CustomException("University already rejected");
+
+        //    // prevent reject after approve
+        //    if (entity.ApprovalStatus == (int)ApprovalStatus.Approved &&
+        //        approvalStatus == (int)ApprovalStatus.Rejected)
+        //        throw new CustomException("Approved University cannot be rejected");
+
+        //    // usually updated via ngo
+        //    entity.ApprovalStatus = approvalStatus;
+        //    entity.ApprovedBy = approvedBy;
+
+        //    await _context.SaveChangesAsync();
+
+        //    return true;
+        //}
+
 
 
     }

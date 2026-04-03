@@ -1,6 +1,4 @@
-﻿@* @page "/enrolled/student/data/{stdId:long}" *@
-
-@page "/enrolled/student/data/{stdId:long}/{reqId:long}"
+﻿@page "/student-view/{Id:long}"
 
 @attribute [Authorize]
 @layout MainLayout
@@ -34,6 +32,7 @@
 @inject ISnackbar Snackbar
 @inject AuthService AuthService
 @inject IJSRuntime JS
+
 
 <style>
 
@@ -116,8 +115,8 @@
                                Style="width:48px;height:48px; margin-right:15px;">
 
                         <img src="@(string.IsNullOrWhiteSpace(model.Photo)
-                                                      ? "/images/male-icon.png"
-                                                      : model.Photo)"
+                                                                                   ? "/images/male-icon.png"
+                                                                                   : model.Photo)"
                              style="width:100%;height:100%;object-fit:cover;" />
 
                     </MudAvatar>
@@ -138,23 +137,6 @@
 
                 </div>
 
-                <!-- RIGHT SIDE BUTTON -->
-                @if (showUpdateStatus)
-                {
-                    <div class="d-flex align-items-center gap-1 text-primary small mt-1 approval-action"
-                         style="cursor:pointer;"
-                         @onclick="@OpenStatusDialog">
-
-                        <MudIcon Icon="@Icons.Material.Filled.Edit"
-                                 Style="font-size:14px;" />
-
-                        <span>
-                            Update status
-                        </span>
-                    </div>
-                }
-
-
             </div>
 
             <div style="height:2px; background:#e5e7eb; margin-bottom:5px;"></div>
@@ -165,52 +147,6 @@
 
             <MudGrid Spacing="3">
 
-                @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.Marketing)
-                {
-                    <!-- ================= Requiremnet Details ================= -->
-                    <MudItem xs="12" Class="mb-2">
-                        <MudText Typo="Typo.h6" Style="font-size:15px; font-weight:600;">
-                            Requiremnet Details
-                        </MudText>
-                        <div style="width:60px; height:2px; background:#1E88E5;"></div>
-                        <MudDivider />
-                    </MudItem>
-
-
-                    <MudItem xs="12" md="4">
-                        <span style="color:#334155; font-weight:500;">University Name:</span>
-                        <span style="color:#64748B;">
-                            @(string.IsNullOrWhiteSpace(Req.UniversityName) ? "N/A" : Req.UniversityName)
-                        </span>
-                    </MudItem>
-
-
-                    <MudItem xs="12" md="4">
-                        <span style="color:#334155; font-weight:500;">Course Name:</span>
-                        <span style="color:#64748B;">
-                            @(string.IsNullOrWhiteSpace(Req.CourseName) ? "N/A" : Req.CourseName)
-                        </span>
-                    </MudItem>
-
-                    <MudItem xs="12" md="4">
-                        <span style="color:#334155; font-weight:500;">Duration:</span>
-                        <span style="color:#64748B;">
-                            @(
-                                                    Req.ReqStartDate.HasValue && Req.ReqEndDate.HasValue
-                                                    ? $"{Req.ReqStartDate.Value:dd MMM yyyy} - {Req.ReqEndDate.Value:dd MMM yyyy}"
-                                                    : Req.ReqStartDate.HasValue
-                                                    ? $"From {Req.ReqStartDate.Value:dd MMM yyyy}"
-                                                    : Req.ReqEndDate.HasValue
-                                                    ? $"Until {Req.ReqEndDate.Value:dd MMM yyyy}"
-                                                    : "N/A"
-                                                    )
-                        </span>
-                    </MudItem>
-
-                    <MudDivider Class="mb-4" />
-                }
-
-             
                 <!-- ================= BASIC ================= -->
                 <MudItem xs="12" Class="mb-2">
                     <MudText Typo="Typo.h6"
@@ -533,6 +469,7 @@
 
 
 
+
 @code {
 
 
@@ -542,22 +479,14 @@
     private StudentFilterDto Filter = new StudentFilterDto();
 
     private StaffType? CurrentStaffType;
-    bool canView => PermissionService.CanView("course-enrollment") || PermissionService.CanView("enrolled-students");
-    bool canAdd => PermissionService.CanInsert("course-enrollment") || PermissionService.CanInsert("enrolled-students");
-    bool canEdit => PermissionService.CanUpdate("course-enrollment") || PermissionService.CanUpdate("enrolled-students");
-    bool canDelete => PermissionService.CanDelete("course-enrollment") || PermissionService.CanDelete("enrolled-students");
+    bool canView => PermissionService.CanView("course-enrollment") || PermissionService.CanView("enrolled-students") || PermissionService.CanView("students");
+    bool canAdd => PermissionService.CanInsert("course-enrollment") || PermissionService.CanInsert("enrolled-students") || PermissionService.CanInsert("students");
+    bool canEdit => PermissionService.CanUpdate("course-enrollment") || PermissionService.CanUpdate("enrolled-students") || PermissionService.CanUpdate("students");
+    bool canDelete => PermissionService.CanDelete("course-enrollment") || PermissionService.CanDelete("enrolled-students") || PermissionService.CanDelete("students");
 
 
     [Parameter]
-    public long stdId { get; set; }
-
-    [Parameter]
-    public long reqId { get; set; }
-
-
-    private CourseRequirementRequestDto Req { get; set; } = new();
-    public StudentRequirementRequestDto StdReq { get; set; } = new();
-
+    public long Id { get; set; }
 
 
     protected override async Task OnInitializedAsync()
@@ -570,21 +499,10 @@
         var user = CurrentUserProfileService.GetCurrentUserProfile();
         CurrentStaffType = user.StaffType;
 
-        if (stdId > 0)
+        if (Id > 0)
         {
-            await GetStudentById(stdId);
+            await GetStudentById(Id);
         }
-
-        if (reqId > 0)
-        {
-            await GetReqById(reqId);
-        }
-
-        if (stdId > 0 && reqId > 0)
-        {
-            await GetStdReqById(reqId,stdId);
-        }
-
 
     }
 
@@ -606,107 +524,20 @@
     }
 
 
-    private async Task GetReqById(long reqID)
-    {
-        var resultReq = await CourseRequirementService.GetCourseRequirementById(reqID);
-
-
-        if (resultReq.Response.Success)
-        {
-            Req = resultReq.Data ?? new CourseRequirementRequestDto();
-
-        }
-        else
-        {
-            Snackbar.Add(resultReq.Response.Message, Severity.Error);
-        }
-
-        await InvokeAsync(StateHasChanged);
-
-    }
-
-    private bool showUpdateStatus = false;
-    private async Task GetStdReqById(long reqID, long stdID)
-    {
-        var result = await StudentRequirementService.GetStudentRequirements(new StudentRequirementFilterDto()
-        {
-            StudentID = stdID,
-            ReqId = reqID
-        });
-
-        if (result.Response.Success)
-        {
-            StdReq = result.Data.Items.FirstOrDefault() ?? new StudentRequirementRequestDto();
-
-            if (StdReq.UniAwardingStatus != (int)AwardingStatus.Awarded)
-            {
-                showUpdateStatus = false;
-            }
-            else
-            {
-                if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.University)
-                {
-                    showUpdateStatus = true;
-                }
-            }
-        }
-        else
-        {
-            Snackbar.Add(result.Response.Message, Severity.Error);
-        }
-
-        await InvokeAsync(StateHasChanged);
-
-    }
-
-
-    private async Task OpenStatusDialog()
-    {
-        var parameters = new DialogParameters
-        {
-            {
-                "StdReq",
-                new StudentRequirementRequestDto
-                {
-                    // StudentReqID = model.StudentReqID,
-                    StudentID = stdId,
-                    ReqId = reqId,
-                }
-            } //label model for edit
-        };
-
-        var options = new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true
-        };
-
-        var dialog = await DialogService.ShowAsync<StudentRequirementUpdateDialog>("Update Student Status", parameters, options);
-
-        var result = await dialog.Result;
-
-        // Reload only if Save was successful
-        if (result is not null && !result.Canceled)
-        {
-            await GetStudentById(stdId);
-        }
-    }
-
-
-
     private async Task GoBack()
     {
         await JS.InvokeVoidAsync("history.back");
     }
 
 
+
     private void GoToSchoolProfile(long id)
     {
-        // Navigation.NavigateTo($"/school/profile/{id}");
+        //Navigation.NavigateTo($"/school/profile/{id}");
 
-        Navigation.NavigateTo(Routes.SchoolProfile.Replace("{Id:long}", id.ToString()));
+        Navigation.NavigateTo(Routes.SchoolProfile.Replace("{Id:long}",id.ToString()));
     }
+
 
 
 }

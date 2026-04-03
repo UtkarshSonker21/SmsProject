@@ -267,7 +267,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             var totalCount = await query.CountAsync();
 
             // ---------- Ordering ----------
-            query = query.OrderBy(x => x.SchoolId);
+            query = query.OrderByDescending(x => x.StudentData.Count());
 
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)
@@ -317,7 +317,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
 
                     ApprovalStatus = x.ApprovalStatus,
                     ApprovedBy = x.ApprovedBy,
-                    ApprovedByName = x.ApprovedByNavigation != null ? x.ApprovedByNavigation.LoginName : null
+                    ApprovedByName = x.ApprovedByNavigation != null ? x.ApprovedByNavigation.LoginName : null,
+
+                    TotalStudents = x.StudentData != null ? x.StudentData.Count : 0
                 })
                 .ToListAsync();
 
