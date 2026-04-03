@@ -274,7 +274,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             var totalCount = await query.CountAsync();
 
             // ---------- Ordering ----------
-            query = query.OrderBy(x => x.ReqId);
+            query = query.OrderByDescending(x => x.ReqId);
 
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)
@@ -377,7 +377,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             var totalCount = await query.CountAsync();
 
             // ---------- PAGINATION ----------
-            query = query.OrderBy(x => x.ReqId);
+            query = query.OrderByDescending(x => x.ReqId);
 
             if (filter.PageSize > 0)
             {

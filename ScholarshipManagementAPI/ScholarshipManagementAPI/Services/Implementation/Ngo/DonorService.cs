@@ -159,7 +159,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.Ngo
             var totalCount = await query.CountAsync();
 
             // ---------- Ordering ----------
-            query = query.OrderBy(x => x.DonorId);
+            query = query.OrderByDescending(x => x.DonorId);
 
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)

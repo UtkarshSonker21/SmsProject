@@ -79,7 +79,9 @@
             public const string SchoolRegistartion = "/school-registration";
             public const string SchoolCreate = "/school";
             public const string SchoolUpdate = "/school-update/{Id:long}";
+            public const string SchoolProfile = "/school/profile/{Id:long}";
             public const string SchoolList = "/school-lists";
+            public const string SchoolListByCountryID = "/school-lists/{countryId:long}";
 
             public const string UniversityRegistartion = "/university-registration";
             public const string UniversityUpdate = "/university-update/{Id:long}";
@@ -108,13 +110,18 @@
 
             public const string StudentAdd = "/student-add";
             public const string StudentUpdate = "/student-update/{Id:long}";
+            public const string StudentView = "/student-view/{Id:long}";
             public const string StudentList = "/student-list";
+            public const string StudentListBySchoolId = "/student-list/{schoolId:long}";
 
             public const string StudentRequiremntList = "/student-req-list";
             public const string Enrollments = "/enrollments";
             public const string EnrolledStudentsByReqId = "/enrolled/students/{reqId}";
             public const string EnrolledStudents = "/enrolled/students";
             public const string EnrolledStudentData = "/enrolled/student/data/{stdId:long}/{reqId:long}";
+
+
+            public const string CountrySchoolSummary = "/country-schools-summary";
 
         }
 

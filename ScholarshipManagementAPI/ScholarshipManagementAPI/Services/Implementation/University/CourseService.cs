@@ -223,7 +223,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             var totalCount = await query.CountAsync();
 
             // ---------- Ordering ----------
-            query = query.OrderBy(x => x.CourseId);
+            query = query.OrderByDescending(x => x.CourseId);
 
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)

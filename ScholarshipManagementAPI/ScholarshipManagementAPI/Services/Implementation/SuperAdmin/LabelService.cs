@@ -180,7 +180,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
             var totalCount = await query.CountAsync();
 
             var items = await query
-                .OrderBy(x => x.LabelId)
+                .OrderByDescending(x => x.LabelId)
                 .Skip((filter.PageNumber - 1) * filter.PageSize)
                 .Take(filter.PageSize)
                 .Select(x => new LabelRequestDto

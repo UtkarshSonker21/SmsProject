@@ -142,7 +142,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
             var totalCount = await query.CountAsync();
 
             // ---------- Ordering ----------
-            query = query.OrderBy(x => x.CurrencyId);
+            query = query.OrderByDescending(x => x.CurrencyId);
 
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)

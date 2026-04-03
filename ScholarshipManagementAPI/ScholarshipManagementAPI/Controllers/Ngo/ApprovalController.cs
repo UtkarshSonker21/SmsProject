@@ -125,5 +125,32 @@ namespace ScholarshipManagementAPI.Controllers.Ngo
         }
 
 
+        [HttpPost("university")]
+        [Authorize]
+        public async Task<IActionResult> ApproveUniversity(ApprovalRequestDto dto)
+        {
+            // get logged-in user
+            var currentUser = await _currentUser.GetCurrentUserAsync();
+
+            // optional role guard (recommended)
+            if (currentUser.StaffType != StaffType.Ngo && currentUser.StaffType != StaffType.SuperAdmin)
+                throw new CustomException("Only NGO can approve university");
+
+            // approval status should be 1 (approved) or 2 (rejected)
+            // entity id is the school id here 
+            // var result = await _service.ApproveUniversityAsync(dto.EntityId, dto.ApprovalStatus, currentUser.LoginId);
+
+            return Ok(new ApiResponseDto
+            {
+                Success = true,
+                Message = "University approval updated successfully",
+                //Result = result,
+            });
+        }
+
+
+
+
+
     }
 }

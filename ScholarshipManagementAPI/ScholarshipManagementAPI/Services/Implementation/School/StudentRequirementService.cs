@@ -383,7 +383,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             var totalCount = await query.CountAsync();
 
             // ---------- Ordering ----------
-            query = query.OrderBy(x => x.StudentReqId);
+            query = query.OrderByDescending(x => x.StudentReqId);
 
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)

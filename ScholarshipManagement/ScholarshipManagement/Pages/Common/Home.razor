@@ -7,6 +7,9 @@
 @using MudBlazor
 @using ScholarshipManagement.Helper.Translations
 @using ScholarshipManagement.Services.Common
+@using ApexCharts
+@using Color = MudBlazor.Color
+@using Size = MudBlazor.Size
 @inject AuthService AuthService
 @inject IDialogService DialogService
 @inject IJSRuntime JS
@@ -14,6 +17,97 @@
 @inject ISnackbar Snackbar
 @inject TranslationStateService T
 @inject TranslationStateService TState
+
+
+<style>
+    .dashboard-card {
+        border-radius: 12px;
+        height: 110px;
+        transition: 0.2s;
+    }
+
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            transition: 0.2s;
+        }
+
+    /* Colors */
+    /* .success {
+        background: #16a34a;
+        color: white;
+    }
+
+    .info {
+        background: #2563eb;
+        color: white;
+    }
+
+    .warning {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .danger {
+        background: #dc2626;
+        color: white;
+    } */
+
+
+    .success {
+    background: rgba(22, 163, 74, 0.15);
+    color: #16a34a;
+    border: 1px solid rgba(22, 163, 74, 0.25);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
+}
+
+.info {
+    background: rgba(37, 99, 235, 0.15);
+    color: #2563eb;
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.danger {
+    background: rgba(220, 38, 38, 0.15);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+}
+
+
+    .card-title {
+        font-size: 13px;
+        opacity: 0.8;
+    }
+
+    .card-value {
+        font-size: 26px;
+        font-weight: bold;
+    }
+
+    .card-sub {
+        font-size: 11px;
+        opacity: 0.7;
+    }
+
+    .section-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+</style>
+
+
 
 <!-- Main Content Wrapper -->
 <div style="display: flex; flex-direction: column; align-items: flex-start; flex: 1 0 0;">
@@ -52,21 +146,140 @@
 
     </div>
 
+    <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+        <!-- KPI CARDS -->
+        <MudGrid Class="mb-4">
+
+            @foreach (var card in DashboardCards)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class=@($"pa-4 d-flex align-center justify-space-between dashboard-card {card.Color}")>
+                        <div>
+                            <div class="card-title">@card.Title</div>
+                            <div class="card-value">@card.Value</div>
+                            <div class="card-sub">+12% this month</div>
+                        </div>
+                        <MudIcon Icon="@card.Icon" Size="Size.Large" />
+                    </MudPaper>
+                </MudItem>
+            }
+
+        </MudGrid>
+
+        <!-- CHARTS -->
+        <MudGrid Class="mb-4">
+
+            <!-- LEFT: BAR/LINE CHART -->
+            <MudItem xs="12" md="8">
+                <MudPaper Class="pa-4">
+                    @* <div class="section-title">Applications Overview</div>
+
+                    <ApexChart TItem="ChartData" Options="lineOptions">
+
+                        <ApexPointSeries TItem="ChartData"
+                                         Items="chartData"
+                                         Name="Applications"
+                                         XValue="@(e => e.Month)"
+                                         YValue="@(e => e.Count)" />
+
+                    </ApexChart> *@
+                    
+
+                </MudPaper>
+            </MudItem>
+
+            <!-- RIGHT: DONUT CHART -->
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4">
+                    @* <div class="section-title">Status Distribution</div>
+
+                    <ApexChart TItem="StatusData" Options="barOptions">
+
+                        <ApexPointSeries TItem="StatusData"
+                                         Items="statusData"
+                                         Name="Applications" Horizontal=true
+                                         XValue="@(e => e.Label)"
+                                         YValue="@(e => e.Value)" />
+
+                    </ApexChart> *@
+
+                </MudPaper>
+            </MudItem>
+
+        </MudGrid>
+
+
+
+        <!-- TABLES -->
+        <MudGrid>
+
+            <!-- Recent Students -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4">
+                    <div class="section-title">Recent Students</div>
+
+                    <MudTable Items="RecentStudents" Dense Hover>
+                        <HeaderContent>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Country</MudTh>
+                            <MudTh>Status</MudTh>
+                        </HeaderContent>
+
+                        <RowTemplate>
+                            <MudTd>@context.Name</MudTd>
+                            <MudTd>@context.Country</MudTd>
+                            <MudTd>
+                                <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Style="min-width:100px; justify-content:center;">
+                                    @context.Status
+                                </MudChip>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+
+                </MudPaper>
+            </MudItem>
+
+            <!-- Recent Applications -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4">
+                    <div class="section-title">Recent Applications</div>
+
+                    <MudTable Items="RecentApplications" Dense Hover>
+                        <HeaderContent>
+                            <MudTh>Student</MudTh>
+                            <MudTh>Program</MudTh>
+                            <MudTh>Status</MudTh>
+                        </HeaderContent>
+
+                        <RowTemplate>
+                            <MudTd>@context.Student</MudTd>
+                            <MudTd>@context.Program</MudTd>
+                            <MudTd>
+                                <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Style="min-width:100px; justify-content:center;">
+                                    @context.Status
+                                </MudChip>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+
+                </MudPaper>
+            </MudItem>
+
+        </MudGrid>
+
+    </MudContainer>
+
 </div>
+
 
 @* <Loader Text="Loading"
         SecondaryText="Fetching Data..." Visible="true" /> *@
  
+
+
 @code {
 
-
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     if (!await AuthService.IsUserLoggedIn())
-    //     {
-    //         Nav.NavigateTo("/login", true);
-    //     }
-    // }
 
 
     protected override void OnInitialized()
@@ -85,16 +298,95 @@
     }
 
 
-    private string _search = string.Empty;
-
-    void OnSearchKeyDown(KeyboardEventArgs e)
+    List<CardModel> DashboardCards = new()
     {
-        if (e.Key == "Enter")
-        {
-            // perform search
-        }
+        new("Total Students", 1200, "success", Icons.Material.Filled.School),
+        new("Applications", 320, "info", Icons.Material.Filled.Description),
+        new("Pending", 86, "warning", Icons.Material.Filled.Pending),
+        new("Rejected", 24, "danger", Icons.Material.Filled.Cancel)
+    };
+
+    List<Student> RecentStudents = new()
+    {
+        new("Amit Sharma", "India", "Approved"),
+        new("John Doe", "UK", "Pending"),
+        new("Ali Khan", "UAE", "Approved"),
+        new("Sara Lee", "USA", "Rejected")
+    };
+
+    List<Application> RecentApplications = new()
+    {
+        new("Amit Sharma", "MBA", "Pending"),
+        new("John Doe", "BSc IT", "Approved"),
+        new("Ali Khan", "Engineering", "Pending"),
+        new("Sara Lee", "Medical", "Rejected")
+    };
+
+    public record CardModel(string Title, int Value, string Color, string Icon);
+    public record Student(string Name, string Country, string Status);
+    public record Application(string Student, string Program, string Status);
+
+
+
+
+    public class ChartData
+    {
+		public string Month { get; set; } = string.Empty;
+        public int Count { get; set; }
     }
 
+    List<ChartData> chartData = new()
+    {
+        new() { Month = "Jan", Count = 20 },
+        new() { Month = "Feb", Count = 35 },
+        new() { Month = "Mar", Count = 50 },
+        new() { Month = "Apr", Count = 40 },
+        new() { Month = "May", Count = 65 },
+        new() { Month = "Jun", Count = 80 }
+    };
+
+
+    public class StatusData
+    {
+		public string Label { get; set; } = string.Empty;
+        public int Value { get; set; }
+    }
+
+    List<StatusData> statusData = new()
+{
+    new() { Label = "Approved", Value = 45 },
+    new() { Label = "Pending", Value = 30 },
+    new() { Label = "Rejected", Value = 25 }
+};
+
+    ApexChartOptions<StatusData> barOptions = new()
+    {
+        Chart = new Chart
+        {
+            Type = ApexCharts.ChartType.Bar
+        },
+        PlotOptions = new PlotOptions
+        {
+            Bar = new PlotOptionsBar
+            {
+                Horizontal = false
+            }
+        }
+    };
+
+
+    ApexChartOptions<StatusData> lineOptions = new()
+    {
+        Chart = new Chart { Type = ApexCharts.ChartType.Line },
+        PlotOptions = new PlotOptions
+        {
+            Bar = new PlotOptionsBar
+            {
+                Horizontal = true // Set your horizontal preference here
+            }
+        },
+        Stroke = new Stroke { Curve = Curve.Smooth }
+    };
 
 
 }
