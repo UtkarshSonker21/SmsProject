@@ -85,9 +85,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Courses Requirement
                     </span>
                 </div>
@@ -96,9 +94,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -232,7 +228,7 @@
             <MudTabPanel>
                 <TabContent>
 
-                    <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" />
+                    <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" style="font-size:16px;" />
                     All
                 </TabContent>
             </MudTabPanel>
@@ -242,7 +238,7 @@
 
                     <MudIcon Icon="@Icons.Material.Filled.HourglassTop"
                              Color="Color.Warning"
-                             Class="mr-2" />
+                             Class="mr-2" style="font-size:16px;" />
 
                     <MudText Color="Color.Warning" Typo="Typo.subtitle2">
                         Pending
@@ -256,7 +252,7 @@
 
                     <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
                              Color="Color.Success"
-                             Class="mr-2" />
+                             Class="mr-2" style="font-size:16px;" />
 
                     <MudText Color="Color.Success" Typo="Typo.subtitle2">
                         Approved
@@ -270,7 +266,7 @@
 
                     <MudIcon Icon="@Icons.Material.Filled.Cancel"
                              Color="Color.Error"
-                             Class="mr-2" />
+                             Class="mr-2" style="font-size:16px;" />
 
                     <MudText Color="Color.Error" Typo="Typo.subtitle2">
                         Rejected
@@ -297,9 +293,32 @@
 
             <Columns>
 
+
+                <TemplateColumn Title="Active"
+                                HeaderClass="fw-bold"
+                                Style="min-width:140px"
+                                CellClass="text-center"
+                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
+                                CellStyle="width:80px; min-width:80px; max-width:80px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
+
+                            <span style="width:15px;height:15px;border-radius:50%;
+                 display:inline-block;
+                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
+                            </span>
+
+                        </MudTooltip>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
                 <TemplateColumn Title="Course"
                                 HeaderClass="fw-bold"
-                                Style="min-width:220px"
+                                HeaderStyle=" min-width:200px;"
+                                CellStyle="min-width:200px;;"
                                 Hideable="true">
 
                     <CellTemplate Context="ctx">
@@ -307,13 +326,11 @@
                         @if (!string.IsNullOrWhiteSpace(ctx.Item.CourseName))
                         {
                             <div class="d-flex align-items-center gap-1 ">
-                                <MudIcon Icon="@Icons.Material.Filled.AutoStories"
+                                @* <MudIcon Icon="@Icons.Material.Filled.AutoStories"
                                          Style="font-size:15px;"
-                                         Class="text-muted"
-                                         @onclick="@(() => EditCourseReq(ctx.Item))" />
+                                         Class="text-muted" /> *@
                                 <span class="text-primary fw-medium"
-                                      style="cursor:pointer;"
-                                      @onclick="@(() => EditCourseReq(ctx.Item))">
+                                      style="cursor:pointer;">
                                     @ctx.Item.CourseName
                                 </span>
                             </div>
@@ -321,9 +338,9 @@
                             @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin || CurrentStaffType == StaffType.School)
                             {
                                 <div class="d-flex align-items-center gap-1">
-                                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
+                                    @* <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
                                              Style="font-size:15px;"
-                                             Class="text-muted" />
+                                             Class="text-muted" /> *@
                                     <span>@ctx.Item.UniversityName</span>
                                 </div>
                             }
@@ -341,7 +358,7 @@
                                 HeaderClass="fw-bold"
                                 HeaderStyle="width:130px; min-width:130px; max-width:130px;"
                                 CellStyle="width:130px; min-width:130px; max-width:130px;"
-                                Hideable="true">
+                                Hideable="true" Hidden="true">
 
                     <CellTemplate Context="ctx">
 
@@ -482,7 +499,7 @@
                                 HeaderClass="fw-bold"
                                 HeaderStyle="width:100px; min-width:100px; max-width:100px;"
                                 CellStyle="width:100px; min-width:100px; max-width:100px;"
-                                Hideable="true">
+                                Hideable="true" Hidden="true">
 
                     <CellTemplate Context="ctx">
 
@@ -737,26 +754,7 @@
                 }
 
 
-                <TemplateColumn Title="Active"
-                                HeaderClass="fw-bold"
-                                Style="min-width:140px"
-                                CellClass="text-center"
-                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
-                                CellStyle="width:80px; min-width:80px; max-width:80px;">
 
-                    <CellTemplate Context="ctx">
-
-                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
-
-                            <span style="width:15px;height:15px;border-radius:50%;
-                 display:inline-block;
-                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
-                            </span>
-
-                        </MudTooltip>
-
-                    </CellTemplate>
-                </TemplateColumn>
 
 
                 @if (CurrentStaffType != StaffType.School)
@@ -782,7 +780,7 @@
                                         {
                                             <!-- EDIT -->
                                             <MudTooltip Text="Approved records cannot be edited"
-                                                        Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved">
+                                                        Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved" Placement="Placement.Left">
 
                                                 <span style="display:flex; align-items:center;">
 
@@ -820,7 +818,7 @@
                                         @if (canDelete)
                                         {
                                             <MudTooltip Text="Approved records cannot be deleted"
-                                                        Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved">
+                                                        Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved" Placement="Placement.Left">
 
                                                 <span style="display:flex; align-items:center;">
 

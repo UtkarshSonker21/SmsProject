@@ -38,6 +38,40 @@
         min-height: 100%;
     }
 
+
+    .cost-row-compact {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* very tight spacing */
+
+
+        padding-left: 12px; /* 🔥 aligns with other inputs */
+    }
+
+    .cost-label {
+        min-width: 260px; /* keeps alignment */
+        font-size: 14px;
+        color: #334155;
+        margin-left :5px;
+    }
+
+    .cost-input-compact {
+        width: 180px; /* fixed small input */
+    }
+
+    .cost-currency {
+        font-size: 13px;
+        color: #64748b;
+        padding-right: 12px;
+    }
+
+    .total-compact {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+        padding-right: 12px;
+    }
+
 </style>
 
 
@@ -56,9 +90,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title">
                         @title
                     </span>
                 </div>
@@ -90,6 +122,18 @@
 
                     <MudPaper Class="pa-4 full-height-paper" Elevation="2">
                         <MudGrid Spacing="2">
+
+
+                            <!-- =================  Requirement Deatils ================= -->
+                            <MudItem xs="12" Class="mb-2">
+                                <MudText Typo="Typo.h6"
+                                         Style="font-size:15px; font-weight:600; color:#1E293B;">
+                                    Requirement Deatils
+                                </MudText>
+                                <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                                <MudDivider />
+                            </MudItem>
+
 
                             <MudItem xs="12" md="4">
                                 <MudDatePicker @bind-Date="StartDate" MaxDate="@(EndDate?.AddDays(-1))"
@@ -157,8 +201,19 @@
                                 </MudSelect>
                             </MudItem>
 
-                            <!-- Line break + space -->
-                            <MudItem xs="12" Class="mt-4"></MudItem>
+                            <MudDivider Class="mb-4" />
+
+                            
+                            <!-- =================  Other Deatils ================= -->
+                            <MudItem xs="12" Class="mb-2">
+                                <MudText Typo="Typo.h6"
+                                         Style="font-size:15px; font-weight:600; color:#1E293B;">
+                                    Other Deatils
+                                </MudText>
+                                <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                                <MudDivider />
+                            </MudItem>
+
 
                             <MudItem xs="12" md="4">
                                 <MudSelect T="string"
@@ -225,11 +280,11 @@
                             </MudItem>
 
 
-                            <!-- Line break + space -->
-                            <MudItem xs="12" Class="mt-4"></MudItem>
+                          @*   <!-- Line break + space -->
+                            <MudItem xs="12" Class="mt-4"></MudItem> *@
 
 
-                            <MudItem xs="12">
+                          @*   <MudItem xs="12">
 
                                 <MudGrid AlignItems="AlignItems.Center">
 
@@ -250,134 +305,149 @@
 
                                 </MudGrid>
 
-                            </MudItem>
+                            </MudItem> *@
 
+                            <MudDivider Class="mb-4" />
 
-                            <MudItem xs="12" md="4">
-                                <MudTextField T="double?"
-                                              Label="Annual Registration Cost"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              @bind-Value="model.RegistrationCost"
-                                              For="@(() => model.RegistrationCost)" />
-                            </MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudTextField T="double?"
-                                              Label="Annual Tution Cost"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              @bind-Value="model.TutionCost"
-                                              For="@(() => model.TutionCost)" />
-                            </MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudTextField T="double?"
-                                              Label="Annual Text Books Cost"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              @bind-Value="model.TextBookCost"
-                                              For="@(() => model.TextBookCost)" />
-                            </MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudTextField T="double?"
-                                              Label="Annual Accomodation Cost"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              @bind-Value="model.AccomoCost"
-                                              For="@(() => model.AccomoCost)" />
-                            </MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudTextField T="double?"
-                                              Label="Annual Travelling Cost"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              @bind-Value="model.TravellingCost"
-                                              For="@(() => model.TravellingCost)" />
-                            </MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudTextField T="double?"
-                                              Label="Annual Transportation Cost"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              @bind-Value="model.TransportCost"
-                                              For="@(() => model.TransportCost)" />
-                            </MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudTextField T="double?"
-                                              Label="Annual Visa and Residency Cost"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              @bind-Value="model.VisaResiCost"
-                                              For="@(() => model.VisaResiCost)" />
-                            </MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudTextField T="double?"
-                                              Label="Annual Official Documents Attesting Cost"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              @bind-Value="model.DocuAttestCost"
-                                              For="@(() => model.DocuAttestCost)" />
-                            </MudItem>
-
-
-
-
-                            <!-- Line break -->
-                            <MudItem xs="12" Class="mt-2"></MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudText Typo="Typo.subtitle2">Active Status</MudText>
-                                <MudRadioGroup T="bool" @bind-Value="model.IsActive">
-                                    <MudRadio T="bool" Value="true" Color="Color.Primary">Active</MudRadio>
-                                    <MudRadio T="bool" Value="false" Color="Color.Primary">Inactive</MudRadio>
-                                </MudRadioGroup>
-                            </MudItem>
-
-                            <MudItem xs="12" md="6">
-
-                                <MudText Typo="Typo.subtitle2">
-                                    Approval Status
+                            <!-- =================  ANNUAL COST PER STUDENT ================= -->
+                            <MudItem xs="12" Class="mb-2">
+                                <MudText Typo="Typo.h6"
+                                         Style="font-size:15px; font-weight:600; color:#1E293B;">
+                                    Annual Cost Per Student
                                 </MudText>
-
-                                <MudRadioGroup T="int"
-                                               Value="model.ApprovalStatus"
-                                               Disabled="true"
-                                               Class="mt-1 d-flex gap-3">
-
-                                    <MudRadio T="int" Value="@((int)ApprovalStatus.Pending)" Color="Color.Warning">
-                                        Pending
-                                    </MudRadio>
-
-                                    <MudRadio T="int" Value="@((int)ApprovalStatus.Approved)" Color="Color.Success">
-                                        Approved
-                                    </MudRadio>
-
-                                    <MudRadio T="int" Value="@((int)ApprovalStatus.Rejected)" Color="Color.Error">
-                                        Rejected
-                                    </MudRadio>
-
-                                </MudRadioGroup>
-
-                                @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin)
-                                {
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
-                                        This course requirement is pending approval. Use the approval action from list screen.
-                                    </MudText>
-                                }
-                                else
-                                {
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
-                                        Approval is managed by the NGO
-                                    </MudText>
-                                }
-
+                                <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                                <MudDivider />
                             </MudItem>
+
+
+
+                            <MudGrid Spacing="1">
+
+                                <!-- ROW -->
+                                <MudItem xs="12">
+                                    <div class="cost-row-compact">
+                                        <span class="cost-label">Annual Registration Cost</span>
+
+                                        <MudTextField T="double?"
+                                                      @bind-Value="model.RegistrationCost"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Class="cost-input-compact" />
+
+                                        <span class="cost-currency">USD $</span>
+                                    </div>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <div class="cost-row-compact">
+                                        <span class="cost-label">Annual Tuition Cost</span>
+
+                                        <MudTextField T="double?"
+                                                      @bind-Value="model.TutionCost"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Class="cost-input-compact" />
+
+                                        <span class="cost-currency">USD $</span>
+                                    </div>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <div class="cost-row-compact">
+                                        <span class="cost-label">Annual Text Books Cost</span>
+
+                                        <MudTextField T="double?"
+                                                      @bind-Value="model.TextBookCost"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Class="cost-input-compact" />
+
+                                        <span class="cost-currency">USD $</span>
+                                    </div>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <div class="cost-row-compact">
+                                        <span class="cost-label">Annual Accommodation Cost</span>
+
+                                        <MudTextField T="double?"
+                                                      @bind-Value="model.AccomoCost"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Class="cost-input-compact" />
+
+                                        <span class="cost-currency">USD $</span>
+                                    </div>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <div class="cost-row-compact">
+                                        <span class="cost-label">Annual Travelling Cost</span>
+
+                                        <MudTextField T="double?"
+                                                      @bind-Value="model.TravellingCost"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Class="cost-input-compact" />
+
+                                        <span class="cost-currency">USD $</span>
+                                    </div>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <div class="cost-row-compact">
+                                        <span class="cost-label">Annual Transportation Cost</span>
+
+                                        <MudTextField T="double?"
+                                                      @bind-Value="model.TransportCost"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Class="cost-input-compact" />
+
+                                        <span class="cost-currency">USD $</span>
+                                    </div>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <div class="cost-row-compact">
+                                        <span class="cost-label">Annual Visa and Residency Cost</span>
+
+                                        <MudTextField T="double?"
+                                                      @bind-Value="model.VisaResiCost"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Class="cost-input-compact" />
+
+                                        <span class="cost-currency">USD $</span>
+                                    </div>
+                                </MudItem>
+
+                                <MudItem xs="12">
+                                    <div class="cost-row-compact">
+                                        <span class="cost-label">Annual Official Documents Attesting Cost</span>
+
+                                        <MudTextField T="double?"
+                                                      @bind-Value="model.DocuAttestCost"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Class="cost-input-compact" />
+
+                                        <span class="cost-currency">USD $</span>
+                                    </div>
+                                </MudItem>
+
+                                <!-- repeat same for others -->
+                                <!-- TOTAL -->
+                                <MudItem xs="12">
+                                    <div class="total-compact">
+                                        <MudText Typo="Typo.subtitle1">
+                                            Total Cost (USD $): <b>@TotalCost</b>
+                                        </MudText>
+                                    </div>
+                                </MudItem>
+
+                            </MudGrid>
+
 
                             <MudItem xs="12" Class="mt-5">
                                 <div class="d-flex justify-end gap-2">
@@ -717,3 +787,144 @@
     (model.VisaResiCost ?? 0);
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@*   <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Registration Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.RegistrationCost"
+                                              For="@(() => model.RegistrationCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Tution Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.TutionCost"
+                                              For="@(() => model.TutionCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Text Books Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.TextBookCost"
+                                              For="@(() => model.TextBookCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Accomodation Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.AccomoCost"
+                                              For="@(() => model.AccomoCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Travelling Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.TravellingCost"
+                                              For="@(() => model.TravellingCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Transportation Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.TransportCost"
+                                              For="@(() => model.TransportCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Visa and Residency Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.VisaResiCost"
+                                              For="@(() => model.VisaResiCost)" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="double?"
+                                              Label="Annual Official Documents Attesting Cost"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              @bind-Value="model.DocuAttestCost"
+                                              For="@(() => model.DocuAttestCost)" />
+                            </MudItem>
+
+
+
+                                                        <!-- Line break -->
+                            <MudItem xs="12" Class="mt-2"></MudItem>
+
+                            <MudItem xs="12" md="4">
+                                <MudText Typo="Typo.subtitle2">Active Status</MudText>
+                                <MudRadioGroup T="bool" @bind-Value="model.IsActive">
+                                    <MudRadio T="bool" Value="true" Color="Color.Primary">Active</MudRadio>
+                                    <MudRadio T="bool" Value="false" Color="Color.Primary">Inactive</MudRadio>
+                                </MudRadioGroup>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+
+                                <MudText Typo="Typo.subtitle2">
+                                    Approval Status
+                                </MudText>
+
+                                <MudRadioGroup T="int"
+                                               Value="model.ApprovalStatus"
+                                               Disabled="true"
+                                               Class="mt-1 d-flex gap-3">
+
+                                    <MudRadio T="int" Value="@((int)ApprovalStatus.Pending)" Color="Color.Warning">
+                                        Pending
+                                    </MudRadio>
+
+                                    <MudRadio T="int" Value="@((int)ApprovalStatus.Approved)" Color="Color.Success">
+                                        Approved
+                                    </MudRadio>
+
+                                    <MudRadio T="int" Value="@((int)ApprovalStatus.Rejected)" Color="Color.Error">
+                                        Rejected
+                                    </MudRadio>
+
+                                </MudRadioGroup>
+
+                                @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                        This course requirement is pending approval. Use the approval action from list screen.
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                        Approval is managed by the NGO
+                                    </MudText>
+                                }
+
+                            </MudItem>
+ *@

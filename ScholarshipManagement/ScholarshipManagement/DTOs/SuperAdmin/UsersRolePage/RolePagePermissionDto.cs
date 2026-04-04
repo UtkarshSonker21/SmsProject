@@ -29,5 +29,13 @@
         public int? LevelNo { get; set; }
         public int? SequenceNo { get; set; }
 
+
+
+
+        public bool OriginalViewPer { get; set; }
+        public bool OriginalInsertPer { get; set; }
+        public bool OriginalUpdatePer { get; set; }
+        public bool OriginalDeletePer { get; set; }
+
     }
 }

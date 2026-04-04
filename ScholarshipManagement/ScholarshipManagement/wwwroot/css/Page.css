@@ -1,26 +1,27 @@
-﻿.add-btn {
-    background-color: #0080ff;
-    color: white;
-    border-radius: 6px;
-    padding: 8px 16px;
-    border: 1px solid #0080ff;
+﻿.page-title {
     font-family: Inter, sans-serif;
-    font-weight: 700;
-    font-size: 9pt;
-    cursor: pointer;
-    width: 120px;
-    height: 40px;
-    /* transition */
-    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: 0.4px;
+    color: #334155;
 }
 
 
-    .add-btn:hover {
-        background-color: #0066cc; /* 👈 slightly darker blue */
-        border-color: #0066cc;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 10px rgba(0, 128, 255, 0.35);
-    }
+.page-title-uppercase {
+    text-transform: uppercase;
+}
+
+
+.meta-text {
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+}
+
+
+
 
 
 /* SEARCH CONTAINER */
@@ -64,6 +65,69 @@
     height: 16px;
     color: #2563eb;
 }
+
+
+
+
+.add-btn {
+    font-family: Inter, sans-serif;
+    font-weight: 600;
+    font-size: 9pt;
+    background-color: #0080ff;
+    color: white;
+    border-radius: 6px;
+    padding: 8px 12px;
+    border: 1px solid #0080ff;
+    cursor: pointer;
+    min-width: 100px;
+    height: 40px;
+    transition transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+
+    .add-btn:hover {
+        background-color: #0066cc;
+        👈 slightly darker blue border-color: #0066cc;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 128, 255, 0.35);
+    }
+
+
+
+.settings-btn {
+    background: #0080ff;
+    color: #ffffff;
+    border: 1px solid #0080ff;
+    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.25s ease-in-out, border-color 0.25s ease-in-out, color 0.25s ease-in-out;
+}
+
+    /* HOVER STATE */
+    .settings-btn:hover {
+        background: #1d4ed8 !important; /* darker blue */
+        border-color: #1d4ed8 !important;
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35); /* soft blue glow */
+    }
+
+/* ICON */
+.settings-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.35s ease-in-out;
+    transform: translateY(-1px);
+}
+
+/* ICON ROTATION ON HOVER */
+.settings-btn:hover .settings-icon {
+    transform: rotate(90deg);
+}
+
 
 
 /* dropdown SELECT CONTAINER */
@@ -183,39 +247,7 @@
         color: #2563eb;
     }
 
-.settings-btn {
-    background: #0080ff;
-    color: #ffffff;
-    border: 1px solid #0080ff;
-    border-radius: 6px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.25s ease-in-out, border-color 0.25s ease-in-out, color 0.25s ease-in-out;
-}
 
-    /* HOVER STATE */
-    .settings-btn:hover {
-        background: #1d4ed8 !important; /* darker blue */
-        border-color: #1d4ed8 !important;
-        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35); /* soft blue glow */
-    }
-
-/* ICON */
-.settings-icon {
-    width: 24px;
-    height: 24px;
-    transition: transform 0.35s ease-in-out;
-    transform: translateY(-1px);
-}
-
-/* ICON ROTATION ON HOVER */
-.settings-btn:hover .settings-icon {
-    transform: rotate(90deg);
-}
 
 
 

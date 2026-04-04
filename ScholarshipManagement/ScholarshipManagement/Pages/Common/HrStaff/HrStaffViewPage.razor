@@ -1,0 +1,326 @@
+﻿@page "/hr-staff-view/{Id:long}"
+
+@attribute [Authorize]
+@layout MainLayout
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ScholarshipManagement.DTOs
+@using ScholarshipManagement.DTOs.Common.HrStaff
+@using ScholarshipManagement.DTOs.School.Students
+@using ScholarshipManagement.Helper.Enums
+@using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.Ngo
+@using static ScholarshipManagement.Helper.Constant
+@inject CurrentUserProfileService CurrentUserProfileService
+@inject HrStaffService HrStaffService
+@inject PermissionService PermissionService
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject AuthService AuthService
+@inject IJSRuntime JS
+
+
+<style>
+
+    .border-bottom-only {
+        box-shadow: none !important; /* remove elevation shadow */
+        border-radius: 0; /* optional: flat look */
+        border-bottom: 2px solid #e5e7eb; /* light gray divider */
+    }
+
+    .approval-action:hover {
+        text-decoration: underline;
+        opacity: 0.85;
+    }
+
+    .clickable-text:hover {
+        text-decoration: underline;
+        opacity: 0.8;
+    }
+
+</style>
+
+
+<div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
+
+    <!-- Page Top Section (Header area) -->
+    <div style="display: flex; flex-direction: column; align-items: center; align-self: stretch;">
+
+        <!-- Section Title Bar (under Page Top) -->
+        <div style="display: flex; height: 64px; justify-content: space-between; align-items: center;
+                    align-self: stretch; border-bottom: 1px solid var(--color-border-horizontal-lines, #DBDBDB);
+                    background: var(--color-background-main, #FFF);">
+
+            <!-- Left Section (Inside Page Title Bar) -->
+            <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
+
+                <div style="display: flex; align-items: center;">
+
+                    <MudTooltip Text="Back" Placement="Placement.Bottom">
+
+                        <div class="nav-icon" @onclick="GoBack">
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
+                        </div>
+
+                    </MudTooltip>
+
+                    <span class="page-title page-title-uppercase">
+                        Staff Profile
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- Right Section (Inside Page Title Bar) -->
+            <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
+                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
+                            text-transform: capitalize; margin-right:25px">
+                    @* Total Records : <span id="totalRecords">@TotalRecords</span> *@
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-4">
+
+        <MudPaper Class="pa-6" Elevation="2">
+
+            <!-- ================= HEADER ================= -->
+            <div class="d-flex align-center justify-space-between mb-4">
+
+                <div class="d-flex align-center">
+
+                    <MudAvatar Size="Size.Small"
+                               Style="width:48px;height:48px; margin-right:15px;">
+
+                        <img src="@(string.IsNullOrWhiteSpace(model.Photo)
+                                                             ? "/images/male-icon.png"
+                                                             : model.Photo)"
+                             style="width:100%;height:100%;object-fit:cover;" />
+                    </MudAvatar>
+
+                    <div>
+                        <MudText Typo="Typo.h6">
+                            @model.StaffSalutation @model.StaffFirstName @model.StaffLastName
+                        </MudText>
+
+                        <MudText Typo="Typo.subtitle2"
+                                 Color="Color.Primary">
+                            @model.StaffTypeName 
+                            @* - @model.OrganisationName *@
+                        </MudText>
+                    </div>
+
+                </div>
+            </div>
+
+            <div style="height:2px; background:#e5e7eb; margin-bottom:5px;"></div>
+            <MudDivider Class="mb-4" />
+
+            <MudGrid Spacing="3">
+
+                <!-- ================= BASIC ================= -->
+                <MudItem xs="12" Class="mb-2">
+                    <MudText Typo="Typo.h6"
+                             Style="font-size:15px; font-weight:600; color:#1E293B;">
+                        Basic Information
+                    </MudText>
+                    <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                    <MudDivider />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Name:</span>
+                    <span style="color:#64748B;">
+                        @($"{model.StaffSalutation} {model.StaffFirstName} {model.StaffLastName}")
+                    </span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Staff Type:</span>
+                    <span style="color:#64748B;">@(model.StaffTypeName ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Organisation:</span>
+                    <span style="color:#64748B;">@(model.OrganisationName ?? "N/A")</span>
+                </MudItem>
+
+                <MudDivider Class="mb-4" />
+
+                <!-- ================= PERSONAL ================= -->
+                <MudItem xs="12" Class="mb-2">
+                    <MudText Typo="Typo.h6"
+                             Style="font-size:15px; font-weight:600; color:#1E293B;">
+                        Personal Details
+                    </MudText>
+                    <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                    <MudDivider />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Gender:</span>
+                    <span>@(model.Gender ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Language:</span>
+                    <span style="color:#64748B;">@(model.Language ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Status:</span>
+                    <span style="color:#64748B;">@(model.IsActive ? "Active" : "Inactive")</span>
+                </MudItem>
+
+                <MudDivider Class="mb-4" />
+
+                <!-- ================= CONTACT ================= -->
+                <MudItem xs="12" Class="mb-2">
+                    <MudText Typo="Typo.h6"
+                             Style="font-size:15px; font-weight:600; color:#1E293B;">
+                        Contact & Address
+                    </MudText>
+                    <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                    <MudDivider />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Office Email:</span>
+                    <span style="color:#64748B;">@(model.OfficeEmail ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Personal Email:</span>
+                    <span style="color:#64748B;">@(model.PersonelEmail ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Mobile:</span>
+                    <span style="color:#64748B;">@(model.MobileNo ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Address:</span>
+                    <span style="color:#64748B;">@(model.PermAddress ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">City:</span>
+                    <span style="color:#64748B;">@(model.PermCity ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">State:</span>
+                    <span style="color:#64748B;">@(model.PermState ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Country:</span>
+                    <span style="color:#64748B;">@(model.PermCountry ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Zip:</span>
+                    <span style="color:#64748B;">@(model.PermZipCode ?? "N/A")</span>
+                </MudItem>
+
+                <MudDivider Class="mb-4" />
+
+                <!-- ================= OTHER ================= -->
+                <MudItem xs="12" Class="mb-2">
+                    <MudText Typo="Typo.h6"
+                             Style="font-size:15px; font-weight:600; color:#1E293B;">
+                        Other Details
+                    </MudText>
+                    <div style="width:60px; height:2px; background:#1E88E5;"></div>
+                    <MudDivider />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Login Name:</span>
+                    <span style="color:#64748B;">@(model.LoginName ?? "N/A")</span>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <span style="color:#334155; font-weight:500;">Remarks:</span>
+                    <span style="color:#64748B;">@(model.Remarks ?? "N/A")</span>
+                </MudItem>
+
+            </MudGrid>
+
+        </MudPaper>
+
+    </MudContainer>
+
+
+</div>
+
+@code {
+
+
+
+    private MudForm? form;
+
+    private StaffRequestDto model = new();
+    private StaffFilterDto Filter = new StaffFilterDto();
+
+    private StaffType? CurrentStaffType;
+    bool canView => PermissionService.CanView("users");
+    bool canAdd => PermissionService.CanInsert("users");
+    bool canEdit => PermissionService.CanUpdate("users");
+    bool canDelete => PermissionService.CanDelete("users");
+
+
+    [Parameter]
+    public long Id { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!canView)
+        {
+            Navigation.NavigateTo(Routes.Dashboard);
+        }
+
+        var user = CurrentUserProfileService.GetCurrentUserProfile();
+        CurrentStaffType = user.StaffType;
+
+        if (Id > 0)
+        {
+            await GetSaffById(Id);
+        }
+
+    }
+
+
+
+    private async Task GetSaffById(long ID)
+    {
+        var result = await HrStaffService.GetHrStaffById(ID);
+        if (result.Response.Success)
+        {
+            model = result.Data;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Error);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task GoBack()
+    {
+        await JS.InvokeVoidAsync("history.back");
+    }
+
+
+
+}

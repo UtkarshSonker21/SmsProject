@@ -143,9 +143,7 @@
                 }
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Schools 
                     </span>
                 </div>
@@ -154,10 +152,8 @@
                 {
                     var countryName = Items.FirstOrDefault()?.CountryName;
 
-                    <div style="display:flex; align-items:center;">
-                        <span style="color:#000; font-family:Inter, sans-serif;
-                         font-size:18px; font-weight:600;
-                         line-height:24px; text-transform:uppercase; margin-left:3px;">
+                    <div style="display: flex; align-items: center;">
+                        <span class="page-title page-title-uppercase">
                             : @countryName
                         </span>
                     </div>
@@ -166,9 +162,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -296,7 +290,7 @@
             <MudTabPanel>
                 <TabContent>
 
-                    <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" />
+                    <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" Style="font-size:16px;" />
                     All
 
                 </TabContent>
@@ -307,7 +301,7 @@
 
                     <MudIcon Icon="@Icons.Material.Filled.HourglassTop"
                              Color="Color.Warning"
-                             Class="mr-2" />
+                             Class="mr-2" Style="font-size:16px;" />
 
                     <MudText Color="Color.Warning" Typo="Typo.subtitle2">
                         Pending
@@ -321,7 +315,7 @@
 
                     <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
                              Color="Color.Success"
-                             Class="mr-2" />
+                             Class="mr-2" Style="font-size:16px;" />
 
                     <MudText Color="Color.Success" Typo="Typo.subtitle2">
                         Approved
@@ -335,7 +329,7 @@
 
                     <MudIcon Icon="@Icons.Material.Filled.Cancel"
                              Color="Color.Error"
-                             Class="mr-2" />
+                             Class="mr-2" Style="font-size:16px;" />
 
                     <MudText Color="Color.Error" Typo="Typo.subtitle2">
                         Rejected
@@ -360,6 +354,28 @@
 
             <Columns>
 
+
+                <TemplateColumn Title="Active"
+                                HeaderClass="fw-bold"
+                                Style="min-width:140px"
+                                CellClass="text-center"
+                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
+                                CellStyle="width:80px; min-width:80px; max-width:80px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
+
+                            <span style="width:15px;height:15px;border-radius:50%;
+                 display:inline-block;
+                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
+                            </span>
+
+                        </MudTooltip>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
                 <TemplateColumn Title="School"
                                 HeaderClass="fw-bold"
                                 Style="min-width:260px">
@@ -369,9 +385,9 @@
                         <div class="d-flex align-items-center gap-2">
 
                           
-                            <MudIcon Icon="@Icons.Material.Filled.School"
+                            @* <MudIcon Icon="@Icons.Material.Filled.School"
                                      Color="Color.Primary"
-                                     Style="font-size:15px; cursor:pointer;" />
+                                     Style="font-size:15px; cursor:pointer;" /> *@
 
                             <!-- ⭐ SCHOOL TEXT -->
                             <div class="flex-grow-1">
@@ -379,17 +395,8 @@
                                 <span class="fw-semibold text-primary"
                                       style="cursor:pointer;">
                                     
-                                    @ctx.Item.SchoolName
+                                    @ctx.Item.SchoolName : @ctx.Item.ShortName
                                 </span>
-
-                                @if (!string.IsNullOrWhiteSpace(ctx.Item.ShortName))
-                                {
-                                    <div title="School Name">
-                                        <span class="text-muted small">
-                                            @ctx.Item.ShortName
-                                        </span>
-                                    </div>
-                                }
 
                             </div>
 
@@ -404,7 +411,7 @@
                                 HeaderClass="fw-bold"
                                 HeaderStyle="width:80px; min-width:80px; max-width:80px;"
                                 CellStyle="width:80px; min-width:80px; max-width:80px;"
-                                Hideable="true">
+                                Hideable="true" Hidden="true">
 
                     <CellTemplate Context="ctx">
 
@@ -564,10 +571,10 @@
                 </TemplateColumn>
 
 
-                <TemplateColumn Title="Location"
+                <TemplateColumn Title="Location"   
                                 HeaderClass="fw-bold"
                                 HeaderStyle="width:130px; min-width:130px; max-width:130px;"
-                                CellStyle="width:130px; min-width:130px; max-width:130px;">
+                                CellStyle="width:130px; min-width:130px; max-width:130px;" Hidden="true">
 
                     <CellTemplate Context="ctx">
 
@@ -576,23 +583,27 @@
                             <!-- Country -->
                             @if (!string.IsNullOrWhiteSpace(ctx.Item.CountryName))
                             {
-                                <div class="d-flex align-items-center gap-1 location-row" title="Country">
-                                    <MudIcon Icon="@Icons.Material.Filled.Public"
-                                             Style="font-size:15px;"
-                                             Class="text-muted" />
-                                    <span>@ctx.Item.CountryName</span>
-                                </div>
+                                <MudTooltip Text="Country" Placement="Placement.Bottom">
+                                    <div class="d-flex align-items-center gap-1 location-row">
+                                        <MudIcon Icon="@Icons.Material.Filled.Public"
+                                                 Style="font-size:13px;"
+                                                 Class="text-muted" />
+                                        <span>@ctx.Item.CountryName</span>
+                                    </div>
+                                </MudTooltip>
                             }
 
                             <!-- Area -->
                             @if (!string.IsNullOrWhiteSpace(ctx.Item.Area))
                             {
-                                <div class="d-flex align-items-center gap-1 location-row" title="Area">
-                                    <MudIcon Icon="@Icons.Material.Filled.Place"
-                                             Style="font-size:15px;"
-                                             Class="text-muted"/>
-                                    <span class="text-muted small">@ctx.Item.Area</span>
-                                </div>
+                                <MudTooltip Text="Area" Placement="Placement.Bottom">
+                                    <div class="d-flex align-items-center gap-1 location-row">
+                                        <MudIcon Icon="@Icons.Material.Filled.Place"
+                                                 Style="font-size:13px;"
+                                                 Class="text-muted" />
+                                        <span class="text-muted small">@ctx.Item.Area</span>
+                                    </div>
+                                </MudTooltip>
                             }
 
                         </div>
@@ -935,20 +946,26 @@
 
                         <div class="d-flex flex-column gap-1 small">
 
-                            <!-- Created Date -->
-                            <div class="d-flex align-items-center gap-2 text-muted" title="CreatedDate">
-                                <MudIcon Icon="@Icons.Material.Filled.Schedule"
-                                         Style="font-size:15px;" />
-                                @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
-                            </div>
-
                             <!-- Created By -->
-                            @* <div class="d-flex align-items-center gap-2 fw-semibold" title="CreatedBy">
-                                <MudIcon Icon="@Icons.Material.Filled.Person"
-                                         Style="font-size:15px;"
-                                         Color="Color.Primary" />
-                                @ctx.Item.CreatedBy
-                            </div> *@
+                            @* <MudTooltip Text="Created By">
+                                <div class="d-flex align-items-center gap-2 fw-semibold">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person"
+                                             Style="font-size:15px;"
+                                             Color="Color.Primary" />
+                                    @ctx.Item.CreatedBy
+                                </div>
+                            </MudTooltip> *@
+
+
+                            <!-- Created Date -->
+                            <MudTooltip Text="Created Date">
+                                <div class="d-flex align-items-center gap-2 text-muted">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                             Style="font-size:15px;" />
+                                    @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </div>
+                            </MudTooltip>
+
 
                         </div>
 
@@ -956,26 +973,7 @@
                 </TemplateColumn>
 
 
-                <TemplateColumn Title="Active"
-                                HeaderClass="fw-bold"
-                                Style="min-width:140px"
-                                CellClass="text-center"
-                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
-                                CellStyle="width:80px; min-width:80px; max-width:80px;">
 
-                    <CellTemplate Context="ctx">
-
-                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
-
-                            <span style="width:15px;height:15px;border-radius:50%;
-                 display:inline-block;
-                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
-                            </span>
-
-                        </MudTooltip>
-
-                    </CellTemplate>
-                </TemplateColumn>
 
                 @if (countryId != 0)
                 {
@@ -992,9 +990,15 @@
                                      Size="Size.Small"
                                      Color="@(ctx.Item.TotalStudents == 0 ? Color.Default : Color.Success)"
                                      Variant="@(ctx.Item.TotalStudents == 0 ? Variant.Outlined : Variant.Filled)"
-                                     Style="min-width:50px; justify-content:center;">
+                                     Style="min-width:50px; justify-content:center;"
+                                     OnClick="@(() => OpenStudentList(ctx.Item))" Disabled="@(ctx.Item.TotalStudents == 0)">
 
-                                @ctx.Item.TotalStudents
+                                <MudTooltip Text="@(ctx.Item.TotalStudents == 0 ? "No students available" : "View students")"
+                                            Placement="Placement.Top">
+
+                                    <span>@ctx.Item.TotalStudents</span>
+
+                                </MudTooltip>
 
                             </MudChip>
 
@@ -1020,25 +1024,20 @@
 
                                 <div style="display:flex; align-items:center; gap:10px;">
 
+                                    <MudTooltip Text="View school profile">
 
-                                    @if (countryId != 0)
-                                    {
-                                        <MudTooltip Text="@(ctx.Item.TotalStudents == 0 ? "No students available" : "View students")">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       @onclick="@(() => GoToSchoolProfile(ctx.Item))" />
 
-                                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
-                                                           Color="Color.Primary"
-                                                           Size="Size.Small"
-                                                           Disabled="@(ctx.Item.TotalStudents == 0)"
-                                                           OnClick="@(() => OpenStudentList(ctx.Item))" />
-
-                                        </MudTooltip>
-                                    }
+                                    </MudTooltip>
 
                                     <!-- EDIT -->
                                     @if (canEdit)
                                     {
                                         <!-- EDIT -->
-                                        <MudTooltip Text="Approved records cannot be edited"
+                                        <MudTooltip Text="Approved records cannot be edited" Placement="Placement.Left"
                                                     Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved">
 
                                             <span style="display:flex; align-items:center;">
@@ -1076,7 +1075,7 @@
                                     <!-- DELETE -->
                                     @if (canDelete)
                                     {
-                                        <MudTooltip Text="Approved records cannot be deleted"
+                                        <MudTooltip Text="Approved records cannot be deleted" Placement="Placement.Left"
                                                     Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved">
 
                                             <span style="display:flex; align-items:center;">
@@ -1582,5 +1581,16 @@
 
         Navigation.NavigateTo(url);
     }
+
+
+
+
+    private void GoToSchoolProfile(MasterSchoolRequestDto dto)
+    {
+        //Navigation.NavigateTo($"/school/profile/{id}");
+
+        Navigation.NavigateTo(Routes.SchoolProfile.Replace("{Id:long}", dto.SchoolId.ToString()));
+    }
+
 
 }

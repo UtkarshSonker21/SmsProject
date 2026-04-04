@@ -34,9 +34,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Master Country
                     </span>
                 </div>
@@ -45,9 +43,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -179,6 +175,28 @@
 
             <Columns>
 
+                <!-- Is Active -->
+                <TemplateColumn Title="Active"
+                                HeaderClass="fw-bold"
+                                Style="min-width:140px"
+                                CellClass="text-center"
+                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
+                                CellStyle="width:80px; min-width:80px; max-width:80px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
+
+                            <span style="width:15px;height:15px;border-radius:50%;
+                 display:inline-block;
+                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
+                            </span>
+
+                        </MudTooltip>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
                 <TemplateColumn Title="Country"
                                 HeaderClass="fw-bold"
                                 Style="min-width:220px"
@@ -187,10 +205,10 @@
                     <CellTemplate Context="ctx">
 
                         <div class="d-flex align-items-center gap-1 ">
-                            <MudIcon Icon="@Icons.Material.Filled.Public"
+                            @* <MudIcon Icon="@Icons.Material.Filled.Public"
                                      Style="font-size:15px;"
                                      Class="text-muted"
-                                     @onclick="@(() => EditCountry(ctx.Item))" />
+                                     @onclick="@(() => EditCountry(ctx.Item))" /> *@
                             <span class="text-primary fw-medium"
                                   style="cursor:pointer;"
                                   @onclick="@(() => EditCountry(ctx.Item))">
@@ -306,28 +324,6 @@
                         {
                             <span class="text-muted fst-italic small">N/A</span>
                         }
-                    </CellTemplate>
-                </TemplateColumn>
-
-                <!-- Is Active -->
-                <TemplateColumn Title="Active"
-                                HeaderClass="fw-bold"
-                                Style="min-width:140px"
-                                CellClass="text-center"
-                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
-                                CellStyle="width:80px; min-width:80px; max-width:80px;">
-
-                    <CellTemplate Context="ctx">
-
-                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
-
-                            <span style="width:15px;height:15px;border-radius:50%;
-                 display:inline-block;
-                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
-                            </span>
-
-                        </MudTooltip>
-
                     </CellTemplate>
                 </TemplateColumn>
 

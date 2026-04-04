@@ -135,9 +135,7 @@
                 }
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Students
                     </span>
                 </div>
@@ -147,9 +145,7 @@
                     var SchoolName = Items.FirstOrDefault()?.SchoolName;
 
                     <div style="display:flex; align-items:center;">
-                        <span style="color:#000; font-family:Inter, sans-serif;
-                             font-size:18px; font-weight:600;
-                             line-height:24px; text-transform:uppercase; margin-left:3px;">
+                        <span class="page-title page-title-uppercase">
                             : @SchoolName
                         </span>
                     </div>
@@ -159,9 +155,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -297,7 +291,9 @@
 
                 <TemplateColumn Title="Student Information"
                                 HeaderClass="fw-bold"
-                                Hideable="true">
+                                Hideable="true"
+                                HeaderStyle="min-width:230px;"
+                                CellStyle=" min-width:230px;">
 
                     <CellTemplate Context="ctx">
 
@@ -312,9 +308,19 @@
                             <!-- Std Details -->
                             <div class="flex-grow-1">
 
+
+                                <!-- Clickable Full Name -->
+                                <div class="fw-bold text-primary"
+                                     style="cursor:pointer;">
+                                    @ctx.Item.StudentSalutation
+                                    @ctx.Item.StudentFirstName
+                                    @ctx.Item.StudentLastName
+                                </div>
+
                                 <!-- StudentNumber -->
                                 @if (!string.IsNullOrWhiteSpace(ctx.Item.StudentNumber))
                                 {
+                                    <MudTooltip Text="StudentNumber" Placement="Placement.Bottom">
                                     <div class="d-flex align-items-center gap-1 small text-muted">
                                         <MudIcon Icon="@Icons.Material.Filled.Person"
                                                  Style="font-size:15px; color:#9e9e9e;" />
@@ -322,18 +328,8 @@
                                             @ctx.Item.StudentNumber
                                         </span>
                                     </div>
+                                    </MudTooltip>
                                 }
-
-
-                                <!-- Clickable Full Name -->
-                                <div class="fw-bold text-primary"
-                                     style="cursor:pointer;"
-                                     @onclick="@(() => EditStudent(ctx.Item))">
-                                    @ctx.Item.StudentSalutation
-                                    @ctx.Item.StudentFirstName
-                                    @ctx.Item.StudentLastName
-                                </div>
-
 
                             </div>
                         </div>
@@ -364,7 +360,7 @@
                 </TemplateColumn>
 
 
-                <TemplateColumn Title="Permanent Address"
+                @* <TemplateColumn Title="Permanent Address"
                                 HeaderClass="fw-bold"
                                 HeaderStyle="width:260px;"
                                 CellStyle="width:260px;"
@@ -420,7 +416,7 @@
                         </div>
 
                     </CellTemplate>
-                </TemplateColumn>
+                </TemplateColumn> *@
 
 
                 <TemplateColumn Title="Contact Information"
@@ -487,20 +483,24 @@
 
                         <div class="d-flex flex-column gap-1 small">
 
-                            <!-- Created Date -->
-                            <div class="d-flex align-items-center gap-2 text-muted" title="CreatedDate">
-                                <MudIcon Icon="@Icons.Material.Filled.Schedule"
-                                         Style="font-size:15px;" />
-                                @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
-                            </div>
-
                             <!-- Created By -->
-                            <div class="d-flex align-items-center gap-2 fw-semibold" title="CreatedBy">
-                                <MudIcon Icon="@Icons.Material.Filled.Person"
-                                         Style="font-size:15px;"
-                                         Color="Color.Primary" />
-                                @ctx.Item.CreatedBy
-                            </div>
+                            <MudTooltip Text="Created By">
+                                <div class="d-flex align-items-center gap-2 fw-semibold">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person"
+                                             Style="font-size:15px;"
+                                             Color="Color.Primary" />
+                                    @ctx.Item.CreatedBy
+                                </div>
+                            </MudTooltip>
+
+                            <!-- Created Date -->
+                            <MudTooltip Text="Created Date">
+                                <div class="d-flex align-items-center gap-2 text-muted">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                             Style="font-size:15px;" />
+                                    @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </div>
+                            </MudTooltip>
 
                         </div>
 

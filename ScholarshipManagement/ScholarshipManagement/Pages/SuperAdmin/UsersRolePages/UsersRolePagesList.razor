@@ -25,6 +25,19 @@
 @inject ISnackbar Snackbar
 
 
+<style>
+    .section-header {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .arrow {
+        font-size: 12px;
+        color: #64748b;
+    }
+</style>
+
+
 <div class="container-fluid p-0" style="width:100%; overflow-x:hidden;">
 
     <!-- Page Top Section (Header area) -->
@@ -39,9 +52,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Users Roles Pages
                     </span>
                 </div>
@@ -50,9 +61,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -219,38 +228,43 @@
 
                     <CellTemplate Context="ctx">
 
-                        @if (!string.IsNullOrWhiteSpace(ctx.Item.PageHeading) ||
-                                                !string.IsNullOrWhiteSpace(ctx.Item.PagePath))
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.PageHeading))
                         {
-                            <MudTooltip Text="@($"{ctx.Item.PageHeading} ({ctx.Item.PagePath})")">
+                            <div class="d-flex flex-column"
+                                 style="max-width:240px;">
 
-                                <div class="d-flex flex-column"
-                                     style="max-width:240px; cursor:default;">
+                                <!-- LEVEL 0 (SECTION HEADER) -->
+                                @if (ctx.Item.LevelNo == 0)
+                                {
+                                    <span class="section-header">
+                                        @ctx.Item.PageHeading
+                                    </span>
+                                }
+                                else
+                                {
+                                    <!-- CHILD ITEM -->
+                                    <div style="padding-left:@(ctx.Item.LevelNo * 18)px"
+                                         class="d-flex align-center gap-1">
 
-                                    <!-- Page heading -->
-                                    <div class="d-flex align-items-center gap-1">
-                                        <MudIcon Icon="@Icons.Material.Filled.Description"
-                                                 Style="font-size:15px;"
-                                                 Class="text-muted" />
+                                        <span class="arrow">→</span>
 
                                         <span class="fw-semibold text-truncate"
-                                              style="max-width:210px;">
+                                              style="max-width:200px;">
                                             @ctx.Item.PageHeading
                                         </span>
                                     </div>
+                                }
 
-                                    <!-- Page path -->
-                                    @if (!string.IsNullOrWhiteSpace(ctx.Item.PagePath))
-                                    {
-                                        <span class="text-muted small text-truncate"
-                                              style="max-width:210px;">
-                                            @ctx.Item.PagePath
-                                        </span>
-                                    }
+                                <!-- PATH -->
+                                @if (!string.IsNullOrWhiteSpace(ctx.Item.PagePath) && ctx.Item.LevelNo > 0)
+                                {
+                                    <span class="text-muted small text-truncate"
+                                          style="margin-left:@(ctx.Item.LevelNo * 18 + 14)px; max-width:200px;">
+                                        @ctx.Item.PagePath
+                                    </span>
+                                }
 
-                                </div>
-
-                            </MudTooltip>
+                            </div>
                         }
                         else
                         {
@@ -258,7 +272,11 @@
                         }
 
                     </CellTemplate>
+                
                 </TemplateColumn>
+
+
+
 
 
                 <TemplateColumn Title="Module"
@@ -285,6 +303,17 @@
                                 HeaderStyle="width:130px;"
                                 CellStyle="width:130px;">
 
+                    <HeaderTemplate>
+                        <div class="d-flex align-center gap-1">
+                            <span>View</span>
+
+                            <MudCheckBox T="bool"
+                                         Value="@IsAllViewSelected"
+                                         ValueChanged="ToggleAllView"
+                                         Size="Size.Small" />
+                        </div>
+                    </HeaderTemplate>
+
                     <CellTemplate Context="ctx">
 
                         <MudCheckBox T="bool"
@@ -302,6 +331,17 @@
                                 HeaderClass="fw-bold"
                                 HeaderStyle="width:130px;"
                                 CellStyle="width:130px;">
+
+                    <HeaderTemplate>
+                        <div class="d-flex align-center gap-1">
+                            <span>View</span>
+
+                            <MudCheckBox T="bool"
+                                         Value="@IsAllInsertSelected"
+                                         ValueChanged="ToggleAllInssert"
+                                         Size="Size.Small" />
+                        </div>
+                    </HeaderTemplate>
 
                     <CellTemplate Context="ctx">
 
@@ -321,6 +361,18 @@
                                 HeaderStyle="width:130px;"
                                 CellStyle="width:130px;">
 
+
+                    <HeaderTemplate>
+                        <div class="d-flex align-center gap-1">
+                            <span>View</span>
+
+                            <MudCheckBox T="bool"
+                                         Value="@IsAllUpdateSelected"
+                                         ValueChanged="ToggleAllUpdate"
+                                         Size="Size.Small" />
+                        </div>
+                    </HeaderTemplate>
+
                     <CellTemplate Context="ctx">
 
                         <MudCheckBox T="bool"
@@ -338,6 +390,18 @@
                                 HeaderClass="fw-bold"
                                 HeaderStyle="width:130px;"
                                 CellStyle="width:130px;">
+
+
+                    <HeaderTemplate>
+                        <div class="d-flex align-center gap-1">
+                            <span>View</span>
+
+                            <MudCheckBox T="bool"
+                                         Value="@IsAllDeleteSelected"
+                                         ValueChanged="ToggleAllDelete"
+                                         Size="Size.Small" />
+                        </div>
+                    </HeaderTemplate>
 
                     <CellTemplate Context="ctx">
 
@@ -458,6 +522,16 @@
                 // Data already deserialized in service
                 Items = result.Data.Items;
                 TotalRecords = result.Data.TotalCount;
+
+
+                foreach (var item in Items)
+                {
+                    item.OriginalViewPer = item.ViewPer;
+                    item.OriginalInsertPer = item.InsertPer;
+                    item.OriginalUpdatePer = item.UpdatePer;
+                    item.OriginalDeletePer = item.DeletePer;
+                }
+
             }
             else
             {
@@ -839,6 +913,170 @@
         }
 
     }
+
+
+
+
+    bool IsAllViewSelected =>
+        Items.All(x => x.ViewPer);
+
+    void ToggleAllView(bool value)
+    {
+        foreach (var item in Items)
+        {
+            if (value)
+            {
+                OnViewChanged(item, true);
+            }
+            else
+            {
+                // only uncheck newly selected ones
+                if (!item.OriginalViewPer)
+                    OnViewChanged(item, false);
+            }
+        }
+    }
+
+    bool IsAllInsertSelected =>
+        Items.All(x => x.InsertPer);
+
+    void ToggleAllInssert(bool value)
+    {
+        foreach (var item in Items)
+        {
+            if (value)
+            {
+                OnInsertChanged(item, true);
+            }
+            else
+            {
+                // only uncheck newly selected ones
+                if (!item.OriginalInsertPer)
+                    OnInsertChanged(item, false);
+            }
+        }
+    }
+
+    bool IsAllUpdateSelected =>
+    Items.All(x => x.UpdatePer);
+
+    void ToggleAllUpdate(bool value)
+    {
+        foreach (var item in Items)
+        {
+            if (value)
+            {
+                OnUpdateChanged(item, true);
+            }
+            else
+            {
+                // only uncheck newly selected ones
+                if (!item.OriginalUpdatePer)
+                    OnUpdateChanged(item, false);
+            }
+        }
+    }
+
+    bool IsAllDeleteSelected =>
+        Items.All(x => x.DeletePer);
+
+    void ToggleAllDelete(bool value)
+    {
+        foreach (var item in Items)
+        {
+            if (value)
+            {
+                OnDeleteChanged(item, true);
+            }
+            else
+            {
+                // only uncheck newly selected ones
+                if (!item.OriginalDeletePer)
+                    OnDeleteChanged(item, false);
+            }
+        }
+    }
+
+    // private void OnViewChanged(RolePagePermissionDto item, bool value)
+    // {
+    //     item.ViewPer = value;
+
+    //     if (!value)
+    //     {
+    //         item.InsertPer = false;
+    //         item.UpdatePer = false;
+    //         item.DeletePer = false;
+    //     }
+    // }
+
+    // private void OnInsertChanged(RolePagePermissionDto item, bool value)
+    // {
+    //     item.InsertPer = value;
+
+    //     if (value)
+    //         item.ViewPer = true;
+    // }
+
+    // private void OnUpdateChanged(RolePagePermissionDto item, bool value)
+    // {
+    //     item.UpdatePer = value;
+
+    //     if (value)
+    //         item.ViewPer = true;
+    // }
+
+    // private void OnDeleteChanged(RolePagePermissionDto item, bool value)
+    // {
+    //     item.DeletePer = value;
+
+    //     if (value)
+    //         item.ViewPer = true;
+    // }
+
+
+    @*   <TemplateColumn Title="Page"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:280px; min-width:230px; max-width:300px;"
+                                CellStyle="width:280px; min-width:230px; max-width:300px;"
+                                Hideable="true">
+
+                    <CellTemplate Context="ctx">
+
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.PageHeading) ||
+                                                !string.IsNullOrWhiteSpace(ctx.Item.PagePath))
+                        {
+                           
+
+                            <div class="d-flex flex-column"
+                                 style="max-width:240px; cursor:default;">
+
+                                <!-- Page heading -->
+                                <div class="d-flex align-items-center gap-1">
+
+                                    <span class="fw-semibold text-truncate"
+                                          style="max-width:210px;">
+                                        @ctx.Item.PageHeading
+                                    </span>
+                                </div>
+
+                                <!-- Page path -->
+                                @if (!string.IsNullOrWhiteSpace(ctx.Item.PagePath))
+                                {
+                                    <span class="text-muted small text-truncate"
+                                          style="max-width:210px;">
+                                        @ctx.Item.PagePath
+                                    </span>
+                                }
+
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">N/A</span>
+                        }
+
+                    </CellTemplate>
+                </TemplateColumn> *@
 
 
 }

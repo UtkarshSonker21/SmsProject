@@ -150,9 +150,7 @@
                     }
                    
 
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Enrolled Students
                     </span>
 
@@ -162,9 +160,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -347,10 +343,10 @@
                     </CellTemplate>
                 </TemplateColumn>
 
-                <TemplateColumn Title="Student DOB"
+                <TemplateColumn Title="DOB"
                                 HeaderClass="fw-bold"
-                                HeaderStyle="width:150px; min-width:150px; max-width:150px;"
-                                CellStyle="width:150px; min-width:150px; max-width:150px;">
+                                HeaderStyle="width:130px; min-width:130px; max-width:130px;"
+                                CellStyle="width:130px; min-width:130px; max-width:130px;">
 
                     <CellTemplate Context="ctx">
 
@@ -378,17 +374,17 @@
 
                 <TemplateColumn Title="School"
                                 HeaderClass="fw-bold"
-                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
-                                CellStyle="width:200px; min-width:200px; max-width:200px;">
+                                HeaderStyle="width:200px; min-width:150px; max-width:200px;"
+                                CellStyle="width:200px; min-width:150px; max-width:200px;">
 
                     <CellTemplate Context="ctx">
 
                         <div class="d-flex align-items-center gap-1">
 
                             <!-- Icon -->
-                            <MudIcon Icon="@Icons.Material.Filled.School"
+                            @* <MudIcon Icon="@Icons.Material.Filled.School"
                                      Color="Color.Primary"
-                                     Style="font-size:14px;" />
+                                     Style="font-size:14px;" /> *@
 
                             <!-- Text -->
                             <div class="d-flex flex-column lh-1">
@@ -400,13 +396,13 @@
                                 </span>
 
                                 <!-- Short Name -->
-                                @if (!string.IsNullOrWhiteSpace(ctx.Item.ShortName))
+                                @* @if (!string.IsNullOrWhiteSpace(ctx.Item.ShortName))
                                 {
                                     <span class="text-muted"
                                           style="font-size:11px;">
                                         @ctx.Item.ShortName
                                     </span>
-                                }
+                                } *@
 
                             </div>
 
@@ -419,19 +415,19 @@
                 @if (CurrentStaffType != StaffType.Marketing)
                 {
                     <TemplateColumn Title="Doc Status"
-                    HeaderClass="fw-bold"
-                    HeaderStyle="width:200px; min-width:200px; max-width:200px;"
-                    CellStyle="width:200px; min-width:200px; max-width:200px;"
-                    Hideable="true">
+                                    HeaderClass="fw-bold"
+                                    HeaderStyle="width:150px; min-width:150px; max-width:150px;"
+                                    CellStyle="width:150px; min-width:150px; max-width:150px;"
+                                    Hideable="true">
 
                         <CellTemplate Context="ctx">
 
                             <div class="d-flex flex-column align-items-start">
 
                                 <MudChip Size="Size.Small"
-                                Variant="Variant.Outlined"
-                                Color="@GetDocStatusColor(ctx.Item.DocStatus)"
-                                Style="min-width:90px; justify-content:center;">
+                                         Variant="Variant.Outlined"
+                                         Color="@GetDocStatusColor(ctx.Item.DocStatus)"
+                                         Style="min-width:90px; justify-content:center;">
 
                                     @(string.IsNullOrWhiteSpace(ctx.Item.DocStatus) ? "N/A" : ctx.Item.DocStatus)
 
@@ -441,38 +437,38 @@
 
                     </TemplateColumn>
 
-                    <TemplateColumn Title="Awardings Status"
-                    HeaderClass="fw-bold"
-                    HeaderStyle="width:200px; min-width:200px; max-width:200px;"
-                    CellStyle="width:200px; min-width:200px; max-width:200px;"
-                    Hideable="true">
+                    <TemplateColumn Title="Awarding Status"
+                                    HeaderClass="fw-bold"
+                                    HeaderStyle="width:150px; min-width:150px; max-width:150px;"
+                                    CellStyle="width:150px; min-width:150px; max-width:150px;"
+                                    Hideable="true">
 
                         <CellTemplate Context="ctx">
 
                             <div class="d-flex flex-column align-items-start">
 
                                 <MudChip Size="Size.Small"
-                                Variant="Variant.Outlined"
-                                Color="@GetAwardingStatusColor(ctx.Item.AwardingStatus)"
-                                Style="min-width:90px; justify-content:center;">
+                                         Variant="Variant.Outlined"
+                                         Color="@GetAwardingStatusColor(ctx.Item.AwardingStatus)"
+                                         Style="min-width:90px; justify-content:center;">
 
                                     @(
-                                        string.IsNullOrWhiteSpace(ctx.Item.AwardingStatus)
-                                                                            ? "N/A"
-                                                                            : ctx.Item.AwardingStatus
-                                        )
+                                                                    string.IsNullOrWhiteSpace(ctx.Item.AwardingStatus)
+                                                                    ? "N/A"
+                                                                    : ctx.Item.AwardingStatus
+                                                                    )
 
-                                </MudChip>
-                            </div>
-                        </CellTemplate>
+                            </MudChip>
+                        </div>
+                    </CellTemplate>
 
                     </TemplateColumn>
                 }
 
                 <TemplateColumn Title="Sponsored"
                                 HeaderClass="fw-bold"
-                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
-                                CellStyle="width:200px; min-width:200px; max-width:200px;"
+                                HeaderStyle="width:150px; min-width:150px; max-width:150px;"
+                                CellStyle="width:150px; min-width:150px; max-width:150px;"
                                 Hideable="true">
 
                     <CellTemplate Context="ctx">
@@ -480,7 +476,7 @@
                         <MudChip T="string"
                                  Size="Size.Small"
                                  Variant="Variant.Outlined"
-                                 Style="min-width:120px; justify-content:center;"
+                                 Style="min-width:100px; justify-content:center;"
                                  Color="@GetSponsoredColor(ctx.Item.SponsoredStatus)">
 
                             <MudIcon Icon="@(ctx.Item.SponsoredStatus == "Sponsored"
@@ -499,6 +495,7 @@
                 </TemplateColumn>
 
 
+
                 @if (CurrentStaffType == StaffType.Marketing && reqId == 0)
                 {
                     <TemplateColumn Title="Donor Name"
@@ -509,10 +506,10 @@
                         <CellTemplate Context="ctx">
 
                             <span class="d-flex align-items-center">
-                                <MudIcon Icon="@Icons.Material.Filled.VolunteerActivism"
+                                @* <MudIcon Icon="@Icons.Material.Filled.VolunteerActivism"
                                          Color="Color.Success"
                                          Style="font-size:16px;"
-                                         Class="me-1 text-muted" />
+                                         Class="me-1 text-muted" /> *@
 
                                 @if (!string.IsNullOrWhiteSpace(ctx.Item.DonorName))
                                 {
@@ -560,28 +557,33 @@
 
                 <TemplateColumn Title="Created Info"
                                 HeaderClass="fw-bold"
-                                HeaderStyle="width:280px; min-width:230px; max-width:300px;"
-                                CellStyle="width:280px; min-width:230px; max-width:300px;"
+                                HeaderStyle="width:230px; min-width:200px; max-width:300px;"
+                                CellStyle="width:230px; min-width:200px; max-width:300px;"
                                 Hideable="true">
 
                     <CellTemplate Context="ctx">
 
                         <div class="d-flex flex-column gap-1 small">
 
-                            <!-- Created Date -->
-                            <div class="d-flex align-items-center gap-2 text-muted" title="CreatedDate">
-                                <MudIcon Icon="@Icons.Material.Filled.Schedule"
-                                         Style="font-size:15px;" />
-                                @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
-                            </div>
-
                             <!-- Created By -->
-                            <div class="d-flex align-items-center gap-2 fw-semibold" title="CreatedBy">
-                                <MudIcon Icon="@Icons.Material.Filled.Person"
-                                         Style="font-size:15px;"
-                                         Color="Color.Primary" />
-                                @ctx.Item.CreatedBy
-                            </div>
+                            <MudTooltip Text="Created By">
+                                <div class="d-flex align-items-center gap-2 fw-semibold">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person"
+                                             Style="font-size:15px;"
+                                             Color="Color.Primary" />
+                                    @ctx.Item.CreatedBy
+                                </div>
+                            </MudTooltip>
+
+
+                            <!-- Created Date -->
+                            <MudTooltip Text="Created Date">
+                                <div class="d-flex align-items-center gap-2 text-muted">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                             Style="font-size:15px;" />
+                                    @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </div>
+                            </MudTooltip>
 
                         </div>
 
@@ -594,8 +596,8 @@
                                 Filterable="false"
                                 HeaderClass="text-center fw-bold"
                                 CellClass="text-center"
-                                HeaderStyle="width:100px; min-width:100px; max-width:100px;"
-                                CellStyle="width:100px; min-width:100px; max-width:100px;">
+                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
+                                CellStyle="width:80px; min-width:80px; max-width:80px;">
 
                     <CellTemplate Context="ctx">
                         <div style="display:flex; gap:12px; justify-content:center; align-items:center; height:100%;" class="action-btn">
@@ -1004,6 +1006,27 @@
 }
 
 
+@* <TemplateColumn Title="Sponsored"
+                                HeaderClass="fw-bold"
+                                HeaderStyle="width:120px; min-width:120px; max-width:120px;"
+                                CellStyle="width:120px; min-width:120px; max-width:120px;"
+                                CellClass="text-center">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudTooltip Text="@(string.IsNullOrWhiteSpace(ctx.Item.SponsoredStatus)
+                                                                ? "N/A"
+                                                                : ctx.Item.SponsoredStatus)">
+
+                            <MudIcon Icon="@(ctx.Item.SponsoredStatus == "Sponsored"
+                                                         ? Icons.Material.Filled.CheckCircle
+                                                         : Icons.Material.Filled.Cancel)"
+                                     Style="@($"font-size:18px; color:{GetSponsoredColor(ctx.Item.SponsoredStatus)}")" />
+
+                        </MudTooltip>
+
+                    </CellTemplate>
+                </TemplateColumn> *@
 
 
 @*   <TemplateColumn Title="Student Contact"

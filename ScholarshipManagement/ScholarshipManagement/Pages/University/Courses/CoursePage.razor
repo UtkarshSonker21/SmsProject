@@ -47,9 +47,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title">
                         @title
                     </span>
                 </div>
@@ -81,30 +79,35 @@
                     <MudPaper Class="pa-4 full-height-paper" Elevation="2">
                         <MudGrid Spacing="2">
 
-                            <MudItem xs="12" md="4">
-                                <MudSelect T="long"
-                                           Label="University"
-                                           Variant="Variant.Outlined"
-                                           Margin="Margin.Dense"
-                                           Required="true"
-                                           RequiredError="Country is required"
-                                           @bind-Value="model.UniversityId"
-                                           Disabled="@IsUniversityLocked">
 
-                                    <!-- Default placeholder -->
-                                    <MudSelectItem T="long" Value="0">
-                                        -- Select University --
-                                    </MudSelectItem>
+                            @if (CurrentStaffType != StaffType.University)
+                            {
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="long"
+                                               Label="University"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Required="true"
+                                               RequiredError="University is required"
+                                               @bind-Value="model.UniversityId"
+                                               Disabled="@IsUniversityLocked">
 
-                                    @foreach (var c in Universities)
-                                    {
-                                        <MudSelectItem T="long" Value="@(c.UniversityId ?? 0)">
-                                            @c.UniversityName
+                                        <!-- Default placeholder -->
+                                        <MudSelectItem T="long" Value="0">
+                                            -- Select University --
                                         </MudSelectItem>
-                                    }
 
-                                </MudSelect>
-                            </MudItem>
+                                        @foreach (var c in Universities)
+                                        {
+                                            <MudSelectItem T="long" Value="@(c.UniversityId ?? 0)">
+                                                @c.UniversityName
+                                            </MudSelectItem>
+                                        }
+
+                                    </MudSelect>
+                                </MudItem>
+                            }
+
 
                             <MudItem xs="12" md="4">
                                 <MudTextField T="string"
@@ -189,6 +192,12 @@
                                               For="@(() => model.Remarks)" />
                             </MudItem>
 
+                            @if (CurrentStaffType == StaffType.University)
+                            {
+                                <MudItem xs="12" md="4"></MudItem>
+
+                            }
+
                             <MudItem xs="12" md="4">
                                 <MudText Typo="Typo.subtitle2">Active Status</MudText>
                                 <MudRadioGroup T="bool" @bind-Value="model.IsActive">
@@ -240,7 +249,7 @@
 
                             <MudItem xs="12" Class="mt-5">
                                 <div class="d-flex justify-end gap-2">
-                                    <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="SubmitAsync">Submit</MudButton>
+                                    <MudButton Variant="Variant.Filled" Style="background: #1E88E5; color: white;" OnClick="SubmitAsync">Submit</MudButton>
                                     <MudButton Variant="Variant.Filled" Style="background:#BDBDBD; color:#1F1F1F;" OnClick="Cancel">Cancel</MudButton>
                                 </div>
                             </MudItem>

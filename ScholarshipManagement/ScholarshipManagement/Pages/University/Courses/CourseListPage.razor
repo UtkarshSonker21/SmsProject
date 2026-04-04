@@ -54,9 +54,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Courses
                     </span>
                 </div>
@@ -65,9 +63,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -193,7 +189,7 @@
         <MudTabPanel>
             <TabContent>
 
-                <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" />
+                <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" Style="font-size:16px;" />
                 All
 
             </TabContent>
@@ -204,7 +200,7 @@
 
                 <MudIcon Icon="@Icons.Material.Filled.HourglassTop"
                          Color="Color.Warning"
-                         Class="mr-2" />
+                         Class="mr-2" Style="font-size:16px;" />
 
                 <MudText Color="Color.Warning" Typo="Typo.subtitle2">
                     Pending
@@ -218,7 +214,7 @@
 
                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
                          Color="Color.Success"
-                         Class="mr-2" />
+                         Class="mr-2" Style="font-size:16px;" />
 
                 <MudText Color="Color.Success" Typo="Typo.subtitle2">
                     Approved
@@ -232,7 +228,7 @@
 
                 <MudIcon Icon="@Icons.Material.Filled.Cancel"
                          Color="Color.Error"
-                         Class="mr-2" />
+                         Class="mr-2" Style="font-size:16px;" />
 
                 <MudText Color="Color.Error" Typo="Typo.subtitle2">
                     Rejected
@@ -256,6 +252,27 @@
 
             <Columns>
 
+                <TemplateColumn Title="Active"
+                                HeaderClass="fw-bold"
+                                Style="min-width:140px"
+                                CellClass="text-center"
+                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
+                                CellStyle="width:80px; min-width:80px; max-width:80px;">
+
+                    <CellTemplate Context="ctx">
+
+                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
+
+                            <span style="width:15px;height:15px;border-radius:50%;
+                 display:inline-block;
+                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
+                            </span>
+
+                        </MudTooltip>
+
+                    </CellTemplate>
+                </TemplateColumn>
+
                 <TemplateColumn Title="Course"
                                 HeaderClass="fw-bold"
                                 Style="min-width:260px"
@@ -269,8 +286,7 @@
                             @if (!string.IsNullOrWhiteSpace(ctx.Item.CourseName))
                             {
                                 <span class="text-primary fw-medium"
-                                      style="cursor:pointer;"
-                                      @onclick="@(() => EditCourse(ctx.Item))" title="Course Name">
+                                      style="cursor:pointer;">
                                     @ctx.Item.CourseName
                                 </span>
                             }
@@ -278,9 +294,11 @@
                             <!-- Course Code -->
                             @if (!string.IsNullOrWhiteSpace(ctx.Item.CourseCode))
                             {
-                                <span class="text-muted small" title="Course Code">
-                                    @ctx.Item.CourseCode
-                                </span>
+                                <MudTooltip Text="Course Code" Placement="Placement.Bottom">
+                                    <span class="text-muted small" title="Course Code">
+                                        @ctx.Item.CourseCode
+                                    </span>
+                                </MudTooltip>
                             }
 
                             <!-- Fallback -->
@@ -306,9 +324,9 @@
                         @if (!string.IsNullOrWhiteSpace(ctx.Item.CourseTypeName))
                         {
                             <div class="d-flex align-items-center gap-1">
-                                <MudIcon Icon="@Icons.Material.Filled.Topic"
+                                @* <MudIcon Icon="@Icons.Material.Filled.Topic"
                                          Style="font-size:15px;"
-                                         Class="text-muted" />
+                                         Class="text-muted" /> *@
                                 <span>@ctx.Item.CourseTypeName</span>
                             </div>
                         }
@@ -332,9 +350,9 @@
                         @if (!string.IsNullOrWhiteSpace(ctx.Item.UniversityName))
                         {
                             <div class="d-flex align-items-center gap-1">
-                                <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
+                                @* <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
                                          Style="font-size:15px;"
-                                         Class="text-muted" />
+                                         Class="text-muted" /> *@
                                 <span>@ctx.Item.UniversityName</span>
                             </div>
                         }
@@ -352,7 +370,7 @@
                                 HeaderClass="fw-bold" 
                                 HeaderStyle="width:150px; min-width:130px; max-width:150px;"
                                 CellStyle="width:150px; min-width:130px; max-width:150px;"
-                                Hideable="true">
+                                Hideable="true" Hidden="true">
 
                     <CellTemplate Context="ctx">
 
@@ -373,7 +391,7 @@
                                 HeaderClass="fw-bold"
                                 HeaderStyle="width:150px; min-width:130px; max-width:150px;"
                                 CellStyle="width:150px; min-width:130px; max-width:150px;"
-                                Hideable="true">
+                                Hideable="true" Hidden="true">
 
                     <CellTemplate Context="ctx">
 
@@ -394,7 +412,7 @@
                                 HeaderClass="fw-bold" 
                                 HeaderStyle="width:280px; min-width:230px; max-width:300px;"
                                 CellStyle="width:280px; min-width:230px; max-width:300px;"
-                                Hideable="true">
+                                Hideable="true" >
 
                     <CellTemplate Context="ctx">
 
@@ -455,20 +473,24 @@
 
                         <div class="d-flex flex-column gap-1 small">
 
-                            <!-- Created Date -->
-                            <div class="d-flex align-items-center gap-2 text-muted" title="CreatedDate">
-                                <MudIcon Icon="@Icons.Material.Filled.Schedule"
-                                         Style="font-size:15px;" />
-                                @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
-                            </div>
-
                             <!-- Created By -->
-                            <div class="d-flex align-items-center gap-2 fw-semibold" title="CreatedBy">
-                                <MudIcon Icon="@Icons.Material.Filled.Person"
-                                         Style="font-size:15px;"
-                                         Color="Color.Primary" />
-                                @ctx.Item.CreatedBy
-                            </div>
+                            <MudTooltip Text="Created By">
+                                <div class="d-flex align-items-center gap-2 fw-semibold">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person"
+                                             Style="font-size:15px;"
+                                             Color="Color.Primary" />
+                                    @ctx.Item.CreatedBy
+                                </div>
+                            </MudTooltip>
+
+                            <!-- Created Date -->
+                            <MudTooltip Text="Created Date">
+                                <div class="d-flex align-items-center gap-2 text-muted">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                             Style="font-size:15px;" />
+                                    @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </div>
+                            </MudTooltip>
 
                         </div>
 
@@ -505,26 +527,7 @@
                 </TemplateColumn>
 
 
-                <TemplateColumn Title="Active"
-                                HeaderClass="fw-bold"
-                                Style="min-width:140px" 
-                                CellClass="text-center"
-                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
-                                CellStyle="width:80px; min-width:80px; max-width:80px;">
 
-                    <CellTemplate Context="ctx">
-
-                        <MudTooltip Text="@(ctx.Item.IsActive ? "Active" : "Inactive")">
-
-                            <span style="width:15px;height:15px;border-radius:50%;
-                 display:inline-block;
-                 background:@(ctx.Item.IsActive ? "#22c55e" : "#ef4444")">
-                            </span>
-
-                        </MudTooltip>
-
-                    </CellTemplate>
-                </TemplateColumn>
 
                 <!-- Action -->
                 @if (canEdit || canDelete)
@@ -545,7 +548,7 @@
                                     @if (canEdit)
                                     {
                                         <MudTooltip Text="Approved records cannot be edited"
-                                                    Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved">
+                                                    Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved" Placement="Placement.Left">
 
                                             <span style="display:flex; align-items:center;">
 
@@ -584,7 +587,7 @@
                                     @if (canDelete)
                                     {
                                         <MudTooltip Text="Approved records cannot be deleted"
-                                                    Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved">
+                                                    Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved" Placement="Placement.Left">
 
                                             <!-- DELETE -->
                                             <span style="display:flex; align-items:center;">

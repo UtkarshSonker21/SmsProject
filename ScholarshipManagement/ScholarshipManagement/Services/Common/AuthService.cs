@@ -3,7 +3,6 @@ using ScholarshipManagement.DTOs.Common.Response;
 using ScholarshipManagement.DTOs.Common.Settings;
 using ScholarshipManagement.Helper;
 using ScholarshipManagement.Helper.Enums;
-using ScholarshipManagementAPI.DTOs.Common.HrStaff;
 using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
