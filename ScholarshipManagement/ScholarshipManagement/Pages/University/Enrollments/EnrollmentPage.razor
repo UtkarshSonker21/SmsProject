@@ -44,9 +44,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Enrollments
                     </span>
                 </div>
@@ -55,9 +53,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -206,9 +202,9 @@
                         @if (!string.IsNullOrWhiteSpace(ctx.Item.CourseName))
                         {
                             <div class="d-flex align-items-center gap-1 ">
-                                <MudIcon Icon="@Icons.Material.Filled.AutoStories"
+                                @* <MudIcon Icon="@Icons.Material.Filled.AutoStories"
                                          Style="font-size:15px;"
-                                         Class="text-muted" />
+                                         Class="text-muted" /> *@
                                 <span class="text-primary fw-medium"
                                       style="cursor:pointer;">
                                     @ctx.Item.CourseName
@@ -218,9 +214,9 @@
                             @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin || CurrentStaffType == StaffType.School)
                             {
                                 <div class="d-flex align-items-center gap-1">
-                                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
+                                    @* <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
                                              Style="font-size:15px;"
-                                             Class="text-muted" />
+                                             Class="text-muted" /> *@
                                     <span>@ctx.Item.UniversityName</span>
                                 </div>
                             }
@@ -382,31 +378,39 @@
                 </TemplateColumn>
 
 
-                <TemplateColumn Title="Total Students"
+
+
+                <TemplateColumn Title="Total Student"
                                 HeaderClass="fw-bold"
-                                HeaderStyle="width:180px; min-width:150px; max-width:180px;"
-                                CellStyle="width:180px; min-width:150px; max-width:180px;"
-                                Hideable="true">
+                                Style="min-width:140px"
+                                CellClass="text-center"
+                                HeaderStyle="width:130px; min-width:130px; max-width:130px;"
+                                CellStyle="width:130px; min-width:130px; max-width:130px;">
 
                     <CellTemplate Context="ctx">
 
-                        @* CHECK IF ANY COST EXISTS *@
-                        @if (ctx.Item.StudentCount > 0)
-                        {
-                            <span class="text-muted fst-italic small">@ctx.Item.StudentCount</span>
-                        }
-                        else
-                        {
-                            <span class="text-muted fst-italic small">N/A</span>
-                        }
+                        <MudChip T="int"
+                                 Size="Size.Small"
+                                 Color="@(ctx.Item.StudentCount == 0 ? Color.Default : Color.Success)"
+                                 Variant="@(ctx.Item.StudentCount == 0 ? Variant.Outlined : Variant.Filled)"
+                                 Style="min-width:50px; justify-content:center;"
+                                 OnClick="@(() => OpenEnrolledStudents(ctx.Item))" Disabled="@(ctx.Item.StudentCount == 0)">
+
+                            <MudTooltip Text="@(ctx.Item.StudentCount == 0 ? "No students available" : "View students")"
+                                        Placement="Placement.Top">
+
+                                <span>@ctx.Item.StudentCount</span>
+
+                            </MudTooltip>
+
+                        </MudChip>
 
                     </CellTemplate>
                 </TemplateColumn>
 
 
-
                 <!-- Action -->
-                <TemplateColumn Title="Action"
+                @* <TemplateColumn Title="Action"
                                 Filterable="false"
                                 HeaderClass="text-center fw-bold"
                                 CellClass="text-center"
@@ -429,7 +433,7 @@
                         </div>
                     </CellTemplate>
 
-                </TemplateColumn>
+                </TemplateColumn> *@
 
 
 

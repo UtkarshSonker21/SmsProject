@@ -35,6 +35,7 @@
     .current-role-text {
         color: #DC2626; /* primary blue */
     }
+
 </style>
 
 <HeadContent>
@@ -83,7 +84,7 @@
                                  Class="user-material-icon" />
                     </div>
 
-                    <span class="username">@loginName</span>
+                    <span class="username">@fullName</span>
 
                     <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown"
                              Class="dropdown-material-icon" Size="Size.Small"/>
@@ -280,6 +281,7 @@
     private DrawerClipMode _clipMode = DrawerClipMode.Always;
 
     private string loginName = "";
+    private string fullName = "";
     private long loginId = 0;
     private long currentRoleId = 0;
 
@@ -324,6 +326,7 @@
         var user = CurrentUserProfileService.GetCurrentUserProfile();
 
         loginName = user.LoginName;
+        fullName = user.FullName;
         loginId = user.LoginId;
         currentRoleId = user.CurrentRoleId;
 

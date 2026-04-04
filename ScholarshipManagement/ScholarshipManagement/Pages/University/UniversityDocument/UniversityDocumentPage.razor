@@ -47,9 +47,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         @title
                     </span>
                 </div>
@@ -76,33 +74,36 @@
                     <MudPaper Class="pa-4 full-height-paper" Elevation="2">
                         <MudGrid Spacing="2">
 
+                            @if (CurrentStaffType != StaffType.University)
+                            {
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="long"
+                                               Label="University"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Required="true"
+                                               RequiredError="University is required"
+                                               @bind-Value="model.UniversityId"
+                                               Disabled="@IsUniversityLocked">
 
-                            <MudItem xs="12" md="4">
-                                <MudSelect T="long"
-                                           Label="University"
-                                           Variant="Variant.Outlined"
-                                           Margin="Margin.Dense"
-                                           Required="true"
-                                           RequiredError="University is required"
-                                           @bind-Value="model.UniversityId"
-                                           Disabled="@IsUniversityLocked">
-
-                                    <!-- Default placeholder -->
-                                    <MudSelectItem T="long" Value="0">
-                                        -- Select University --
-                                    </MudSelectItem>
-
-                                    @foreach (var c in Universities)
-                                    {
-                                        <MudSelectItem T="long" Value="@(c.UniversityId ?? 0)">
-                                            @c.UniversityName
+                                        <!-- Default placeholder -->
+                                        <MudSelectItem T="long" Value="0">
+                                            -- Select University --
                                         </MudSelectItem>
-                                    }
 
-                                </MudSelect>
-                            </MudItem>
+                                        @foreach (var c in Universities)
+                                        {
+                                            <MudSelectItem T="long" Value="@(c.UniversityId ?? 0)">
+                                                @c.UniversityName
+                                            </MudSelectItem>
+                                        }
 
-                            <MudItem xs="12" md="4">
+                                    </MudSelect>
+                                </MudItem>
+                            }
+
+
+                            <MudItem xs="12" md="8">
                                 <MudTextField T="string"
                                               Label="Document Name"
                                               Variant="Variant.Outlined"

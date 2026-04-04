@@ -291,12 +291,31 @@
                                 <div>
 
                                     <MudText Typo="Typo.subtitle1" Class="fw-bold">
-                                        @Profile.FullName
+                                        @Profile.FullName -
+                                        <MudTooltip Text="Login Name">
+                                            <span style="cursor:pointer;">
+                                                @Profile.LoginName
+                                            </span>
+                                        </MudTooltip>
                                     </MudText>
 
                                     <MudText Typo="Typo.caption" Class="d-flex align-center gap-1 role-text">
                                         <MudIcon Icon="@Icons.Material.Filled.WorkOutline" Style="font-size:16px;" />
-                                        @Profile.CurrentRoleName • @Profile.ModuleName
+                                        <!-- ROLE -->
+                                        <MudTooltip Text="Role Name">
+                                            <span style="cursor:pointer;">
+                                                @Profile.CurrentRoleName
+                                            </span>
+                                        </MudTooltip>
+
+                                        <span>•</span>
+
+                                        <!-- MODULE -->
+                                        <MudTooltip Text="Organization Name">
+                                            <span style="cursor:pointer;">
+                                                @(string.IsNullOrWhiteSpace(Profile.OrganizationName) ? "N/A" : Profile.OrganizationName)
+                                            </span>
+                                        </MudTooltip>
                                     </MudText>
 
                                     <MudText Typo="Typo.caption" Class="d-flex align-center gap-1 email-text">

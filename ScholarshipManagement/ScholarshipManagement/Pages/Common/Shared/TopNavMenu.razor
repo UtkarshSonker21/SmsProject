@@ -2,13 +2,257 @@
 @using ScholarshipManagement.DTOs.Common.Menu
 @using ScholarshipManagement.Helper
 @inject NavigationManager Nav
+@inject IJSRuntime JS
+
+
+
+<style>
+
+    .nav-scroll-container {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    /* SIDE AREAS FOR BUTTONS */
+    .scroll-side {
+        width: 32px; /* space reserved */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* BUTTON STYLE */
+    .scroll-btn {
+        width: 22px;
+        height: 22px;
+        background: white;
+        color: #64748b;
+        border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+
+        .scroll-btn.left {
+            left: 6px;
+            margin-right:20px;
+        }
+
+        .scroll-btn.right {
+            right: 6px;
+            margin-left:25px;
+        }
+
+
+    /* ===============================
+       NAV WRAPPER
+    ================================= */
+    .nav-btn-wrapper {
+        width: 100%;
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        padding: 4px 6px;
+
+        flex: 1; /* TAKE REMAINING SPACE */
+    }
+
+        .nav-btn-wrapper::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .nav-btn-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(124, 138, 160, 0.4);
+            border-radius: 10px;
+        }
+
+        .nav-btn-wrapper:hover::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.6);
+        }
+
+        .nav-btn-wrapper::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+
+    /* ===============================
+       NAV CONTAINER
+    ================================= */
+    .nav-btn-container {
+        /* display: flex; */
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .custom-navlink-btn {
+        flex-shrink: 0; /*  PREVENT SHRINK */
+    }
+
+    /* ===============================
+       NAV BUTTON
+    ================================= */
+    .custom-navlink-btn {
+        color: #7c8aa0; /* FIX: visible inactive */
+        font-size: 13.5px;
+        font-weight: 500;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: transparent;
+        min-width: unset;
+        transition: all 0.2s ease;
+    }
+
+
+        /* HOVER (VISIBLE ALWAYS) */
+        .custom-navlink-btn:hover {
+            background: rgba(59, 130, 246, 0.10);
+            color: #3b82f6;
+        }
+
+
+        /* ACTIVE */
+        .custom-navlink-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+
+    /* ===============================
+       ICON + TEXT (FIX ALIGNMENT)
+    ================================= */
+    .icon-with-text {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        line-height: 1;
+    }
+
+    /* ICON FIX */
+    .nav-icon {
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        vertical-align: middle;
+        transform: translateY(-1px); /* FIX: move slightly up */
+    }
+
+    /* TEXT */
+    .icon-text {
+        font-size: 13.5px;
+        font-weight: 500;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+    }
+
+
+    /* ===============================
+       MATERIAL ICON FIX (CRITICAL)
+    ================================= */
+    .material-icons {
+        font-size: 16px !important;
+        color: inherit !important;
+        line-height: 1 !important;
+    }
+
+
+    /* ===============================
+       DROPDOWN ARROW
+    ================================= */
+    .nav-arrow {
+        font-size: 16px !important;
+        opacity: 0.6;
+    }
+
+
+    /* ===============================
+       DROPDOWN ITEMS
+    ================================= */
+
+    .mud-menu-item {
+        font-size: 13px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+        .mud-menu-item:hover {
+            background: rgba(59, 130, 246, 0.10);
+            color: #3b82f6;
+        }
+
+    .submenu {
+        color: #7c8aa0; /* FIX: visible inactive */
+        font-size: 13.5px;
+        font-weight: 500;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: transparent;
+        min-width: unset;
+        transition: all 0.2s ease;
+    }
+    .submenu-active {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+
+    .nav-mobile {
+        display: none;
+    }
+
+    @@media (max-width: 768px) {
+        /* Hide desktop nav */
+        .nav-btn-container {
+            display: none;
+        }
+        /* Show hamburger */
+        .nav-mobile {
+            display: flex;
+        }
+    }
+
+
+
+</style>
+
+@* <div class="nav-scroll-container">
+
+    <!-- LEFT -->
+    <div class="scroll-side">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                       Class=@($"scroll-btn left {(CanScrollLeft ? "" : "hidden")}")
+                       OnClick="@(() => Scroll(-200))" />
+    </div>
+
+
+    <div class="nav-btn-wrapper" @ref="navRef" @onscroll="OnScroll">
+
+    </div>
+
+
+
+    <!-- RIGHT -->
+    <div class="scroll-side">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                       Class=@($"scroll-btn right {(CanScrollRight ? "" : "hidden")}")
+                       OnClick="@(() => Scroll(200))" />
+    </div>
+
+</div> *@
+
 
 <div class="nav-btn-wrapper">
+
     <div class="nav-btn-container">
 
         @foreach (var menu in Menus
-            .Where(m => m.HasAccess)
-            .OrderBy(m => m.SequenceNo))
+                .Where(m => m.HasAccess)
+                .OrderBy(m => m.SequenceNo))
         {
             if (menu.SubMenus != null && menu.SubMenus.Any(x => x.HasAccess))
             {
@@ -16,23 +260,24 @@
                 <MudMenu Dense="true" OpenOnHover="true" CloseOnMouseLeave="true">
 
                     <ActivatorContent>
-                        <MudButton Class="@NavClass(menu.PagePath, menu.SubMenus)"
-                                   Title="@menu.PageHeading">
+                        <MudTooltip Text="@menu.PageHeading" Placement="Placement.Bottom">
+                        <MudButton Class="@NavClass(menu.PagePath, menu.SubMenus)">
                             <div class="icon-with-text">
                                 @RenderIcon(menu.Icon)
                                 <span class="icon-text">@menu.PageHeading</span>
                                 <span class="material-icons nav-arrow" style="font-size:20px;">expand_more</span>
                             </div>
                         </MudButton>
+                        </MudTooltip>
                     </ActivatorContent>
 
                     <ChildContent>
                         @foreach (var sub in menu.SubMenus
-                            .Where(s => s.HasAccess)
-                            .OrderBy(s => s.SequenceNo))
+                                        .Where(s => s.HasAccess)
+                                        .OrderBy(s => s.SequenceNo))
                         {
-                            <MudMenuItem Class="@(IsSubActive(sub) ? "submenu-active" : "")" 
-                                OnClick="@(() => Navigate(sub.PagePath))">
+                            <MudMenuItem Class="@(IsSubActive(sub) ? "submenu-active" : "submenu")"
+                                         OnClick="@(() => Navigate(sub.PagePath))">
                                 <div class="icon-with-text">
                                     @RenderIcon(sub.Icon)
                                     <span class="icon-text">@sub.PageHeading</span>
@@ -46,9 +291,9 @@
             else
             {
                 <!-- SIMPLE BUTTON -->
+                <MudTooltip Text="@menu.PageHeading" Placement="Placement.Bottom">
                 <MudButton Class="@NavClass(menu.PagePath)"
-                           OnClick="@(() => Navigate(menu.PagePath))"
-                           Title="@menu.PageHeading">
+                           OnClick="@(() => Navigate(menu.PagePath))">
 
                     <div class="icon-with-text">
                         @RenderIcon(menu.Icon)
@@ -56,15 +301,16 @@
                     </div>
 
                 </MudButton>
+                </MudTooltip>
             }
         }
 
-        
 
     </div>
 
-    @* <div class="scroll-indicator"></div> *@
 </div>
+
+
 
 @code {
 
@@ -141,5 +387,53 @@
     }
 
 
+
+
+
+    private ElementReference navRef;
+
+    private bool CanScrollLeft;
+    private bool CanScrollRight = true;
+
+    private async Task Scroll(int amount)
+    {
+        await JS.InvokeVoidAsync("navScroll.scroll", navRef, amount);
+        await Task.Delay(50);
+        await CheckScroll();
+    }
+
+    private async Task OnScroll()
+    {
+        await CheckScroll();
+    }
+
+    private async Task CheckScroll()
+    {
+        var result = await JS.InvokeAsync<ScrollInfo>("navScroll.get", navRef);
+
+        CanScrollLeft = result.ScrollLeft > 0;
+
+        // FIXED CONDITION
+        CanScrollRight = result.ScrollWidth > result.ClientWidth;
+
+        Console.WriteLine($"ScrollWidth: {result.ScrollWidth}, ClientWidth: {result.ClientWidth}");
+
+        StateHasChanged();
+    }
+
+    public class ScrollInfo
+    {
+        public double ScrollLeft { get; set; }
+        public double ScrollWidth { get; set; }
+        public double ClientWidth { get; set; }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await CheckScroll();
+        }
+    }
 
 }

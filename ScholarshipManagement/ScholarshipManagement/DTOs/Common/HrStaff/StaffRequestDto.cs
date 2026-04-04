@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ScholarshipManagementAPI.DTOs.Common.HrStaff
+namespace ScholarshipManagement.DTOs.Common.HrStaff
 {
     public class StaffRequestDto
     {

@@ -146,7 +146,28 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- ApexChart JS -->
-    <script src="_content/Blazor-ApexCharts/apexcharts.min.js"></script>
+    <!--<script src="_content/Blazor-ApexCharts/apexcharts.min.js"></script>-->
+  
+    
+    <!-- NavScroll JS -->
+    <script>
+        window.navScroll = {
+            scroll: function (element, amount) {
+                element.scrollBy({
+                    left: amount,
+                    behavior: 'smooth'
+                });
+            },
+
+            get: function (element) {
+                return {
+                    scrollLeft: element.scrollLeft,
+                    scrollWidth: element.scrollWidth,
+                    clientWidth: element.clientWidth
+                };
+            }
+        };
+    </script>
 
 </body>
 

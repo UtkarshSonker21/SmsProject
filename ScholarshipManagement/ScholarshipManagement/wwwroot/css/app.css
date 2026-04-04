@@ -241,122 +241,162 @@ code {
     }
 
 
-.nav-btn-wrapper {
-    width: 100%;
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-}
 
-.nav-btn-container {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    justify-content: flex-start;
-}
+    /* ===============================
+       NAV WRAPPER
+    ================================= */
+    /*.nav-btn-wrapper {
+        width: 100%;
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        padding: 4px 6px;
+    }
 
-
-/*
-.nav-btn-wrapper {
-    position: relative;
-}*/
+        .nav-btn-wrapper::-webkit-scrollbar {
+            display: none;
+        }*/
 
 
+    /* ===============================
+       NAV CONTAINER
+    ================================= */
+    /*.nav-btn-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }*/
+
+
+    /* ===============================
+       NAV BUTTON
+    ================================= */
+    /*.custom-navlink-btn {
+        color: #7c8aa0;*/ /* FIX: visible inactive */
+        /*font-size: 13.5px;
+        font-weight: 500;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: transparent;
+        min-width: unset;
+        transition: all 0.2s ease;
+    }*/
+
+
+        /* HOVER (VISIBLE ALWAYS) */
+        /*.custom-navlink-btn:hover {
+            background: rgba(59, 130, 246, 0.10);
+            color: #3b82f6;
+        }*/
+
+
+        /* ACTIVE */
+        /*.custom-navlink-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }*/
+
+
+    /* ===============================
+       ICON + TEXT (FIX ALIGNMENT)
+    ================================= */
+    /*.icon-with-text {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        line-height: 1;
+    }*/
+
+    /* ICON FIX */
+    /*.nav-icon {
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        vertical-align: middle;
+        transform: translateY(-1px);*/ /* FIX: move slightly up */
+    /*}*/
+
+    /* TEXT */
+    /*.icon-text {
+        font-size: 13.5px;
+        font-weight: 500;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+    }*/
+
+
+    /* ===============================
+       MATERIAL ICON FIX (CRITICAL)
+    ================================= */
+    /*.material-icons {
+        font-size: 16px !important;
+        color: inherit !important;
+        line-height: 1 !important;
+    }*/
+
+
+    /* ===============================
+       DROPDOWN ARROW
+    ================================= */
+    /*.nav-arrow {
+        font-size: 16px !important;
+        opacity: 0.6;
+    }*/
+
+
+    /* ===============================
+       DROPDOWN ITEMS
+    ================================= */
+
+    /*.mud-menu-item {
+        font-size: 13px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+        .mud-menu-item:hover {
+            background: rgba(59, 130, 246, 0.10);
+            color: #3b82f6;
+        }
+
+        .submenu{
+        color: #7c8aa0;*/ /* FIX: visible inactive */
+        /*font-size: 13.5px;
+        font-weight: 500;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: transparent;
+        min-width: unset;
+        transition: all 0.2s ease;
+        }
+    .submenu-active {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }*/
 
 
 /* Hide hamburger */
-.nav-mobile {
+/*.nav-mobile {
     display: none;
-}
-
-@media (max-width: 768px) {
-
-    /* Hide desktop nav */
-    .nav-btn-container {
-        display: none;
-    }
-
-    /* Show hamburger */
-    .nav-mobile {
-        display: flex;
-    }
-}
-
-
-
-
-
-/* NAV BUTTONS ONLY*/
-
-.custom-navlink-btn {
-    color: #ffffff;
-    text-transform: none;
-    font-weight: 500;
-    padding: 8px 14px;
-    border-radius: 6px;
-    min-width: unset;
-}
-
-
-    .custom-navlink-btn:hover {
-        background-color: rgba(59, 130, 246, 0.12);
-        color: #2563eb;
-    }
-
-    /* OPTIONAL: ACTIVE STATE */
-
-    .custom-navlink-btn.active {
-        background-color: rgba(59, 130, 246, 0.18);
-        color: #1d4ed8;
-    }
-
-
-
-/* ICON + TEXT (ROW) */
-
-.icon-with-text {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/*.icon-with-text svg {
-    width: 18px;
-    height: 18px;
 }*/
 
-.nav-icon {
-    font-size: 14px;
-/*    margin-right: 1px;*/
-    vertical-align: middle;
-}
+/*@media (max-width: 768px) {*/
 
-.icon-text {
-    font-size: 14px;
-    font-weight: 500;
-    white-space: nowrap;
-}
+    /* Hide desktop nav */
+    /*.nav-btn-container {
+        display: none;
+    }*/
 
-
-/* Submenu hover background */
-.mud-menu-item:hover {
-    background-color: rgba(25, 118, 210, 0.08) !important;
-}
-
-    /* Optional: icon color on hover */
-    .mud-menu-item:hover .nav-icon {
-        color: #1976d2;
+    /* Show hamburger */
+    /*.nav-mobile {
+        display: flex;
     }
-
-/* Active submenu = same as hover */
-.submenu-active {
-    background-color: rgba(25, 118, 210, 0.08) !important;
-}
-
-    /* Active icon color */
-    .submenu-active .nav-icon {
-        color: #1976d2;
-    }
+}*/
 
 
 

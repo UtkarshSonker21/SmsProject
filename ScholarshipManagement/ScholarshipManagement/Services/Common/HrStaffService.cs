@@ -1,7 +1,5 @@
 ﻿using ScholarshipManagement.DTOs.Common.HrStaff;
 using ScholarshipManagement.DTOs.Common.Response;
-using ScholarshipManagement.DTOs.University.MasterUniversity;
-using ScholarshipManagementAPI.DTOs.Common.HrStaff;
 using System.Net.Http.Json;
 
 namespace ScholarshipManagement.Services.Common
@@ -26,14 +24,14 @@ namespace ScholarshipManagement.Services.Common
         }
 
 
-        public async Task<(StaffRequestDto? Data, ApiResponseDto Response)> GetHrStaffById(long id)
+        public async Task<(StaffRequestDto Data, ApiResponseDto Response)> GetHrStaffById(long id)
         {
             var response = await _http.GetAsync(
                 $"common/staff/getById/{id}");
 
             var apiResponse = await HandleResponse(response);
 
-            var data = GetObject<StaffRequestDto>(apiResponse);
+            var data = GetObject<StaffRequestDto>(apiResponse) ?? new StaffRequestDto();
 
             return (data, apiResponse);
         }

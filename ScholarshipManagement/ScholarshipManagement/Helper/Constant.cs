@@ -106,6 +106,7 @@
 
             public const string HrStaff = "/hr-staff";
             public const string HrStaffUpdate = "/hr-staff-update/{Id:long}";
+            public const string HrStaffView = "/hr-staff-view/{Id:long}";
             public const string HrStaffList = "/hr-staff-list";
 
             public const string StudentAdd = "/student-add";

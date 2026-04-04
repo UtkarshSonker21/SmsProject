@@ -122,9 +122,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Applied Students
                     </span>
                 </div>
@@ -133,9 +131,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -300,8 +296,7 @@
 
                                 <!-- Clickable Full Name -->
                                 <div class="fw-bold text-primary"
-                                     style="cursor:pointer;"
-                                     @onclick="@(() => EditStudentRequiremnt(ctx.Item))">
+                                     style="cursor:pointer;">
                                     @ctx.Item.StudentFullName
                                 </div>
 
@@ -324,9 +319,9 @@
                         @if (!string.IsNullOrWhiteSpace(ctx.Item.UniversityName))
                         {
                             <div class="d-flex align-items-center gap-1">
-                                <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
+                                @* <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
                                          Style="font-size:15px;"
-                                         Class="text-muted" />
+                                         Class="text-muted" /> *@
                                 <span>@ctx.Item.UniversityName</span>
                             </div>
                         }
@@ -349,9 +344,9 @@
                         @if (!string.IsNullOrWhiteSpace(ctx.Item.CourseName))
                         {
                             <div class="d-flex align-items-center gap-1">
-                                <MudIcon Icon="@Icons.Material.Filled.AutoStories"
+                                @* <MudIcon Icon="@Icons.Material.Filled.AutoStories"
                                          Style="font-size:15px;"
-                                         Class="text-muted" />
+                                         Class="text-muted" /> *@
                                 <span>@ctx.Item.CourseName</span>
                             </div>
                         }
@@ -400,20 +395,25 @@
 
                         <div class="d-flex flex-column gap-1 small">
 
-                            <!-- Created Date -->
-                            <div class="d-flex align-items-center gap-2 text-muted" title="CreatedDate">
-                                <MudIcon Icon="@Icons.Material.Filled.Schedule"
-                                         Style="font-size:15px;" />
-                                @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
-                            </div>
-
                             <!-- Created By -->
-                            <div class="d-flex align-items-center gap-2 fw-semibold" title="CreatedBy">
-                                <MudIcon Icon="@Icons.Material.Filled.Person"
-                                         Style="font-size:15px;"
-                                         Color="Color.Primary" />
-                                @ctx.Item.CreatedBy
-                            </div>
+                            <MudTooltip Text="Created By">
+                                <div class="d-flex align-items-center gap-2 fw-semibold">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person"
+                                             Style="font-size:15px;"
+                                             Color="Color.Primary" />
+                                    @ctx.Item.CreatedBy
+                                </div>
+                            </MudTooltip>
+
+
+                            <!-- Created Date -->
+                            <MudTooltip Text="Created Date">
+                                <div class="d-flex align-items-center gap-2 text-muted">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                             Style="font-size:15px;" />
+                                    @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </div>
+                            </MudTooltip>
 
                         </div>
 
@@ -428,11 +428,21 @@
                                     Filterable="false"
                                     HeaderClass="text-center fw-bold"
                                     CellClass="text-center"
-                                    HeaderStyle="width:100px; min-width:100px; max-width:100px;"
-                                    CellStyle="width:100px; min-width:100px; max-width:100px;">
+                                    HeaderStyle="width:120px; min-width:120px; max-width:120px;"
+                                    CellStyle="width:120px; min-width:120px; max-width:120px;">
 
                         <CellTemplate Context="ctx">
                             <div style="display:flex; gap:12px; justify-content:center; align-items:center; height:100%;" class="action-btn">
+
+
+                                <MudTooltip Text="View student data">
+
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenStudentDetails(ctx.Item))" />
+
+                                </MudTooltip>
 
                                 <!-- EDIT -->
                                 @if (canEdit)
@@ -858,5 +868,11 @@
 
     }
 
+
+
+    void OpenStudentDetails(StudentRequirementRequestDto student)
+    {
+        Navigation.NavigateTo(Routes.StudentView.Replace("{Id:long}", student.StudentID.ToString()));
+    }
 
 }

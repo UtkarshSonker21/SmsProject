@@ -34,9 +34,7 @@
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
                 <div style="display: flex; align-items: center;">
-                    <span style="color: var(--color-text-section-title, #000); font-family: Inter, sans-serif;
-                          font-size: 18px; font-style: normal; font-weight: 600;
-                          line-height: 24px; text-transform: uppercase;">
+                    <span class="page-title page-title-uppercase">
                         Labels
                     </span>
                 </div>
@@ -45,9 +43,7 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="meta-text">
                     Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
             </div>
@@ -188,10 +184,10 @@
                     <CellTemplate Context="ctx">
 
                         <div class="d-flex align-items-center gap-1 ">
-                            <MudIcon Icon="@Icons.Material.Filled.Label"
+                            @* <MudIcon Icon="@Icons.Material.Filled.Label"
                                      Size="Size.Small"
                                      Class="text-muted"
-                                     @onclick="@(() => EditLabel(ctx.Item))" />
+                                     @onclick="@(() => EditLabel(ctx.Item))" /> *@
                             <span class="text-primary fw-medium"
                                   style="cursor:pointer;"
                                   @onclick="@(() => EditLabel(ctx.Item))">
@@ -211,12 +207,14 @@
 
                     <CellTemplate Context="ctx">
 
-                        <MudChip Size="Size.Small"
+                        @* <MudChip Size="Size.Small"
                                  Variant="Variant.Outlined"
                                  Color="Color.Error"
                                  Style="min-width:150px; justify-content:center;">
                             @ctx.Item.LabelValue
-                        </MudChip>
+                        </MudChip> *@
+
+                        <span class="text-muted"> @ctx.Item.LabelValue</span>
 
                     </CellTemplate>
                 </TemplateColumn>
@@ -231,12 +229,13 @@
 
                         @if (!string.IsNullOrWhiteSpace(ctx.Item.LabelNewValue))
                         {
-                            <MudChip Size="Size.Small"
+                            @* <MudChip Size="Size.Small"
                                      Variant="Variant.Outlined"
                                      Color="Color.Warning"
                                      Style="min-width:150px; justify-content:center;">
                                 @ctx.Item.LabelNewValue
-                            </MudChip>
+                            </MudChip> *@
+                            <span class="text-muted"> @ctx.Item.LabelNewValue</span>
                         }
                         else
                         {
@@ -256,12 +255,13 @@
 
                         @if (!string.IsNullOrWhiteSpace(ctx.Item.Arabic))
                         {
-                            <MudChip Size="Size.Small"
+                            @* <MudChip Size="Size.Small"
                                      Variant="Variant.Outlined"
                                      Color="Color.Success"
                                      Style="min-width:150px; justify-content:center;">
                                 @ctx.Item.Arabic
-                            </MudChip>
+                            </MudChip> *@
+                            <span class="text-muted"> @ctx.Item.Arabic</span>
                         }
                         else
                         {
@@ -282,20 +282,24 @@
 
                         <div class="d-flex flex-column gap-1 small">
 
-                            <!-- Created Date -->
-                            <div class="d-flex align-items-center gap-2 text-muted" title="CreatedDate">
-                                <MudIcon Icon="@Icons.Material.Filled.Schedule"
-                                         Style="font-size:15px;" />
-                                @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
-                            </div>
-
                             <!-- Created By -->
-                            <div class="d-flex align-items-center gap-2 fw-semibold" title="CreatedBy">
-                                <MudIcon Icon="@Icons.Material.Filled.Person"
-                                         Style="font-size:15px;"
-                                         Color="Color.Primary" />
-                                @ctx.Item.CreatedBy
-                            </div>
+                            <MudTooltip Text="Created By">
+                                <div class="d-flex align-items-center gap-2 fw-semibold">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person"
+                                             Style="font-size:15px;"
+                                             Color="Color.Primary" />
+                                    @ctx.Item.CreatedBy
+                                </div>
+                            </MudTooltip>
+
+                            <!-- Created Date -->
+                            <MudTooltip Text="Created Date">
+                                <div class="d-flex align-items-center gap-2 text-muted">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                             Style="font-size:15px;" />
+                                    @ctx.Item.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </div>
+                            </MudTooltip>
 
                         </div>
 
