@@ -7,54 +7,142 @@ using ScholarshipManagementAPI.DTOs.School.MasterSchool;
 using ScholarshipManagementAPI.DTOs.School.StudentRequirements;
 using ScholarshipManagementAPI.Helper.Enums;
 using ScholarshipManagementAPI.Helper.Utilities;
+using ScholarshipManagementAPI.Services.Interface.Common;
 using ScholarshipManagementAPI.Services.Interface.School;
+using System.Text.RegularExpressions;
 
 namespace ScholarshipManagementAPI.Services.Implementation.School
 {
     public class StudentRequirementService : IStudentRequirementService
     {
         private readonly AppDbContext _context;
-
-        public StudentRequirementService(AppDbContext context)
+        private readonly ILocalFileService _localFileService;
+        public StudentRequirementService(AppDbContext context , ILocalFileService localFileService)
         {
             _context = context;
+            _localFileService = localFileService;
         }
 
 
         // ---------------- StudentRequirementMap ----------------
+        //public async Task<long> CreateStudentRequirementMapAsync(StudentRequirementMappingDto dto)
+        //{
+        //    if (dto.StudentID <= 0)
+        //        throw new CustomException("Invalid student.");
+
+        //    if (dto.ReqId <= 0)
+        //        throw new CustomException("Invalid requirement.");
+
+        //    // Check: Student already has a request
+        //    var exists = await _context.StudentReqLists
+        //        .Include(x => x.Req)
+        //        .ThenInclude(r => r.Course)
+        //        .AnyAsync(x => x.StudentId == dto.StudentID && x.Req.Course.UniversityId == dto.UniversityId);
+
+        //    if (exists)
+        //    {
+        //        throw new CustomException("Student already applied in this university.");
+        //    }
+
+        //    var entity = new StudentReqList
+        //    {
+        //        StudentId = dto.StudentID,
+        //        ReqId = dto.ReqId,
+        //        CreatedBy = dto.CreatedBy,
+        //        CreatedDate = dto.CreatedDate
+        //    };
+
+        //    _context.StudentReqLists.Add(entity);
+        //    await _context.SaveChangesAsync();
+
+        //    // Get the generated StudentReqId
+        //    var studentReqId = entity.StudentReqId;
+
+
+        //    // Attach uploaded docs & update StudentDocuments with this studentReqId
+        //    var tempDocs = await _context.StudentDocuments
+        //        .Where(x => x.StudentReqId == null && x.StudentId == dto.StudentID)
+        //        .ToListAsync();
+
+        //    foreach (var doc in tempDocs)
+        //    {
+        //        doc.StudentReqId = studentReqId;
+        //    }
+
+        //    await _context.SaveChangesAsync();
+
+
+        //    return entity.StudentReqId;
+        //}
+
+
+
         public async Task<long> CreateStudentRequirementMapAsync(StudentRequirementMappingDto dto)
         {
-            if (dto.StudentID <= 0)
-                throw new CustomException("Invalid student.");
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            if (dto.ReqId <= 0)
-                throw new CustomException("Invalid requirement.");
-
-            // Check: Student already has a request
-            var exists = await _context.StudentReqLists
-                .Include(x => x.Req)
-                .ThenInclude(r => r.Course)
-                .AnyAsync(x => x.StudentId == dto.StudentID && x.Req.Course.UniversityId == dto.UniversityId);
-
-            if (exists)
+            try
             {
-                throw new CustomException("Student already applied in this university.");
+                if (dto.StudentID <= 0)
+                    throw new CustomException("Invalid student.");
+
+                if (dto.ReqId <= 0)
+                    throw new CustomException("Invalid requirement.");
+
+                // 🔹 Check existing
+                var exists = await _context.StudentReqLists
+                    .Include(x => x.Req)
+                    .ThenInclude(r => r.Course)
+                    .AnyAsync(x => x.StudentId == dto.StudentID && x.Req.Course.UniversityId == dto.UniversityId);
+
+                if (exists)
+                    throw new CustomException("Student already applied in this university.");
+
+                // 🔹 Create mapping
+                var entity = new StudentReqList
+                {
+                    StudentId = dto.StudentID,
+                    ReqId = dto.ReqId,
+                    CreatedBy = dto.CreatedBy,
+                    CreatedDate = dto.CreatedDate
+                };
+
+                _context.StudentReqLists.Add(entity);
+                await _context.SaveChangesAsync();
+
+                var studentReqId = entity.StudentReqId;
+
+                // 🔹 Attach uploaded docs (IMPORTANT FIX BELOW 👇)
+                //var tempDocs = await _context.StudentDocuments
+                //    .Where(x => x.StudentReqId == null
+                //             && x.UploadSessionId == dto.UploadSessionId) // use session, NOT studentId
+                //    .ToListAsync();
+
+
+                var tempDocs = await _context.StudentDocuments
+                    .Where(x => x.StudentReqId == null
+                    && x.UploadSessionId == dto.UploadSessionId
+                    && x.StudentId == dto.StudentID)
+                    .ToListAsync();
+
+                foreach (var doc in tempDocs)
+                {
+                    doc.StudentReqId = studentReqId;
+                }
+
+                await _context.SaveChangesAsync();
+
+                // 🔹 Commit
+                await transaction.CommitAsync();
+
+                return studentReqId;
             }
-
-            var entity = new StudentReqList
+            catch
             {
-                StudentId = dto.StudentID,
-                ReqId = dto.ReqId,
-                CreatedBy = dto.CreatedBy,
-                CreatedDate = dto.CreatedDate
-            };
-
-            _context.StudentReqLists.Add(entity);
-            await _context.SaveChangesAsync();
-
-            return entity.StudentReqId;
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
-
 
 
         public async Task<bool> UpdateStudentRequirementMapAsync(StudentRequirementMappingDto dto)
@@ -106,6 +194,21 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             // entity.StudentId = dto.StudentID;
             // entity.ReqId = dto.ReqId;
 
+            // Validate documents FIRST (if accepting)
+            if (dto.DocumentStatus == (int)DocumentStatus.Accepted)
+            {
+                var missingDocs = await ValidateRequiredDocumentsAsync(entity.StudentReqId);
+
+                if (missingDocs.Any())
+                    throw new CustomException("All required documents must be uploaded before accepting");
+            }
+
+            // Validate workflow BEFORE updating anything
+
+            ValidateUniversityAndNgoWorkflow(entity, dto);
+
+
+            // Now apply updates
             entity.DocumentStatus = dto.DocumentStatus;
 
             if (dto.DocumentStatus == (int)DocumentStatus.Accepted)
@@ -154,6 +257,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             return true;
         }
 
+
         public async Task<bool> UpdateStudentRequirementMapByNgoAsync(StudentRequirementRequestDto dto, LoggedInUserDto currentUser)
         {
             var entity = await _context.StudentReqLists
@@ -176,18 +280,24 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             // entity.StudentId = dto.StudentID;
             // entity.ReqId = dto.ReqId;
 
+            // Validate workflow FIRST
+            ValidateUniversityAndNgoWorkflow(entity, dto);
 
-            // Only when Awarded
-            if (dto.UniAwardingStatus == (int)AwardingStatus.Awarded)
+            // NGO can only act AFTER awarding
+            if (entity.UniAwardingstatus != (int)AwardingStatus.Awarded)
             {
-                entity.DaAdmissionStatus = dto.DaAdmissionStatus;
-                entity.TotalCost = dto.TotalCost;
-                entity.UniAwardingstatusCost = dto.UniAwardingStatusCost;
-                entity.DonorId = dto.DonorId;
-
-                entity.DaStatusBy = currentUser.LoginId;
-                entity.DaStatusDate = DateTime.UtcNow;
+                throw new CustomException("Student must be awarded before NGO action");
             }
+
+
+            // Apply NGO updates
+            entity.DaAdmissionStatus = dto.DaAdmissionStatus;
+            entity.TotalCost = dto.TotalCost;
+            entity.UniAwardingstatusCost = dto.UniAwardingStatusCost;
+            entity.DonorId = dto.DonorId;
+
+            entity.DaStatusBy = currentUser.LoginId;
+            entity.DaStatusDate = DateTime.UtcNow;
 
 
             await _context.SaveChangesAsync();
@@ -443,5 +553,462 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
 
 
 
+
+
+        public async Task<string> UploadAsync(long studentReqId, long masterDocId, IFormFile file)
+        {
+            // 🔹 1. Validate file
+            if (file == null || file.Length == 0)
+                throw new Exception("File required");
+
+            var extension = Path.GetExtension(file.FileName)?.ToLower();
+
+            var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+
+            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+                throw new Exception("Invalid file type");
+
+            if (file.Length > 5 * 1024 * 1024)
+                throw new Exception("File size must be less than 5MB");
+
+            // 🔹 2. Validate student requirement
+            var studentReq = await _context.StudentReqLists
+                .Include(x => x.Student)
+                .FirstOrDefaultAsync(x => x.StudentReqId == studentReqId);
+
+            if (studentReq == null)
+                throw new Exception("Invalid requirement");
+
+            // 🔹 3. Validate master document exists
+            var masterDoc = await _context.UnMasterDocs
+                .FirstOrDefaultAsync(x => x.UniversityDocsId == masterDocId);
+
+            if (masterDoc == null)
+                throw new Exception("Invalid document type");
+
+            // 🔹 4. Validate document belongs to requirement
+            var req = await _context.UnCourseReqs
+                .FirstOrDefaultAsync(x => x.ReqId == studentReq.ReqId);
+
+            if (req == null || string.IsNullOrEmpty(req.RequiredDocuments))
+                throw new Exception("Requirement document configuration missing");
+
+            var requiredDocs = req.RequiredDocuments
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(int.Parse)
+                .ToList();
+
+            if (!requiredDocs.Contains((int)masterDocId))
+                throw new Exception("Document not required for this requirement");
+
+            // 🔹 5. Check existing document (BEFORE upload)
+            var existing = await _context.StudentDocuments
+                .FirstOrDefaultAsync(x =>
+                    x.StudentReqId == studentReqId &&
+                    x.MasterDocId == masterDocId);
+
+            var cleanDocName = SanitizeFileName(masterDoc.DocumentName);
+
+            // 🔹 6. Generate file key
+            var fileKey = $"students/{studentReq.Student.StudentNumber}/requirement/{studentReqId}/{masterDocId}_{cleanDocName}/{Guid.NewGuid()}{extension}";
+
+            using var stream = file.OpenReadStream();
+
+            // 🔹 7. Upload file
+            await _localFileService.UploadAsync(stream, fileKey);
+
+            // later delete old file if exists (optional)
+
+            // 🔹 8. Update or insert DB
+            if (existing != null)
+            {
+                // optional: delete old file
+                // await _localFileService.DeleteAsync(existing.FileUrlName);
+
+                existing.FileUrlName = fileKey;
+                existing.CreatedDate = DateTime.UtcNow;
+            }
+            else
+            {
+                _context.StudentDocuments.Add(new StudentDocument
+                {
+                    StudentId = studentReq.StudentId,
+                    StudentReqId = null,
+                    MasterDocId = masterDocId,
+                    FileUrlName = fileKey,
+                    CreatedDate = DateTime.UtcNow,
+                    IsActive = true
+                });
+            }
+
+            // 🔹 9. Save DB
+            await _context.SaveChangesAsync();
+
+            // 🔹 10. Return full URL
+            return _localFileService.GetFileUrl(fileKey);
+        }
+
+
+        public async Task<string> UploadAsync(UploadDocumentRequestDto request)
+        {
+            // 🔹 1. Validate file
+            if (request.File == null || request.File.Length == 0)
+                throw new CustomException("File required");
+
+            var extension = Path.GetExtension(request.File.FileName)?.ToLower();
+            var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+
+            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+                throw new CustomException("Invalid file type");
+
+            if (request.File.Length > 5 * 1024 * 1024)
+                throw new CustomException("File size must be less than 5MB");
+
+
+            // 🔹 2. Validate student
+            var student = await _context.StudentData
+                .FirstOrDefaultAsync(x => x.StudentId == request.StudentId);
+
+            if (student == null)
+                throw new CustomException("Invalid student");
+
+
+            // 🔹 3. Validate master document
+            var masterDoc = await _context.UnMasterDocs
+                .FirstOrDefaultAsync(x => x.UniversityDocsId == request.MasterDocId);
+
+            if (masterDoc == null)
+                throw new CustomException("Invalid document type");
+
+            // null before save
+            long? studentReqId = null;
+
+            // 🔹 4. OPTIONAL: Validate requirement (only if mapped)
+            if (request.StudentReqId != null && request.StudentReqId >0)
+            {
+                studentReqId = request.StudentReqId;
+                var studentReq = await _context.StudentReqLists
+                    .FirstOrDefaultAsync(x => x.StudentReqId == request.StudentReqId);
+
+                if (studentReq == null)
+                    throw new CustomException("Invalid requirement");
+
+                var req = await _context.UnCourseReqs
+                    .FirstOrDefaultAsync(x => x.ReqId == studentReq.ReqId);
+
+                if (req != null && !string.IsNullOrEmpty(req.RequiredDocuments))
+                {
+                    var requiredDocs = req.RequiredDocuments
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(int.Parse)
+                        .ToList();
+
+                    if (!requiredDocs.Contains((int)request.MasterDocId))
+                        throw new CustomException("Document not required for this requirement");
+                }
+            }
+
+            // 🔹 5. Check existing document (Replace logic)
+            var existing = await _context.StudentDocuments
+                .FirstOrDefaultAsync(x =>
+                    x.MasterDocId == request.MasterDocId &&
+                    (
+                        (request.StudentReqId != null && x.StudentReqId == request.StudentReqId) ||
+                        (request.StudentReqId == null && x.UploadSessionId == request.UploadSessionId)
+                    ));
+
+            var cleanDocName = SanitizeFileName(masterDoc.DocumentName);
+
+            // 🔹 6. Generate file key
+            var fileKey = $"students/{student.StudentNumber}/documents/{request.MasterDocId}_{cleanDocName}/{Guid.NewGuid()}{extension}";
+
+            using var stream = request.File.OpenReadStream();
+
+            // 🔹 7. Upload file
+            await _localFileService.UploadAsync(stream, fileKey);
+
+            // 🔹 8. Insert / Update DB
+            if (existing != null)
+            {
+                // optional: delete old file
+                // await _localFileService.DeleteAsync(existing.FileUrlName);
+
+                existing.FileUrlName = fileKey;
+                existing.CreatedDate = DateTime.UtcNow;
+            }
+            else
+            {
+                _context.StudentDocuments.Add(new StudentDocument
+                {
+                    StudentId = request.StudentId,
+                    StudentReqId = studentReqId, 
+                    UploadSessionId = request.UploadSessionId,
+                    MasterDocId = request.MasterDocId,
+                    FileUrlName = fileKey,
+                    CreatedDate = DateTime.UtcNow,
+                    IsActive = true
+                }); ;
+            }
+
+            // 🔹 9. Save DB
+            await _context.SaveChangesAsync();
+
+            // 🔹 10. Return URL
+            return _localFileService.GetFileUrl(fileKey);
+        }
+
+
+
+
+
+        public async Task<List<StudentDocumentDto>> GetDocumentStatusAsync(long studentReqId)
+        {
+            // 🔹 1. Get student requirement
+            var studentReq = await _context.StudentReqLists
+                .FirstOrDefaultAsync(x => x.StudentReqId == studentReqId);
+
+            if (studentReq == null)
+                throw new Exception("Invalid requirement");
+
+            // 🔹 2. Get requirement config
+            var req = await _context.UnCourseReqs
+                .FirstOrDefaultAsync(x => x.ReqId == studentReq.ReqId);
+
+            if (req == null || string.IsNullOrEmpty(req.RequiredDocuments))
+                throw new Exception("No required documents found");
+
+            // 🔹 3. Parse required document IDs
+            var requiredDocIds = req.RequiredDocuments
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(long.Parse)
+                .ToList();
+
+            // 🔹 4. Get master document details
+            var masterDocs = await _context.UnMasterDocs
+                .Where(x => requiredDocIds.Contains(x.UniversityDocsId))
+                .ToListAsync();
+
+            // 🔹 5. Get uploaded documents
+            var uploadedDocs = await _context.StudentDocuments
+                .Where(x => x.StudentReqId == studentReqId)
+                .ToListAsync();
+
+            // 🔹 6. Map result
+            var result = masterDocs.Select(doc =>
+            {
+                var uploaded = uploadedDocs
+                    .FirstOrDefault(x => x.MasterDocId == doc.UniversityDocsId);
+
+                return new StudentDocumentDto
+                {
+                    StdReqId = studentReqId,
+                    MasterDocId = doc.UniversityDocsId,
+                    DocName = doc.DocumentName,
+                    DocType = doc.DocType ?? "",
+                    IsUploaded = uploaded != null,
+                    FileUrl = uploaded != null && !string.IsNullOrEmpty(uploaded.FileUrlName)
+                    ? _localFileService.GetFileUrl(uploaded.FileUrlName)
+                    : null
+                };
+            }).ToList();
+
+            return result;
+        }
+
+
+        public async Task<List<StudentDocumentDto>> GetDocumentStatusAsync(DocumentStatusRequestDto request)
+        {
+            // 🔹 1. Validate request
+            if (request.ReqId <= 0)
+                throw new CustomException("Invalid requirement");
+
+            if (request.StudentReqId == null && request.UploadSessionId == null)
+                throw new CustomException("Either StudentReqId or UploadSessionId is required");
+
+            // 🔹 2. Get requirement config
+            var req = await _context.UnCourseReqs
+                .FirstOrDefaultAsync(x => x.ReqId == request.ReqId);
+
+            if (req == null || string.IsNullOrEmpty(req.RequiredDocuments))
+                throw new CustomException("No required documents found");
+
+            // 🔹 3. Parse required docs
+            var requiredDocIds = req.RequiredDocuments
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(long.Parse)
+                .ToList();
+
+            // 🔹 4. Get master docs
+            var masterDocs = await _context.UnMasterDocs
+                .Where(x => requiredDocIds.Contains(x.UniversityDocsId))
+                .ToListAsync();
+
+            // 🔹 5. Get uploaded docs (CORE LOGIC)
+            List<StudentDocument> uploadedDocs;
+
+            if (request.StudentReqId != null)
+            {
+                // AFTER SAVE
+                uploadedDocs = await _context.StudentDocuments
+                    .Where(x => x.StudentReqId == request.StudentReqId)
+                    .ToListAsync();
+            }
+            else
+            {
+                // BEFORE SAVE
+                uploadedDocs = await _context.StudentDocuments
+                    .Where(x => x.UploadSessionId == request.UploadSessionId && x.StudentReqId == null)
+                    .ToListAsync();
+            }
+
+            // 🔹 6.Map required documents with uploaded documents
+            var result = masterDocs.Select(doc =>
+            {
+                var uploaded = uploadedDocs
+                    .FirstOrDefault(x => x.MasterDocId == doc.UniversityDocsId);
+
+                return new StudentDocumentDto
+                {
+                    StdReqId = request.StudentReqId,
+                    MasterDocId = doc.UniversityDocsId,
+                    DocName = doc.DocumentName,
+                    DocType = doc.DocType ?? "",
+                    IsUploaded = uploaded != null,
+                    FileUrl = uploaded != null && !string.IsNullOrEmpty(uploaded.FileUrlName)
+                        ? _localFileService.GetFileUrl(uploaded.FileUrlName)
+                        : null
+                };
+            }).ToList();
+
+            return result;
+        }
+
+
+
+
+        private async Task<List<long>> ValidateRequiredDocumentsAsync(long studentReqId)
+        {
+            // 🔹 Get student requirement
+            var studentReq = await _context.StudentReqLists
+                .FirstOrDefaultAsync(x => x.StudentReqId == studentReqId);
+
+            if (studentReq == null)
+                throw new CustomException("Invalid requirement");
+
+            // 🔹 Get requirement config
+            var req = await _context.UnCourseReqs
+                .FirstOrDefaultAsync(x => x.ReqId == studentReq.ReqId);
+
+            if (req == null || string.IsNullOrEmpty(req.RequiredDocuments))
+                throw new CustomException("Requirement documents not configured");
+
+            // 🔹 Parse required docs
+            var requiredDocs = req.RequiredDocuments
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(long.Parse)
+                .ToList();
+
+            // 🔹 Get uploaded docs
+            var uploadedDocs = await _context.StudentDocuments
+                .Where(x => x.StudentReqId == studentReqId)
+                .Select(x => x.MasterDocId)
+                .ToListAsync();
+
+            // 🔹 Find missing docs
+            var missingDocs = requiredDocs
+                .Where(id => !uploadedDocs.Contains(id))
+                .ToList();
+
+            return missingDocs;
+        }
+
+
+        private void ValidateUniversityAndNgoWorkflow(StudentReqList entity, StudentRequirementRequestDto dto)
+        {
+            // 🔹 Awarding only after documents accepted
+            if (dto.UniAwardingStatus == (int)AwardingStatus.Awarded &&
+                entity.DocumentStatus != (int)DocumentStatus.Accepted)
+            {
+                throw new CustomException("Documents must be accepted before awarding");
+            }
+
+            // 🔹 Prevent changing document status AFTER awarding
+            if (entity.UniAwardingstatus == (int)AwardingStatus.Awarded &&
+                dto.DocumentStatus != entity.DocumentStatus)
+            {
+                throw new CustomException("Document status cannot be changed after awarding");
+            }
+
+            // 🔹 Sponsorship only after awarding
+            if (dto.DaAdmissionStatus == (int)SponsoredStatus.Sponsored &&
+                entity.UniAwardingstatus != (int)AwardingStatus.Awarded)
+            {
+                throw new CustomException("Student must be awarded before sponsorship");
+            }
+
+            // 🔹 Lock everything after sponsorship
+            if (entity.DaAdmissionStatus == (int)SponsoredStatus.Sponsored)
+            {
+                throw new CustomException("Sponsorship already completed. No further updates allowed");
+            }
+        }
+
+
+
+        private string SanitizeFileName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return "doc";
+
+            // remove special chars
+            name = Regex.Replace(name, @"[^a-zA-Z0-9\s-]", "");
+
+            // replace spaces with underscore
+            name = name.Replace(" ", "_");
+
+            return name.ToLower();
+        }
+
     }
 }
+
+
+
+
+
+
+
+//university can update document status(accepted only if all documnst are uploaded) 
+//and if document status is accepted then awareding status can be updated by university only 
+//    and if awarding status is awarded then sponsorship status can be updated by ngo only.
+
+
+
+//    and if sponsored no further update allowed from university or ngo. Because sponsoring already done.
+//    and if awarding already done then document status cannot be updated by university. Because awarding already done.
+
+
+
+//public async Task<List<StudentDocumentDto>> GetUploadedDocs(long studentReqId)
+//{
+//    var docs = await _context.StudentDocuments
+//        .Include(x => x.MasterDoc)
+//        .Where(x => x.StudentReqId == studentReqId)
+//        .ToListAsync();
+
+//    return docs.Select(x => new StudentDocumentDto
+//    {
+//        StdReqId = studentReqId,
+//        DocId = x.DocumentId,
+//        MasterDocId = x.MasterDocId,
+//        DocName = x.MasterDoc.DocumentName,
+//        DocType = x.MasterDoc.DocType ?? "",
+//        IsUploaded = true, // always true here
+//        FileUrl = !string.IsNullOrEmpty(x.FileUrlName)
+//            ? _localFileService.GetFileUrl(x.FileUrlName)
+//            : null,
+//        UploadedAt = x.CreatedDate
+//    }).ToList();
+//}
+
+

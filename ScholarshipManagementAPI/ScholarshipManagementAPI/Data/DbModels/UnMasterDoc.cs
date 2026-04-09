@@ -21,5 +21,7 @@ public partial class UnMasterDoc
 
     public DateTime CreatedDate { get; set; }
 
+    public virtual ICollection<StudentDocument> StudentDocuments { get; set; } = new List<StudentDocument>();
+
     public virtual UnUniversityList University { get; set; } = null!;
 }

@@ -19,5 +19,10 @@ namespace ScholarshipManagementAPI.DTOs.School.StudentRequirements
 
         public DateTime CreatedDate { get; set; }
 
+
+
+
+        public Guid UploadSessionId { get; set; }   // required for temp tracking of uploaded documents before final save
+
     }
 }

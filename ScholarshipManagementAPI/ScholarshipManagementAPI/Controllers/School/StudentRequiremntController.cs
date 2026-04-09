@@ -5,6 +5,7 @@ using ScholarshipManagementAPI.DTOs.Common.Response;
 using ScholarshipManagementAPI.DTOs.School.StudentRequirements;
 using ScholarshipManagementAPI.DTOs.School.Students;
 using ScholarshipManagementAPI.Helper.Utilities;
+using ScholarshipManagementAPI.Services.Implementation.School;
 using ScholarshipManagementAPI.Services.Interface.School;
 
 namespace ScholarshipManagementAPI.Controllers.School
@@ -194,6 +195,78 @@ namespace ScholarshipManagementAPI.Controllers.School
         }
 
 
+
+
+
+        //[HttpPost("upload/{studentReqId}/{masterDocId}")]
+        //public async Task<IActionResult> UploadDocument(long studentReqId, long masterDocId, IFormFile file)
+        //{
+        //    var result = await _service.UploadAsync(
+        //        studentReqId,
+        //        masterDocId,
+        //        file);
+
+        //    //return Ok(result);
+
+
+        //    return Ok(new ApiResponseDto
+        //    {
+        //        Success = true,
+        //        Result = result,
+        //        Message = "Document uploaded successfully"
+        //    });
+        //}
+
+        //[HttpGet("documents/{studentReqId}")]
+        //public async Task<IActionResult> GetDocuments(long studentReqId)
+        //{
+        //    var result = await _service
+        //        .GetDocumentStatusAsync(studentReqId);
+
+        //    //return Ok(result);
+
+
+        //    return Ok(new ApiResponseDto
+        //    {
+        //        Success = true,
+        //        Result = result,
+        //        Message = "Document fetched successfully"
+        //    });
+
+        //}
+
+
+
+        [HttpPost("upload")]
+        public async Task<IActionResult> Upload([FromForm] UploadDocumentRequestDto dto)
+        {
+            var result = await _service.UploadAsync(dto);
+
+            return Ok(new ApiResponseDto
+            {
+                Success = true,
+                Result = result,
+                Message = "Document uploaded successfully"
+            });
+        }
+
+
+
+        [HttpPost("document-status")]
+        public async Task<IActionResult> GetDocumentStatus(DocumentStatusRequestDto request)
+        {
+            var result = await _service.GetDocumentStatusAsync(request);
+            //return Ok(result);
+
+
+
+            return Ok(new ApiResponseDto
+            {
+                Success = true,
+                Result = result,
+                Message = "Document fetched successfully"
+            });
+        }
 
 
     }

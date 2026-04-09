@@ -66,6 +66,7 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<ZzMasterDropDown> ZzMasterDropDowns { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AcCurrencyConversion>(entity =>
@@ -292,10 +293,19 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.DocType).HasMaxLength(100);
             entity.Property(e => e.FileUrlName).HasMaxLength(1000);
 
+            entity.HasOne(d => d.MasterDoc).WithMany(p => p.StudentDocuments)
+                .HasForeignKey(d => d.MasterDocId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_StudentDocument_MasterDoc");
+
             entity.HasOne(d => d.Student).WithMany(p => p.StudentDocuments)
                 .HasForeignKey(d => d.StudentId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_StudentDocument_StudentData");
+
+            entity.HasOne(d => d.StudentReq).WithMany(p => p.StudentDocuments)
+                .HasForeignKey(d => d.StudentReqId)
+                .HasConstraintName("FK_StudentDocument_StudentReq");
         });
 
         modelBuilder.Entity<StudentReqList>(entity =>

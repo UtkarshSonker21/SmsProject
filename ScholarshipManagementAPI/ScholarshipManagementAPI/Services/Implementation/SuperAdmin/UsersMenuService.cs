@@ -245,6 +245,10 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
                 .ThenBy(x => x.LevelNo)
                 .ThenBy(x => x.SequenceNo);
 
+            //query = query
+            //    .OrderBy(x => x.SequenceNo)
+            //    .ThenBy(x => x.LevelNo);
+
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)
             {
