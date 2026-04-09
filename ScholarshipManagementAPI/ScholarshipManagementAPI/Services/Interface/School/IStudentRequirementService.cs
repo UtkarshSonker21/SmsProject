@@ -20,5 +20,17 @@ namespace ScholarshipManagementAPI.Services.Interface.School
 
         Task<StudentRequirementRequestDto?> GetByIdAsync(long id);
         Task<PagedResultDto<StudentRequirementRequestDto>> GetByFilterAsync(StudentRequirementFilterDto filter);
+
+
+
+
+        Task<string> UploadAsync(long studentReqId, long masterDocId, IFormFile file);
+        Task<string> UploadAsync(UploadDocumentRequestDto dto);
+
+
+
+        Task<List<StudentDocumentDto>> GetDocumentStatusAsync(long studentReqId);
+        Task<List<StudentDocumentDto>> GetDocumentStatusAsync(DocumentStatusRequestDto request);
+
     }
 }

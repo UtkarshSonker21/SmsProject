@@ -21,6 +21,6 @@ namespace ScholarshipManagement.DTOs.School.StudentRequirements
         public long? UniversityId { get; set; }
         public string? RequiredDocuments { get; set; }
 
-
+        public Guid UploadSessionId { get; set; }   // required for temp tracking of uploaded documents before final save
     }
 }

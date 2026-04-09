@@ -52,4 +52,6 @@ public partial class StudentReqList
     public virtual UnCourseReq Req { get; set; } = null!;
 
     public virtual StudentDatum Student { get; set; } = null!;
+
+    public virtual ICollection<StudentDocument> StudentDocuments { get; set; } = new List<StudentDocument>();
 }

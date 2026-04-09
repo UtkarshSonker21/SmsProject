@@ -89,10 +89,27 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-                <span style="color: var(--color-text-breadcrumbs, #000); font-family: Inter, sans-serif;
-                            font-size: 15px; font-style: normal; font-weight: 400; line-height: 20px;
-                            text-transform: capitalize; margin-right:25px">
+                <span class="page-title">
                     @* Total Records : <span id="totalRecords">@TotalRecords</span> *@
+                    <MudChip T="string"
+                             Color="@(AllUploaded ? Color.Success : Color.Error)"
+                             Variant="Variant.Filled"
+                             Size="Size.Small"
+                             StartIcon="@(AllUploaded
+                                              ? Icons.Material.Filled.CheckCircle
+                                              : Icons.Material.Filled.Warning)"
+                             Class="cursor-pointer">
+
+                        @if (AllUploaded)
+                        {
+                            <span>All Documents Submitted</span>
+                        }
+                        else
+                        {
+                            <span>Documents Pending (@MissingDocs)</span>
+                        }
+
+                    </MudChip>
                 </span>
             </div>
 
@@ -132,6 +149,7 @@
                             @model.SchoolName - @model.ShortName
 
                         </MudText>
+
                     </div>
 
                 </div>
@@ -150,6 +168,7 @@
                             Update status
                         </span>
                     </div>
+
                 }
 
 
@@ -163,7 +182,7 @@
 
             <MudGrid Spacing="3">
 
-                @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.Marketing)
+                @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.University || CurrentStaffType == StaffType.Marketing)
                 {
                     <!-- ================= Requiremnet Details ================= -->
                     <MudItem xs="12" Class="mb-2">
@@ -520,6 +539,93 @@
 
                 <MudDivider Class="mb-4" />
 
+
+                @if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.University || CurrentStaffType == StaffType.Marketing)
+                {
+
+                    <div style="height:3px; background:#e5e7eb; margin-bottom:5px;"></div>
+
+                    <!-- ================= Student Documents ================= -->
+                    <MudItem xs="12" Class="mb-2">
+                        <MudText Typo="Typo.h6"
+                                 Style="font-size:15px; font-weight:600; color:#1E293B;">
+                            Student Documents
+                        </MudText>
+                        <div style="width:60px; height:2px; background:#1E88E5; margin-bottom:3px;"></div>
+                        <MudDivider />
+                    </MudItem>
+
+
+                    <MudItem xs="12">
+                        @if (RequiredDocuments.Any())
+                        {
+                            <MudTable Items="RequiredDocuments"
+                                      Dense="true"
+                                      Hover="true"
+                                      Bordered="true"
+                                      Striped="true">
+
+                                <HeaderContent>
+                                    <MudTh>Type</MudTh>
+                                    <MudTh>Document Name</MudTh>
+                                    <MudTh Style="width:140px;">Action</MudTh>
+                                </HeaderContent>
+
+                                <RowTemplate>
+
+                                    <!-- ✅ Document Type -->
+                                    <MudTd>
+                                        <MudChip T="string" Size="Size.Small"
+                                                 Color="Color.Primary"
+                                                 Variant="Variant.Outlined" Style="min-width:80px; justify-content:center;">
+                                            @context.DocType
+                                        </MudChip>
+                                    </MudTd>
+
+                                    <!-- ✅ Document Name -->
+                                    <MudTd>@context.DocName</MudTd>
+
+                                    <!-- ✅ Actions -->
+                                    <MudTd>
+
+                                        @if (context.IsUploaded)
+                                        {
+                                            <!-- 👁 VIEW -->
+                                            <MudTooltip Text="View File">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                               Color="Color.Primary"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenFile(context.FileUrl))" />
+                                            </MudTooltip>
+                                        }
+                                        else
+                                        {
+                                            <!-- 👁 VIEW (Disabled) -->
+                                            <MudTooltip Text="File not uploaded yet">
+                                                <span>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                                   Disabled="true"
+                                                                   Color="Color.Default"
+                                                                   Size="Size.Small" />
+                                                </span>
+                                            </MudTooltip>
+                                        }
+
+
+                                    </MudTd>
+
+                                </RowTemplate>
+
+                            </MudTable>
+                        }
+
+
+                    </MudItem>
+
+                    <MudDivider Class="mb-4" />
+                }
+
+
             </MudGrid>
 
         </MudPaper>
@@ -636,17 +742,20 @@
         {
             StdReq = result.Data.Items.FirstOrDefault() ?? new StudentRequirementRequestDto();
 
-            if (StdReq.UniAwardingStatus != (int)AwardingStatus.Awarded)
+            // if (StdReq.UniAwardingStatus != (int)AwardingStatus.Awarded)
+            // {
+            //     showUpdateStatus = false;
+            // }
+            // else
+            // {
+
+            // }
+            if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.University)
             {
-                showUpdateStatus = false;
+                showUpdateStatus = true;
             }
-            else
-            {
-                if (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.University)
-                {
-                    showUpdateStatus = true;
-                }
-            }
+
+            await GetRequiredDcouments(StdReq.StudentReqID, StdReq.ReqId);
         }
         else
         {
@@ -704,6 +813,46 @@
         // Navigation.NavigateTo($"/school/profile/{id}");
 
         Navigation.NavigateTo(Routes.SchoolProfile.Replace("{Id:long}", id.ToString()));
+    }
+
+
+
+
+
+    private int TotalDocs => RequiredDocuments?.Count ?? 0;
+
+    private int UploadedDocs => RequiredDocuments?.Count(x => x.IsUploaded) ?? 0;
+
+    private int MissingDocs => TotalDocs - UploadedDocs;
+
+    private bool AllUploaded => TotalDocs > 0 && MissingDocs == 0;
+
+
+    private List<StudentDocumentDto> RequiredDocuments = new();
+
+    private async Task GetRequiredDcouments(long? studentReqId, long reqId)
+    {
+        // var ok = await StudentRequirementService.GetDocumentsAsync(studentReqId);
+        var ok = await StudentRequirementService.GetDocumentsAsync(studentReqId, null, reqId);
+
+        if (ok.Response.Success)
+        {
+            RequiredDocuments = ok.Data;
+
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            Snackbar.Add(ok.Response.Message, Severity.Error);
+        }
+    }
+
+    async Task OpenFile(string url)
+    {
+        if (!string.IsNullOrEmpty(url))
+        {
+            await JS.InvokeVoidAsync("open", url, "_blank");
+        }
     }
 
 

@@ -172,6 +172,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
+// local file service
+builder.Services.AddScoped<ILocalFileService, LocalFileService>();
+
 // aws service
 builder.Services.Configure<AwsS3OptionsDto>(
     builder.Configuration.GetSection("AWS"));

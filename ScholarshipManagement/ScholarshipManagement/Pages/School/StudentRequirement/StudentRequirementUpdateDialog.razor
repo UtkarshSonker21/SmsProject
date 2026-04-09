@@ -31,6 +31,7 @@
 
             <MudForm @ref="_form" Model="@StdReq">
 
+
                 @if (CurrentStaffType == StaffType.University)
                 {
                     <MudGrid Spacing="3">
@@ -301,8 +302,6 @@
                     </MudGrid>
                 }
 
-
-
             </MudForm>
 
         </MudPaper>
@@ -525,6 +524,7 @@
         TotalCost + AdminCostAmount;
 
     private bool showCost = false;
+    private bool showDocuments = false;
 
 
 
@@ -567,6 +567,7 @@
         }
         await InvokeAsync(StateHasChanged);
     }
+
 
 
 }

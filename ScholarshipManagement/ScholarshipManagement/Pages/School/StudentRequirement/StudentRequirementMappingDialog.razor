@@ -20,10 +20,36 @@
 @inject CourseRequirementService CourseRequirementService
 @inject StudentService StudentService
 @inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject UsersMenuService UsersMenuService
 @inject CommonService CommonService
+
+
+<style>
+    /* .file-input-overlay {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    } */
+
+    .icon-upload-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+        .icon-upload-wrapper .file-input-overlay {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+</style>
 
 
 <MudDialog MaxWidth="MaxWidth.Large" FullWidth="true">
@@ -62,13 +88,14 @@
                     </MudItem>
 
                     <MudItem xs="12" md="6">
-                        <MudSelect T="long"
+                        <MudSelect T="long?"
                                    Label="Course Requirement"
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
                                    Required="true"
                                    RequiredError="Requirement is required"
-                                   @bind-Value="StdReqMap.ReqId">
+                                   Value="SelectedReqId"
+                                   ValueChanged="OnReqChanged">
 
                             <!-- Default placeholder -->
                             <MudSelectItem T="long" Value="0">
@@ -77,7 +104,7 @@
 
                             @foreach (var c in Requirements)
                             {
-                                <MudSelectItem T="long" Value="@(c.ReqId ?? 0)">
+                                <MudSelectItem T="long?" Value="c.ReqId">
                                     @c.CourseName
                                 </MudSelectItem>
                             }
@@ -123,9 +150,9 @@
                                 </MudText>
                             </div>
 
-                            @if (GetDocuments(StdReqMap.RequiredDocuments).Any())
+                            @if (RequiredDocuments.Any())
                             {
-                                <MudTable Items="GetDocuments(StdReqMap.RequiredDocuments)"
+                                <MudTable Items="RequiredDocuments"
                                           Dense="true"
                                           Hover="true"
                                           Bordered="true"
@@ -138,6 +165,7 @@
                                     </HeaderContent>
 
                                     <RowTemplate>
+
                                         <!-- ✅ Document Type -->
                                         <MudTd>
                                             <MudChip T="string" Size="Size.Small"
@@ -148,19 +176,77 @@
                                         </MudTd>
 
                                         <!-- ✅ Document Name -->
-                                        <MudTd>@context.DocumentName</MudTd>
+                                        <MudTd>@context.DocName</MudTd>
 
                                         <!-- ✅ Actions -->
                                         <MudTd>
-                                            <MudIconButton Icon="@Icons.Material.Filled.Download"
-                                                           Disabled="!context.IsDownloadable"
-                                                           Size="Size.Small"
-                                                           Color="Color.Primary"
-                                                           Class="me-1" />
 
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                           Size="Size.Small"
-                                                           Color="Color.Error" />
+
+
+                                            @if (context.IsUploaded)
+                                            {
+                                                <!-- 👁 VIEW -->
+                                                <MudTooltip Text="View File">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                                   Color="Color.Primary"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => OpenFile(context.FileUrl))" />
+                                                </MudTooltip>
+
+                                                <!-- 🔄 REPLACE -->
+                                                <MudTooltip Text="Replace File">
+        
+                                                    <div class="icon-upload-wrapper">
+
+                                                        <MudTooltip Text="Upload File">
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Update"
+                                                                           Color="Color.Success"
+                                                                           Size="Size.Small" />
+                                                        </MudTooltip>
+
+                                                        <!-- IMPORTANT: OUTSIDE the button -->
+                                                        <InputFile OnChange="e => UploadFile(context.StdReqId, context.MasterDocId, e.File)"
+                                                                   accept=".pdf,.png,.jpg,.jpeg"
+                                                                   class="file-input-overlay" title="" />
+
+                                                    </div>
+
+                                                </MudTooltip>
+                                            }
+                                            else
+                                            {
+                                                <!-- 👁 VIEW (Disabled) -->
+                                                <MudTooltip Text="File not uploaded yet">
+                                                    <span>
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                                       Disabled="true"
+                                                                       Color="Color.Default"
+                                                                       Size="Size.Small"/>
+                                                    </span>
+                                                </MudTooltip>
+
+                                                <!-- ⬆ UPLOAD -->
+                                                <MudTooltip Text="Upload File">
+                                   
+                                                    <div class="icon-upload-wrapper">
+
+                                                        <MudTooltip Text="Upload File">
+                                                            <MudIconButton Icon="@Icons.Material.Filled.CloudUpload"
+                                                                           Color="Color.Success"
+                                                                           Size="Size.Small" />
+                                                        </MudTooltip>
+
+                                                        <!-- IMPORTANT: OUTSIDE the button -->
+                                                        <InputFile OnChange="e => UploadFile(context.StdReqId, context.MasterDocId, e.File)"
+                                                                   accept=".pdf,.png,.jpg,.jpeg"
+                                                                   class="file-input-overlay" title="" />
+
+                                                    </div>
+
+                                                </MudTooltip>
+                                            }
+
+
                                         </MudTd>
 
                                     </RowTemplate>
@@ -170,7 +256,7 @@
                             else
                             {
                                 <MudAlert Severity="Severity.Info" Dense="true">
-                                    No documents required for this student.
+                                    Please select university and requirement to load documents.
                                 </MudAlert>
                             }
 
@@ -211,33 +297,46 @@
     private List<CourseRequirementRequestDto> Requirements = new();
     private List<StudentRequestDto> Students = new();
 
+    private Guid UploadSeesionId;
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             await InvokeAsync(StateHasChanged);
 
+
+
             await GetStudents();
             await GetUniversities();
-            await GetDocuments();
+            // await GetDocuments();
 
             if (StdReqMap.StudentReqID is null or 0)
             {
                 Title = "Apply To Requirement";
+                UploadSeesionId = Guid.NewGuid();
             }
             else
             {
                 Title = "Apply To Requirement";
 
-				SelectedUniversityId = StdReqMap.UniversityId;
-
-                // ✅ FORCE UI REFRESH
-                await InvokeAsync(StateHasChanged);
+                SelectedUniversityId = StdReqMap.UniversityId;
+                SelectedReqId = StdReqMap.ReqId;
 
                 if (SelectedUniversityId.HasValue)
                 {
                     await GetRequirements(SelectedUniversityId.Value);
                 }
+
+                // Load documents for edit
+                if (StdReqMap.StudentReqID.HasValue && StdReqMap.ReqId > 0)
+                {
+                    await GetRequiredDcouments(StdReqMap.StudentReqID, StdReqMap.ReqId);
+                }
+
+
+                // FORCE UI REFRESH
+                await InvokeAsync(StateHasChanged);
             }
 
         }
@@ -257,7 +356,21 @@
             if (!_form.IsValid || !SelectedUniversityId.HasValue)
                 return;
 
+            if (StdReqMap.StudentID == 0)
+            {
+                Snackbar.Add("Please select student", Severity.Error);
+                return;
+            }
+
+            if (AllUploaded != true)
+            {
+                Snackbar.Add("Please upload all required documents", Severity.Error);
+                return;
+            }
+
+
             StdReqMap.UniversityId = SelectedUniversityId.Value;
+			StdReqMap.UploadSessionId = UploadSeesionId;
 
             var result = StdReqMap.StudentReqID is null or 0
                 ? await StudentRequirementService.CreateStudentRequirementMapAsync(StdReqMap)
@@ -275,6 +388,8 @@
             {
                 DialogReference.Close(DialogResult.Ok(result));
             }
+
+            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
@@ -348,6 +463,50 @@
     }
 
 
+    private long? SelectedReqId { get; set; } = null;
+
+    private async Task OnReqChanged(long? reqID)
+    {
+        SelectedReqId = reqID;
+
+        if (reqID.HasValue)
+        {
+            StdReqMap.ReqId = reqID.Value;
+
+            await GetRequiredDcouments(StdReqMap.StudentReqID, reqID.Value);
+
+        }
+    }
+
+
+    private int TotalDocs => RequiredDocuments?.Count ?? 0;
+
+    private int UploadedDocs => RequiredDocuments?.Count(x => x.IsUploaded) ?? 0;
+
+    private int MissingDocs => TotalDocs - UploadedDocs;
+
+    private bool AllUploaded => TotalDocs > 0 && MissingDocs == 0;
+
+    private List<StudentDocumentDto> RequiredDocuments = new();
+
+    private async Task GetRequiredDcouments(long? studentReqId , long reqId)
+    {
+        // var ok = await StudentRequirementService.GetDocumentsAsync(studentReqId);
+        var ok = await StudentRequirementService.GetDocumentsAsync(studentReqId,UploadSeesionId, reqId);
+
+        if (ok.Response.Success)
+        {
+            RequiredDocuments = ok.Data;
+
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            Snackbar.Add(ok.Response.Message, Severity.Error);
+        }
+    }
+
+
 
     private async Task GetStudents()
     {
@@ -371,47 +530,73 @@
 
 
 
-    private List<UniversityDocumentRequestDto> Documents = new();
-    private async Task GetDocuments()
+    private async Task UploadFile(long? studentReqId, long masterDocId, IBrowserFile file)
     {
-        var result = await UniversityDocumentService.GetMasterUniversityDocuments(new UniversityDocumentFilterDto
+        if (StdReqMap.StudentID == 0)
         {
-            PageNumber = 1,
-            PageSize = 0,
-            IsActive = true,
-        });
-
-
-        if (result.Response.Success)
-        {
-            Documents = result.Data.Items;
+            Snackbar.Add("Please select student",Severity.Error );
+            return;
         }
-        else
-        {
-            Snackbar.Add(result.Response.Message, Severity.Warning);
-        }
+
+        // var result = await StudentRequirementService.UploadDocumentAsync(studentReqId, masterDocId, file);
+        var result = await StudentRequirementService.UploadDocumentAsync(UploadSeesionId,studentReqId, StdReqMap.StudentID, masterDocId, file);
+
+        // Always show backend message
+        Snackbar.Add(
+            result.Message,
+            result.Success ? Severity.Success : Severity.Error
+        );
+
+        // await GetRequiredDcouments(studentReqId);
+
+        if (StdReqMap.ReqId > 0)
+            await GetRequiredDcouments(StdReqMap.StudentReqID, StdReqMap.ReqId);
+
         await InvokeAsync(StateHasChanged);
     }
 
 
-    private List<UniversityDocumentRequestDto> GetDocuments(string requiredDocuments)
+
+    async Task OpenFile(string url)
     {
-        if (string.IsNullOrWhiteSpace(requiredDocuments))
-            return new();
-
-        var ids = requiredDocuments
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => long.TryParse(x, out var id) ? id : 0)
-            .Where(x => x > 0)
-            .ToHashSet();
-
-        return Documents
-            .Where(d => d.UniversityDocsId.HasValue &&
-                        ids.Contains(d.UniversityDocsId.Value))
-            .ToList();
+        if (!string.IsNullOrEmpty(url))
+        {
+            await JS.InvokeVoidAsync("open", url, "_blank");
+        }
     }
 
+
+    // string previewUrl;
+    // bool showPreview = false;
+
+    // void OpenFile(string url)
+    // {
+    //     previewUrl = url;
+    //     showPreview = true;
+    // }
+
+
+    //     if (url.EndsWith(".png") || url.EndsWith(".jpg"))
+    // {
+    //     show modal
+    // }
+    // else
+    // {
+    //     open new tab
+    // }
+
+
+    // <MudDialog @bind-IsVisible="showPreview" MaxWidth="MaxWidth.Medium">
+    //     <DialogContent>
+    //         <img src="@previewUrl" style="width:100%; height:auto;" />
+    //     </DialogContent>
+    // </MudDialog>
 
 
 
 }
+
+
+
+
+

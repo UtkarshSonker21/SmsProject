@@ -23,5 +23,8 @@ namespace ScholarshipManagementAPI.Services.Interface.Common
         string? GetDocumentUrl(string? fileKey);
 
 
+
+
+
     }
 }

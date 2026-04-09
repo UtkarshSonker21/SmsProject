@@ -19,5 +19,15 @@ public partial class StudentDocument
 
     public DateTime CreatedDate { get; set; }
 
+    public long? StudentReqId { get; set; }
+
+    public long MasterDocId { get; set; }
+
+    public Guid? UploadSessionId { get; set; }
+
+    public virtual UnMasterDoc MasterDoc { get; set; } = null!;
+
     public virtual StudentDatum Student { get; set; } = null!;
+
+    public virtual StudentReqList? StudentReq { get; set; }
 }
