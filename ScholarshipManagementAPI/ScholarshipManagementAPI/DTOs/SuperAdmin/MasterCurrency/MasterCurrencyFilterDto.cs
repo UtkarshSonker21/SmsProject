@@ -6,7 +6,7 @@ namespace ScholarshipManagementAPI.DTOs.SuperAdmin.MasterCountry
     {
         public string? CurrencyName { get; set; }
 
-        public string? CurrencyAbb { get; set; }
+        public string? CurrencyCode { get; set; }
 
         public bool? IsActive { get; set; }
 

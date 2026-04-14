@@ -68,6 +68,8 @@
 
             public const string Country = "/countries";
             public const string Currency = "/currencies";
+            public const string CurrencyConversion = "/currency-conversion";
+            public const string CurrencyConversionByCurrencyId = "/currency-conversion/{Id:long}";
             public const string GeneralSettings = "/general-settings";
 
             public const string Dropdowns = "/dropdowns";

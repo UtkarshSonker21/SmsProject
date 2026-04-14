@@ -206,13 +206,10 @@
                     <CellTemplate Context="ctx">
 
                         <div class="d-flex align-items-center gap-1 ">
-                            @* <MudIcon Icon="@Icons.Material.Filled.Payments"
-                                     Style="font-size:15px;"
-                                     Class="text-muted"
-                                     @onclick="@(() => EditCurrency(ctx.Item))" /> *@
+
                             <span class="text-primary fw-medium"
                                   style="cursor:pointer;"
-                                  @onclick="@(() => EditCurrency(ctx.Item))">
+                                  @onclick="@(() => ShowConversionRate(ctx.Item))">
                                 @ctx.Item.CurrencyName
                             </span>
                         </div>
@@ -221,16 +218,16 @@
                 </TemplateColumn>
 
 
-                <TemplateColumn Title="Currency Abbreviation"
+                <TemplateColumn Title="Code"
                                 HeaderClass="fw-bold"
-                                HeaderStyle="width:200px; min-width:200px; max-width:200px;"
-                                CellStyle="width:200px; min-width:200px; max-width:200px;"
+                                HeaderStyle="width:150px; min-width:150px; max-width:150px;"
+                                CellStyle="width:150px; min-width:150px; max-width:150px;"
                                 Hideable="true">
 
                     <CellTemplate Context="ctx">
-                        @if (!string.IsNullOrWhiteSpace(ctx.Item.CurrencyAbb))
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.CurrencyCode))
                         {
-                            <span>@ctx.Item.CurrencyAbb</span>
+                            <span>@ctx.Item.CurrencyCode</span>
                         }
                         else
                         {
@@ -240,16 +237,21 @@
                 </TemplateColumn>
 
 
-                <TemplateColumn Title="Currency String"
+                <TemplateColumn Title="Symbol"
                                 HeaderClass="fw-bold"
-                                HeaderStyle="width:180px; min-width:180px; max-width:180px;"
-                                CellStyle="width:180px; min-width:180px; max-width:180px;"
+                                HeaderStyle="width:150px; min-width:150px; max-width:150px;"
+                                CellStyle="width:150px; min-width:150px; max-width:150px;"
                                 Hideable="true">
 
                     <CellTemplate Context="ctx">
-                        @if (!string.IsNullOrWhiteSpace(ctx.Item.CurrencyString))
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.CurrencySymbol))
                         {
-                            <span>@ctx.Item.CurrencyString</span>
+                            <span style="
+        color:#2e7d32;
+        font-weight:600;
+font-size:13px;">
+                                @ctx.Item.CurrencySymbol
+                            </span>
                         }
                         else
                         {
@@ -259,7 +261,7 @@
                 </TemplateColumn>
 
 
-                <TemplateColumn Title="Currency Fraction Unit"
+                <TemplateColumn Title="Fraction Unit"
                                 HeaderClass="fw-bold"
                                 HeaderStyle="width:200px; min-width:200px; max-width:200px;"
                                 CellStyle="width:200px; min-width:200px; max-width:200px;"
@@ -653,8 +655,8 @@
                 {
                     CurrencyId = currency.CurrencyId,
                     CurrencyName = currency.CurrencyName,
-                    CurrencyAbb = currency.CurrencyAbb,
-                    CurrencyString = currency.CurrencyString,
+                    CurrencyCode = currency.CurrencyCode,
+                    CurrencySymbol = currency.CurrencySymbol,
                     CurrencyFracUnit = currency.CurrencyFracUnit,
                     IsActive = currency.IsActive,
                     CreatedDate = currency.CreatedDate
@@ -753,13 +755,18 @@
 
     void NavigateToMenu(long menuId)
     {
-        // Navigation or detail page
     }
 
 
     void ExportData()
     {
 
+    }
+
+
+    void ShowConversionRate(MasterCurrencyRequestDto currency)
+    {
+        Navigation.NavigateTo(Routes.CurrencyConversionByCurrencyId.Replace("{Id:long}", currency.CurrencyId.ToString()));
     }
 
 

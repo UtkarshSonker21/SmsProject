@@ -33,7 +33,8 @@
                                       @bind-Value="Settings.ConfigKey"
                                       For="@(() => Settings.ConfigKey)"
                                       Variant="Variant.Outlined"
-                                      Margin="Margin.Dense" />
+                                      Margin="Margin.Dense"
+                                      Disabled="@(Settings.ConfigId != null && Settings.ConfigId != 0)" />
                     </MudItem>
 
                     <MudItem xs="12" md="6">
@@ -88,7 +89,6 @@
     public GeneralSettingRequestDto Settings { get; set; } = new();
 
     private string Title = "Add General Settings";
-
 
     protected override async Task OnInitializedAsync()
     {

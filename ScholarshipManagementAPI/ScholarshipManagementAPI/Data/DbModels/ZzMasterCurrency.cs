@@ -9,9 +9,9 @@ public partial class ZzMasterCurrency
 
     public string CurrencyName { get; set; } = null!;
 
-    public string CurrencyAbb { get; set; } = null!;
+    public string CurrencyCode { get; set; } = null!;
 
-    public string CurrencyString { get; set; } = null!;
+    public string CurrencySymbol { get; set; } = null!;
 
     public string? CurrencyFracUnit { get; set; }
 

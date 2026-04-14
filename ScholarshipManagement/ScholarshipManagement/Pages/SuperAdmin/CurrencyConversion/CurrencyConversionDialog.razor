@@ -1,0 +1,210 @@
+﻿@using MudBlazor
+@using ScholarshipManagement.DTOs.SuperAdmin.CurrencyConversion
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterCurrency
+@using ScholarshipManagement.Services.SuperAdmin
+@inject CurrencyConversionSerevice CurrencyConversionSerevice
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject MasterCurrencyService MasterCurrencyService
+
+<MudDialog>
+    <DialogContent>
+        <!-- ⭐ Paper wrapper -->
+        <MudPaper Class="pa-1" Elevation="1">
+
+            @* <MudText Typo="Typo.h5"  Style="margin-bottom:5px;">@Title</MudText> *@
+
+            <MudForm @ref="_form" Model="@Currency">
+
+                <MudGrid Spacing="3">
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long?" Label="Currency" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                   Value="SelectedCurrencyId"
+                                   ValueChanged="OnCurrencyChanged">
+
+                            <!-- Default placeholder -->
+                            <MudSelectItem T="long" Value="0">
+                                -- Select Currency --
+                            </MudSelectItem>
+
+                            @foreach (var c in Currencies)
+                            {
+                                <MudSelectItem T="long?" Value="@c.CurrencyId">
+                                    @c.CurrencySymbol @c.CurrencyName (@c.CurrencyCode)
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Date="@(Currency.FromDate.HasValue
+                                               ? Currency.FromDate.Value.ToDateTime(TimeOnly.MinValue)
+                                               : null)"
+                                       DateChanged="@(d => Currency.FromDate = d.HasValue
+                                               ? DateOnly.FromDateTime(d.Value)
+                                               : null)"
+                                       Label="From Date"
+                                       Margin="Margin.Dense" Variant="Variant.Outlined" 
+                                       DateFormat="dd-mm-yyyy"/>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField T="decimal"
+                                      Label="Current Rate"
+                                      @bind-Value="Currency.Rates"
+                                      For="@(() => Currency.Rates)"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+
+
+                    <MudItem xs="12">
+                        <MudTextField T="string"
+                                      Label="Remarks"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Lines="3"
+                                      AutoGrow="true"
+                                      @bind-Value="Currency.Remarks"
+                                      For="@(() => Currency.Remarks)" />
+                    </MudItem>
+   
+                    <!-- ACTION BUTTONS -->
+                    <MudItem xs="12">
+                        <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                            <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                            <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudForm>
+        </MudPaper>
+
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public CurrencyConversionRequestDto Currency { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+
+            // if (Currency.CurrencyConversionId is null or 0)
+            // {
+            // }
+            // else
+            // {
+            //     SelectedCurrencyId =Currency.CurrencyId;
+            // }
+
+            await GetCurrencies();
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private MudForm? _form;
+    private async Task Save()
+    {
+        try
+        {
+            await _form!.Validate();
+
+            if(SelectedCurrencyId == null)
+                Snackbar.Add("Please select currency",Severity.Error);
+
+
+            if (!_form.IsValid || SelectedCurrencyId == null)
+                return;
+
+                Currency.CurrencyId = SelectedCurrencyId.Value;
+
+            // var result = Currency.CurrencyConversionId is null or 0
+            //     ? await MasterCurrencyService.AddMasterCurrency(Currency)
+            //     : await MasterCurrencyService.UpdateMasterCurrency(Currency);
+
+            var result = await CurrencyConversionSerevice.AddCurrencyConversion(Currency);
+
+            // Always show backend message
+            Snackbar.Add(
+                result.Message,
+                result.Success ? Severity.Success : Severity.Error
+            );
+
+            // Close dialog only if success
+            if (result.Success)
+            {
+                DialogReference.Close(DialogResult.Ok(result));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong while saving. Please try again.", Severity.Error);
+            Cancel();
+        }
+    }
+
+
+    private void Cancel()
+    {
+        DialogReference.Cancel();
+    }
+
+
+
+    private List<MasterCurrencyRequestDto> Currencies = new();
+    private async Task GetCurrencies()
+    {
+        var result = await MasterCurrencyService.GetMasterCurrency(new MasterCurrencyFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+			IsActive = true
+        });
+
+
+        if (result.Response.Success)
+        {
+            Currencies = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private long? SelectedCurrencyId { get; set; } = null;
+
+    private void OnCurrencyChanged(long? currencyId)
+    {
+        if (currencyId.HasValue)
+        {
+            SelectedCurrencyId = currencyId;
+        }
+        else
+        {
+            SelectedCurrencyId = null;
+        }
+
+    }
+
+
+
+}

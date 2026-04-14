@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScholarshipManagementAPI.DTOs.Common;
 using ScholarshipManagementAPI.DTOs.Common.Response;
+using ScholarshipManagementAPI.DTOs.Common.Settings;
 using ScholarshipManagementAPI.DTOs.SuperAdmin.GeneralSettings;
+using ScholarshipManagementAPI.Services.Implementation.SuperAdmin;
 using ScholarshipManagementAPI.Services.Interface.SuperAdmin;
 
 namespace ScholarshipManagementAPI.Controllers.SuperAdmin
@@ -129,6 +131,26 @@ namespace ScholarshipManagementAPI.Controllers.SuperAdmin
                 Message = result.Items.Count == 0
                     ? "Data not found"
                     : "Data fetched successfully"
+            });
+        }
+
+
+
+        [HttpGet("base-currency")]
+        public async Task<IActionResult> GetBaseCurrency()
+        {
+            var config = await _service.GetGeneralConfigAsync();
+
+            return Ok(new ApiResponseDto
+            {
+                Success = true,
+                Message = "Base currency fetched successfully",
+                Result = new BaseCurrencyDto
+                {
+                    Code = config.BaseCurrencyCode,
+                    Name = config.BaseCurrencyName,
+                    Symbol = config.BaseCurrencySymbol
+                }
             });
         }
 

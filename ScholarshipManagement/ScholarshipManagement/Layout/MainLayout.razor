@@ -22,6 +22,8 @@
 @inject CommonService CommonService
 @inject LocalStorageService LocalStorageService
 @inject CustomAuthStateProvider AuthStateProvider
+@inject GeneralSettingService GeneralSettingService
+@inject BaseCurrencyService BaseCurrencyService
 @inject PermissionService PermissionService
 @inject CurrentUserProfileService CurrentUserProfileService
 @inject PermissionState PermissionState
@@ -322,6 +324,7 @@
     {
         await GetMenuByRoleId();
         await FetchCurrentUserProfile();
+        await FetchBaseCurrency();
 
         var user = CurrentUserProfileService.GetCurrentUserProfile();
 
@@ -342,6 +345,11 @@
         CurrentUserProfileService.SetCurrentUserProfile(user.Data);
     }
 
+    private async Task FetchBaseCurrency()
+    {
+        var baseCurrency = await GeneralSettingService.GetBaseCurrency();
+        BaseCurrencyService.SetBaseCurrency(baseCurrency.Data);
+    }
 
 
     private bool _drawerOpen = false;
@@ -441,9 +449,6 @@
     {
         expandUpdates = !expandUpdates;
     }
-
-
-
 
     bool expandLanguage = false;
 

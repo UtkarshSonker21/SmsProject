@@ -60,6 +60,7 @@ builder.Services.AddScoped<GeneralSettingService>();
 builder.Services.AddScoped<MasterDropdownService>();
 builder.Services.AddScoped<MasterCountryService>();
 builder.Services.AddScoped<MasterCurrencyService>();
+builder.Services.AddScoped<CurrencyConversionSerevice>();
 builder.Services.AddScoped<LabelService>();
 builder.Services.AddScoped<UsersMenuService>();
 builder.Services.AddScoped<UsersRoleService>();
@@ -87,10 +88,17 @@ builder.Services.AddScoped<PermissionState>();
 builder.Services.AddScoped<PermissionService>();
 builder.Services.AddSingleton<CurrentUserProfileService>();
 
+// basecurrency
+builder.Services.AddSingleton<BaseCurrencyService>();
 
+// Translation
 builder.Services.AddScoped<TranslationManager>();
 builder.Services.AddScoped<TranslationStorageService>();
 builder.Services.AddSingleton<TranslationStateService>();
+
+// Logging
+builder.Logging.SetMinimumLevel(LogLevel.None);
+builder.Logging.AddFilter("System.Net.Http.HttpClient", LogLevel.None);
 
 
 await builder.Build().RunAsync();

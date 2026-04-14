@@ -194,7 +194,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
         {
             var result = await _cache.GetOrCreateAsync(CacheKeys.GeneralConfig, async entry =>
             {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
 
                 var configs = await _context.ZzGeneralSettings
                     .AsNoTracking()
@@ -202,18 +202,16 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
 
                 return new GeneralConfigDto
                 {
-                    FullNameFormat = configs.GetValueOrDefault("FullNameFormat") ?? "FirstName LastName",
-                    DateFormat = configs.GetValueOrDefault("DateFormat") ?? "dd-MM-yyyy",
-                    TimeFormat = configs.GetValueOrDefault("TimeFormat") ?? "HH:mm"
+                    FullNameFormat = configs.GetValueOrDefault("FullNameFormat", "FirstName LastName"),
+                    DateFormat = configs.GetValueOrDefault("DateFormat", "dd-MM-yyyy"),
+                    TimeFormat = configs.GetValueOrDefault("TimeFormat", "HH:mm"),
+                    BaseCurrencyName = configs.GetValueOrDefault("BaseCurrencyName", "Rupees"),
+                    BaseCurrencySymbol = configs.GetValueOrDefault("BaseCurrencySymbol", "Rs."),
+                    BaseCurrencyCode = configs.GetValueOrDefault("BaseCurrencyCode", "INR")
                 };
             });
 
-            return result ?? new GeneralConfigDto
-            {
-                FullNameFormat = "FirstName LastName",
-                DateFormat = "dd-MM-yyyy",
-                TimeFormat = "HH:mm"
-            };
+            return result!;
         }
 
 

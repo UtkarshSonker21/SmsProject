@@ -9,5 +9,6 @@
         Religion = 5,
         Availability = 6,
         LevelType = 7,
+        DurationUnit = 8,
     }
 }

@@ -7,15 +7,18 @@
 @using MudBlazor
 @using ScholarshipManagement.DTOs
 @using ScholarshipManagement.DTOs.Common
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
 @using ScholarshipManagement.DTOs.University.MasterCourse
 @using ScholarshipManagement.DTOs.University.MasterCourseType
 @using ScholarshipManagement.DTOs.University.MasterUniversity
 @using ScholarshipManagement.Helper.Enums
 @using ScholarshipManagement.Pages.Common
 @using ScholarshipManagement.Services.Common
+@using ScholarshipManagement.Services.SuperAdmin
 @using ScholarshipManagement.Services.University
 @using static ScholarshipManagement.Helper.Constant
 @inject CurrentUserProfileService CurrentUserProfileService
+@inject MasterDropdownService MasterDropdownService
 @inject UniversityService UniversityService
 @inject CourseTypeService CourseTypeService
 @inject CourseService CourseService
@@ -165,13 +168,30 @@
                                               For="@(() => model.Duration)" />
                             </MudItem>
 
-                            <MudItem xs="12" md="4">
+                            @* <MudItem xs="12" md="4">
                                 <MudTextField T="string"
                                               Label="Duration Unit"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               @bind-Value="model.DurationUnit"
                                               For="@(() => model.DurationUnit)" />
+                            </MudItem> *@
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Duration Unit"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Placeholder="--- Select ---"
+                                           @bind-Value="model.DurationUnit"
+                                           For="@(() => model.DurationUnit)" Clearable="true">
+
+                                    @foreach (var div in DurationUnit.OrderBy(x => x.UniqueId))
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
                             </MudItem>
 
                             <MudItem xs="12" md="4">
@@ -294,6 +314,7 @@
 
         await GetUniversities();
         await GetCourseTypes();
+        await GetDurationUnit();
 
         if (Id > 0)
         {
@@ -451,6 +472,31 @@
     }
 
 
+
+    private List<MasterDropDownRequestDto> DurationUnit = new();
+
+
+    private async Task GetDurationUnit()
+    {
+        var result = await MasterDropdownService.GetMasterDropDown(new MasterDropDownFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            Status = true,
+            ParentId = (long)MainDropdown.DurationUnit
+        });
+
+
+        if (result.Response.Success)
+        {
+            DurationUnit = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
 
 
 }
