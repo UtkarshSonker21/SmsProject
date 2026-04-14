@@ -1,6 +1,7 @@
 ﻿using ScholarshipManagement.DTOs.Common.Response;
 using ScholarshipManagement.DTOs.SuperAdmin.GeneralSettings;
 using ScholarshipManagement.Services.Common;
+using ScholarshipManagementAPI.DTOs.Common.Settings;
 using System.Net.Http.Json;
 
 namespace ScholarshipManagement.Services.SuperAdmin
@@ -60,6 +61,20 @@ namespace ScholarshipManagement.Services.SuperAdmin
 
             return await HandleResponse(response);
         }
+
+
+        public async Task<(BaseCurrencyDto Data, ApiResponseDto)> GetBaseCurrency()
+        {
+            var response = await _http.GetAsync(
+                "superadmin/general-settings/base-currency");
+
+            var apiResponse = await HandleResponse(response);
+
+            var data = GetObject<BaseCurrencyDto>(apiResponse) ?? new BaseCurrencyDto();
+
+            return (data, apiResponse);
+        }
+
 
 
     }

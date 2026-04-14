@@ -11,7 +11,7 @@ public partial class AcCurrencyConversion
 
     public long CurrencyId { get; set; }
 
-    public double Rates { get; set; }
+    public decimal Rates { get; set; }
 
     public DateTime CreatedDate { get; set; }
 

@@ -204,6 +204,7 @@ builder.Services.AddScoped<IGeneralSettingsService, GeneralSettingsService>();
 builder.Services.AddScoped<IMasterDropDownService, MasterDropDownService>();
 builder.Services.AddScoped<IMasterCountryService, MasterCountryService>();
 builder.Services.AddScoped<IMasterCurrencyService, MasterCurrrencyService>();
+builder.Services.AddHttpClient<ICurrencyConversionService, CurrencyConversionService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddScoped<IUsersMenuService, UsersMenuService>();
 builder.Services.AddScoped<IUsersRoleService, UsersRoleService>();
@@ -269,6 +270,7 @@ builder.Services.AddSwaggerGen(c =>
 
 
 
+
 var app = builder.Build();
 
 app.UseSwagger();
@@ -291,6 +293,7 @@ app.UseMiddleware<RequestIdMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseMiddleware<RequestLoggingMiddleware>();
+
 
 // Authentication first
 app.UseAuthentication();

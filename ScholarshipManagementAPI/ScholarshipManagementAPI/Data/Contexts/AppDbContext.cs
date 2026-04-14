@@ -79,6 +79,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("smalldatetime");
+            entity.Property(e => e.Rates).HasColumnType("decimal(18, 6)");
             entity.Property(e => e.Remarks).HasMaxLength(500);
 
             entity.HasOne(d => d.Currency).WithMany(p => p.AcCurrencyConversions)
@@ -474,6 +475,8 @@ public partial class AppDbContext : DbContext
 
             entity.ToTable("UsersLogin");
 
+            entity.HasIndex(e => e.LoginName, "UQ_UsersLogin_LoginName").IsUnique();
+
             entity.Property(e => e.CreatedBy).HasMaxLength(200);
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")
@@ -667,10 +670,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getutcdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.CurrencyAbb).HasMaxLength(10);
+            entity.Property(e => e.CurrencyCode).HasMaxLength(10);
             entity.Property(e => e.CurrencyFracUnit).HasMaxLength(250);
             entity.Property(e => e.CurrencyName).HasMaxLength(50);
-            entity.Property(e => e.CurrencyString).HasMaxLength(10);
+            entity.Property(e => e.CurrencySymbol).HasMaxLength(10);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
         });
 

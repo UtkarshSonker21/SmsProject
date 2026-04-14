@@ -31,8 +31,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
             var entity = new ZzMasterCurrency
             {
                 CurrencyName = dto.CurrencyName,
-                CurrencyAbb = dto.CurrencyAbb,
-                CurrencyString = dto.CurrencyString,
+                CurrencyCode = dto.CurrencyCode,
+                CurrencySymbol = dto.CurrencySymbol,
                 CurrencyFracUnit = dto.CurrencyFracUnit,
                 IsActive = dto.IsActive,
                 CreatedDate = DateTime.UtcNow     // always server-side
@@ -64,8 +64,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
                 return false;
 
             entity.CurrencyName = dto.CurrencyName;
-            entity.CurrencyAbb = dto.CurrencyAbb;
-            entity.CurrencyString = dto.CurrencyString;
+            entity.CurrencyCode = dto.CurrencyCode;
+            entity.CurrencySymbol = dto.CurrencySymbol;
             entity.CurrencyFracUnit = dto.CurrencyFracUnit;
             entity.IsActive = dto.IsActive;
             // CreatedDate NOT updated on purpose
@@ -101,8 +101,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
                 {
                     CurrencyId = x.CurrencyId,
                     CurrencyName = x.CurrencyName,
-                    CurrencyAbb = x.CurrencyAbb,
-                    CurrencyString = x.CurrencyString,
+                    CurrencyCode = x.CurrencyCode,
+                    CurrencySymbol = x.CurrencySymbol,
                     CurrencyFracUnit = x.CurrencyFracUnit,
                     IsActive = x.IsActive,
                     CreatedDate = x.CreatedDate
@@ -119,8 +119,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
             if (!string.IsNullOrWhiteSpace(filter.CurrencyName))
                 query = query.Where(x => x.CurrencyName.Contains(filter.CurrencyName));
 
-            if (!string.IsNullOrWhiteSpace(filter.CurrencyAbb))
-                query = query.Where(x => x.CurrencyAbb.Contains(filter.CurrencyAbb));
+            if (!string.IsNullOrWhiteSpace(filter.CurrencyCode))
+                query = query.Where(x => x.CurrencyCode.Contains(filter.CurrencyCode));
 
             if (filter.IsActive.HasValue)
                 query = query.Where(x => x.IsActive == filter.IsActive.Value);
@@ -132,8 +132,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
                 var search = filter.SearchText.Trim().ToLower();
                 query = query.Where(x =>
                     x.CurrencyName.ToLower().Contains(search) ||
-                    x.CurrencyAbb.ToLower().Contains(search) ||
-                    x.CurrencyString.ToLower().Contains(search)
+                    x.CurrencyCode.ToLower().Contains(search) ||
+                    x.CurrencySymbol.ToLower().Contains(search)
                 );
             }
 
@@ -157,8 +157,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
                 {
                     CurrencyId = x.CurrencyId,
                     CurrencyName = x.CurrencyName,
-                    CurrencyAbb = x.CurrencyAbb,
-                    CurrencyString = x.CurrencyString,
+                    CurrencyCode = x.CurrencyCode,
+                    CurrencySymbol = x.CurrencySymbol,
                     CurrencyFracUnit = x.CurrencyFracUnit,
                     IsActive = x.IsActive,
                     CreatedDate = x.CreatedDate
@@ -175,7 +175,13 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
         }
 
 
-
+        public async Task<Dictionary<string, long>> GetCurrencyCodeMapAsync()
+        {
+            return await _context.ZzMasterCurrencies
+                .AsNoTracking()
+                .Where(x => x.IsActive)
+                .ToDictionaryAsync(x => x.CurrencyCode, x => x.CurrencyId);
+        }
 
 
     }

@@ -1,4 +1,5 @@
-﻿@page "/dropdowns/value/{Id:long}/{DropdownName}"
+﻿@page "/currency-conversion"
+@page "/currency-conversion/{id:long}"
 
 @attribute [Authorize]
 @layout MainLayout
@@ -6,18 +7,21 @@
 @using MudBlazor
 @using ScholarshipManagement.DTOs
 @using ScholarshipManagement.DTOs.Common
-@using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown
+@using ScholarshipManagement.DTOs.SuperAdmin.CurrencyConversion
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterCurrency
 @using ScholarshipManagement.Pages.Common
 @using ScholarshipManagement.Pages.Common.Shared
 @using ScholarshipManagement.Services.Common
 @using ScholarshipManagement.Services.SuperAdmin
 @using static ScholarshipManagement.Helper.Constant
-@inject MasterDropdownService MasterDropdownService
+@inject MasterCurrencyService MasterCurrencyService
+@inject CurrencyConversionSerevice CurrencyConversionSerevice
 @inject PermissionService PermissionService
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
+
 
 
 <!-- Main Content Wrapper -->
@@ -36,16 +40,20 @@
 
                 <div style="display: flex; align-items: center;">
 
-                    <MudTooltip Text="Back" Placement="Placement.Bottom">
+                    @if (Id > 0)
+                    {
+                        <MudTooltip Text="Back" Placement="Placement.Bottom">
 
-                        <div class="nav-icon" @onclick="GoBack">
-                            <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
-                        </div>
+                            <div class="nav-icon" @onclick="GoBack">
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
+                            </div>
 
-                    </MudTooltip>
+                        </MudTooltip>
+                    }
+
 
                     <span class="page-title page-title-uppercase">
-                        Dropdowns - @DropdownName
+                        Currency Conversion
                     </span>
                 </div>
 
@@ -53,11 +61,9 @@
 
             <!-- Right Section (Inside Page Title Bar) -->
             <div style="display: flex; padding: 0 24px; justify-content: flex-end; align-items: center; gap: 14px;">
-               
                 <span class="meta-text">
-                    Total Records : <span id="totalProducts">@TotalRecords</span>
+                    Total Records : <span id="totalRecords">@TotalRecords</span>
                 </span>
-
             </div>
 
         </div>
@@ -70,8 +76,35 @@
 
         <!-- Left -->
         <div class="d-flex align-items-center gap-3" style="padding: 0 24px;">
-            
-            <div class="appbar-search">
+
+            <!-- Name FILTER -->
+            <div class="appbar-search dropdown-filter">
+
+                <label class="filter-label">Login Name : </label>
+
+                <MudSelect T="long?"
+                           Value="SelectedCurrencyId"
+                           ValueChanged="OnCurrencyChanged"
+                           Placeholder="Currency"
+                           Variant="Variant.Text"
+                           Dense="true"
+                           DisableUnderline="true"
+                           Clearable="true"
+                           Class="dropdown-select">
+
+                    @foreach (var c in Currencies)
+                    {
+                        <MudSelectItem T="long?" Value="@c.CurrencyId">
+                            @c.CurrencySymbol @c.CurrencyName (@c.CurrencyCode)
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+            </div>
+
+
+            @* <div class="appbar-search">
                 <input type="text" class="search-input" placeholder="Search..."
                        value="@_search" @oninput="e => _search = e.Value?.ToString() ?? string.Empty"
                        @onkeydown="HandleKeyDown" />
@@ -95,8 +128,8 @@
                               d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 1 1-13 0a6.5 6.5 0 0 1 13 0Z" />
                     </svg>
                 }
-            </div>
-       
+            </div> *@
+
         </div>
 
 
@@ -106,7 +139,7 @@
             <div style="display: flex; align-items: center; gap: 5px; font-family: Inter, sans-serif; font-size: 13px;">
                 @if (canAdd)
                 {
-                    <button @onclick="AddDropdownByParentId" class="add-btn">Add Values</button>
+                    <button @onclick="AddCurrencyConversion" class="add-btn">Add Currency Conversion</button>
                 }
             </div>
 
@@ -158,7 +191,7 @@
                     {
                         <div class="checkbox-row">
                             <input type="checkbox"
-                                   class="theme-checkbox" style="cursor:pointer"
+                                   class="theme-checkbox"
                                    checked="@(col.Hidden == false)"
                                    @onchange="(e) => ToggleColumn(col, (bool)e.Value)" />
 
@@ -175,43 +208,43 @@
 
     </div>
 
+    @* <MudPaper Class="pa-3 mb-2 d-flex align-center flex-wrap">
+
+        <!-- Title -->
+        <span class="page-title">
+            <MudIcon Icon="@Icons.Material.Filled.CurrencyExchange" Class="me-1" Size="Size.Small" />
+            Latest Rates:
+        </span>
+
+        <!-- Rates -->
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var rate in LatestRates)
+            {
+                <MudChip T="string" Color="Color.Primary"
+                         Variant="Variant.Outlined"
+                         Size="Size.Small">
+                    @rate.CurrencySymbol @rate.Rates.ToString("N4")
+                </MudChip>
+            }
+        </div>
+
+    </MudPaper> *@
+
+
     <MudPaper Class="pa-4">
 
-        <MudDataGrid T="MasterDropDownRequestDto" @key="GridKey" RowsPerPage="@PageSize" @ref="dataGrid"
+        <MudDataGrid T="CurrencyConversionRequestDto" @key="GridKey" RowsPerPage="@PageSize" @ref="dataGrid"
                      ColumnsPanelReordering='true' DragDropColumnReordering='true'
                      Hover="true" Bordered="true" Elevation="2" Loading="_loading"
                      Class="blue-hover-grid" Filterable="true"
-                     Items="Items" FixedHeader="true" Virtualize="true" Height="550px"
-                     ColumnResizeMode="ResizeMode.None" Id="myGrid" RowClick="OnRowClick"
-                     @bind-SelectedItem="SelectedDropdown"
-                     Selection="DataGridSelection.Single"
-                     RowClassFunc="GetRowClass">
-
+                     Items="Items" FixedHeader="true" Height="550px"
+                     ColumnResizeMode="ResizeMode.None" Id="myGrid"
+                     Selection="DataGridSelection.Single">
 
             <Columns>
-                <TemplateColumn Title="Status"
-                                HeaderClass="fw-bold"
-                                Style="min-width:140px"
-                                CellClass="text-center"
-                                HeaderStyle="width:80px; min-width:80px; max-width:80px;"
-                                CellStyle="width:80px; min-width:80px; max-width:80px;">
 
-                    <CellTemplate Context="ctx">
 
-                        <MudTooltip Text="@(ctx.Item.Status ? "Active" : "Inactive")">
-
-                            <span style="width:15px;height:15px;border-radius:50%;
-                 display:inline-block;
-                 background:@(ctx.Item.IsShow ? "#22c55e" : "#ef4444")">
-                            </span>
-
-                        </MudTooltip>
-
-                    </CellTemplate>
-                </TemplateColumn>
-
-                <!-- Display Text (Clickable) -->
-                <TemplateColumn Title="Dropdown"
+                <TemplateColumn Title="Currency"
                                 HeaderClass="fw-bold"
                                 Style="min-width:220px"
                                 Hideable="true">
@@ -219,71 +252,82 @@
                     <CellTemplate Context="ctx">
 
                         <div class="d-flex align-items-center gap-1 ">
-                            @* <MudIcon Icon="@Icons.Material.Filled.ArrowDropDownCircle"
-                                     Style="font-size:15px;"
-                                     Class="text-muted"
-                                     @onclick="@(() => EditDropdown(ctx.Item))" /> *@
+
                             <span class="text-primary fw-medium"
-                                  style="cursor:pointer;"
-                                  @onclick="@(() => EditDropdown(ctx.Item))">
-                                @ctx.Item.DisplayText
+                                  style="cursor:pointer;">
+                                @ctx.Item.CurrencySymbol @ctx.Item.CurrencyName (@ctx.Item.CurrencyCode)
                             </span>
                         </div>
 
                     </CellTemplate>
                 </TemplateColumn>
 
-                <!-- Module -->
-                @* <TemplateColumn Title="Module"
+                <TemplateColumn Title="From Date"
                                 HeaderClass="fw-bold"
-                                HeaderStyle="width:130px; min-width:130px; max-width:130px;"
-                                CellStyle="width:130px; min-width:130px; max-width:130px;"
+                                HeaderStyle="width:180px;"
+                                CellStyle="width:180px;"
                                 Hideable="true">
 
                     <CellTemplate Context="ctx">
-
-                        <MudChip Size="Size.Small"
-                                 Variant="Variant.Outlined"
-                                 Color="Color.Error"
-                                 Style="min-width:80px; justify-content:center;">
-                            @ctx.Item.ModuleName
-                        </MudChip>
-
+                        @if (ctx.Item.FromDate.HasValue)
+                        {
+                            <span class="text-muted">
+                                @ctx.Item.FromDate.Value.ToString("dd-MM-yyyy")
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">N/A</span>
+                        }
                     </CellTemplate>
-                </TemplateColumn> *@
 
-                <TemplateColumn Title="Editable"
-                                HeaderClass="fw-bold"
-                                HeaderStyle="width:130px; min-width:130px; max-width:130px;"
-                                CellStyle="width:130px; min-width:130px; max-width:130px;"
-                                Hideable="true">
-
-                    <CellTemplate Context="ctx">
-
-                        <MudChip Size="Size.Small"
-                                 Variant="Variant.Outlined"
-                                 Color="@(ctx.Item.IsEditable? Color.Info: Color.Default)"
-                                 Style="min-width:72px; justify-content:center;">
-                            @(ctx.Item.IsEditable ? "Yes" : "No")
-                        </MudChip>
-
-                    </CellTemplate>
                 </TemplateColumn>
 
-                <TemplateColumn Title="Show"
+                <TemplateColumn Title="Rate"
                                 HeaderClass="fw-bold"
-                                HeaderStyle="width:130px; min-width:130px; max-width:130px;"
-                                CellStyle="width:130px; min-width:130px; max-width:130px;"
+                                HeaderStyle="width:150px;"
+                                CellStyle="width:150px;"
                                 Hideable="true">
 
                     <CellTemplate Context="ctx">
+                        @if (ctx.Item.Rates > 0)
+                        {
+                            <span class="text-muted">
+                                @ctx.Item.Rates.ToString("N4")
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic small">N/A</span>
+                        }
+                    </CellTemplate>
 
-                        <MudChip Size="Size.Small"
-                                 Variant="Variant.Outlined"
-                                 Color="@(ctx.Item.IsShow? Color.Info: Color.Default)"
-                                 Style="min-width:72px; justify-content:center;">
-                            @(ctx.Item.IsShow ? "Yes" : "No")
-                        </MudChip>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Remarks"
+                                HeaderClass="fw-bold"
+                                Style="min-width:100px"
+                                Hideable="true" CellClass="text-center"
+                                HeaderStyle="width:100px; min-width:100px; max-width:100px;"
+                                CellStyle="width:100px; min-width:100px; max-width:100px;">
+
+                    <CellTemplate Context="ctx">
+
+                        @if (!string.IsNullOrWhiteSpace(ctx.Item.Remarks))
+                        {
+                            <MudTooltip Text="@ctx.Item.Remarks" Placement="Placement.Top">
+                                <MudIcon Icon="@Icons.Material.Filled.Comment"
+                                         Color="Color.Info"
+                                         Style="cursor:pointer;" />
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="No remarks available" Placement="Placement.Top">
+                                <MudIcon Icon="@Icons.Material.Filled.Comment"
+                                         Style="color:#c4c4c4; cursor:default;" />
+                            </MudTooltip>
+                        }
 
                     </CellTemplate>
                 </TemplateColumn>
@@ -298,6 +342,8 @@
 
                         <div class="d-flex flex-column gap-1 small">
 
+
+
                             <!-- Created By -->
                             <MudTooltip Text="Created By">
                                 <div class="d-flex align-items-center gap-2 fw-semibold">
@@ -308,6 +354,8 @@
                                 </div>
                             </MudTooltip>
 
+
+
                             <!-- Created Date -->
                             <MudTooltip Text="Created Date">
                                 <div class="d-flex align-items-center gap-2 text-muted">
@@ -317,88 +365,10 @@
                                 </div>
                             </MudTooltip>
 
-
                         </div>
 
                     </CellTemplate>
                 </TemplateColumn>
-
-
-                <!-- Action -->
-                @if (canEdit || canDelete)
-                {
-                    <TemplateColumn Title="Action"
-                                    Filterable="false"
-                                    HeaderClass="text-center fw-bold"
-                                    CellClass="text-center"
-                                    HHeaderStyle="width:100px; min-width:100px; max-width:100px;"
-                                    CellStyle="width:100px; min-width:100px; max-width:100px;">
-
-                        <CellTemplate Context="ctx">
-
-                            <div style="display:flex; gap:12px; justify-content:center; align-items:center; height:100%;" class="action-btn">
-
-                                @if (canEdit)
-                                {
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                         fill="none"
-                                         viewBox="0 0 24 24"
-                                         stroke-width="1.5"
-                                         stroke="currentColor"
-                                         style="width:20px; height:20px;
-                            cursor:@(ctx.Item.IsEditable ? "pointer" : "not-allowed");
-                            color:@(ctx.Item.IsEditable ? "#0d6efd" : "#b0b0b0");"
-                                         title="Edit"
-                                         @onclick="@(ctx.Item.IsEditable ? (() => EditDropdown(ctx.Item)) : null)">
-                                        <path stroke-linecap="round"
-                                              stroke-linejoin="round"
-                                              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652
-                                                 L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13
-                                                 L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897
-                                                 l8.932-8.931ZM18 14v4.75
-                                                 A2.25 2.25 0 0 1 15.75 21H5.25
-                                                 A2.25 2.25 0 0 1 3 18.75V8.25
-                                                 A2.25 2.25 0 0 1 5.25 6H10" />
-                                    </svg>
-                                }
-
-                                @if (canDelete)
-                                {
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                         fill="none"
-                                         viewBox="0 0 24 24"
-                                         stroke-width="1.5"
-                                         stroke="currentColor"
-                                         style="width:20px; height:20px;
-                                    cursor:@(ctx.Item.IsEditable ? "pointer" : "not-allowed");
-                                    color:@(ctx.Item.IsEditable ? "#0d6efd" : "#b0b0b0");"
-                                         title="Delete"
-                                         @onclick="@(ctx.Item.IsEditable ? (() => DeleteDropdown(ctx.Item)) : null)">
-                                        <path stroke-linecap="round"
-                                              stroke-linejoin="round"
-                                              d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21
-                                                 c.342.052.682.107 1.022.166m-1.022-.165
-                                                 L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077
-                                                 H8.084a2.25 2.25 0 0 1-2.244-2.077
-                                                 L4.772 5.79m14.456 0
-                                                 a48.108 48.108 0 0 0-3.478-.397m-12 .562
-                                                 c.34-.059.68-.114 1.022-.165m0 0
-                                                 a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916
-                                                 c0-1.18-.91-2.164-2.09-2.201
-                                                 a51.964 51.964 0 0 0-3.32 0
-                                                 c-1.18.037-2.09 1.022-2.09 2.201v.916
-                                                 m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                    </svg>
-                                }
-
-
-                            </div>
-
-                        </CellTemplate>
-
-                    </TemplateColumn>
-                }
-
 
             </Columns>
 
@@ -457,26 +427,27 @@
 
 
 
+
+
 @code {
 
     int PageNumber = 1;       // current page
     int PageSize = 25;        // rows per page
     int TotalRecords = 0;     // total records returned by API
     int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize); // calculated
-    private List<MasterDropDownRequestDto> Items = new();
-    private MudDataGrid<MasterDropDownRequestDto>? dataGrid;
-    private MasterDropDownFilterDto Filter = new MasterDropDownFilterDto();
+    private List<CurrencyConversionRequestDto> Items = new();
+    private MudDataGrid<CurrencyConversionRequestDto>? dataGrid;
+    private CurrencyConversionFilterDto Filter = new CurrencyConversionFilterDto();
+
+
+    bool canView => PermissionService.CanView("currencies") || PermissionService.CanView("currency_conversions");
+    bool canAdd => PermissionService.CanInsert("currencies") || PermissionService.CanInsert("currency_conversions");
+    bool canEdit => PermissionService.CanUpdate("currencies") || PermissionService.CanUpdate("currency_conversions");
+    bool canDelete => PermissionService.CanDelete("currencies") || PermissionService.CanDelete("currency_conversions");
+
 
     [Parameter]
     public long Id { get; set; }
-
-    [Parameter]
-    public string? DropdownName { get; set; }
-
-    bool canView => PermissionService.CanView("dropdowns");
-    bool canAdd => PermissionService.CanInsert("dropdowns");
-    bool canEdit => PermissionService.CanUpdate("dropdowns");
-    bool canDelete => PermissionService.CanDelete("dropdowns");
 
     protected override async Task OnInitializedAsync()
     {
@@ -485,14 +456,26 @@
             Navigation.NavigateTo(Routes.Dashboard);
         }
 
-        if (Id == 0)
-        {
-            Navigation.NavigateTo(Routes.Dashboard);
-        }
+        await GetCurrencies();
+        await GetLatestRates();
 
-        // always show --- parent dropdown value
-        Filter.ParentId = Id;
-        await LoadData(Filter);
+        if (Id > 0)
+        {
+            SelectedCurrencyId = Id;
+            await OnCurrencyChanged(SelectedCurrencyId);
+        }
+        else
+        {
+            await LoadData(Filter);
+        }
+    }
+
+
+    private List<CurrencyConversionRequestDto> LatestRates = new();
+    private async Task GetLatestRates()
+    {
+        var result = await CurrencyConversionSerevice.GetCurrentCurrencyRate();
+		LatestRates = result.Data;
     }
 
 
@@ -534,23 +517,19 @@
 
 
     private bool _loading = false;
-    private async Task LoadData(MasterDropDownFilterDto filter)
+    private async Task LoadData(CurrencyConversionFilterDto filter)
     {
         try
         {
             _loading = true;                 // start loading
             await InvokeAsync(StateHasChanged); // refresh UI immediately if needed
 
-            // always show --- parent dropdown
-            // filter.ParentId = null;
-
-            var result = await MasterDropdownService.GetMasterDropDown(filter);
+            var result = await CurrencyConversionSerevice.GetCurrencyConversion(filter);
 
             if (result.Response.Success)
             {
                 // Data already deserialized in service
                 Items = result.Data.Items;
-				Items = Items.OrderBy(i => i.DisplaySequence).ToList(); // Ensure sorting by DisplaySequence
                 TotalRecords = result.Data.TotalCount;
             }
             else
@@ -568,7 +547,6 @@
         }
     }
 
-
     private int GridKey = 1;
     private async Task OnPageSizeChanged(ChangeEventArgs e)
     {
@@ -579,7 +557,6 @@
         PageSize = newSize;
 
         GridKey++;  // <<<<< IMPORTANT (forces new DataGrid instance)
-
 
         if (dataGrid is null)
             return;   //  Prevents the crash
@@ -595,7 +572,7 @@
     // hide / show coloumns
     private bool showColumnsPopup = false;
     private string columnFilter = "";
-    private List<Column<MasterDropDownRequestDto>> allColumns = new();
+    private List<Column<CurrencyConversionRequestDto>> allColumns = new();
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -619,7 +596,7 @@
         showColumnsPopup = false;
     }
 
-    private async Task ToggleColumn(Column<MasterDropDownRequestDto> col, bool makeVisible)
+    private async Task ToggleColumn(Column<CurrencyConversionRequestDto> col, bool makeVisible)
     {
         if (makeVisible)
             await col.ShowAsync();
@@ -631,6 +608,7 @@
     }
 
 
+    // pagination btn
     bool IsPrevDisabled => PageNumber <= 1;
     private async Task PrevPage()
     {
@@ -654,52 +632,24 @@
     }
 
 
-    // row selection --
-    private MasterDropDownRequestDto? SelectedDropdown;
 
-
-    private string GetRowClass(MasterDropDownRequestDto dropdown, int rowNumber)
-    {
-        // selected-row
-        return dropdown == SelectedDropdown ? "" : "";
-    }
-
-    private void OnRowClick(DataGridRowClickEventArgs<MasterDropDownRequestDto> args)
-    {
-
-        StateHasChanged();
-    }
-
-    private async Task EditDropdown(MasterDropDownRequestDto dropdown)
+    private async Task AddCurrencyConversion()
     {
         var parameters = new DialogParameters
         {
-            {
-                "Dropdown",
-                new MasterDropDownRequestDto
-                {
-                    UniqueId = dropdown.UniqueId,
-                    DisplayText = dropdown.DisplayText,
-                    ParentId = dropdown.ParentId,
-                    DisplaySequence = dropdown.DisplaySequence,
-                    Status = dropdown.Status,
-                    IsEditable = dropdown.IsEditable,
-                    IsShow = dropdown.IsShow,
-                    ModuleId = dropdown.ModuleId,
-                    CreatedBy = dropdown.CreatedBy,
-                    CreatedDate = dropdown.CreatedDate
-                }
-            } // dropdown model for edit
+            { 
+                "Currency", new CurrencyConversionRequestDto(
+            ) } // empty model for ADD
         };
 
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Medium,
+            MaxWidth = MaxWidth.Small,
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<DropdownDialog>($"Edit Dropdown Value - {DropdownName}", parameters, options);
+        var dialog = await DialogService.ShowAsync<CurrencyConversionDialog>("Add Currency Conversion", parameters, options);
 
         var result = await dialog.Result;
 
@@ -708,106 +658,69 @@
         {
             PageNumber = 1;
             PageSize = 25;
-            var filter = new MasterDropDownFilterDto();
-
-            // always show --- parent dropdown value
-            filter.ParentId = Id;
-            await LoadData(filter);   // your grid reload method
-        }
-    }
-
-    private async Task DeleteDropdown(MasterDropDownRequestDto dropdown)
-    {
-        var parameters = new DialogParameters
-        {
-            { "Message", $"Are you sure you want to delete '{dropdown.DisplayText}'?" }
-        };
-
-        var options = new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Small
-        };
-
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters, options);
-        var result = await dialog.Result;
-
-        if (result != null && !result.Canceled && dropdown.UniqueId.HasValue)
-        {
-            var response = await MasterDropdownService.DeleteMasterDropDown(dropdown.UniqueId.Value);
-
-            Snackbar.Add(
-                response.Message,
-                response.Success ? Severity.Success : Severity.Error
-            );
-
-            if (response.Success)
+            var filter = new CurrencyConversionFilterDto();
+            if(Id > 0)
             {
-                PageNumber = 1;
-                PageSize = 25;
-                var filter = new MasterDropDownFilterDto();
-
-                // always show --- parent dropdown value
-                filter.ParentId = Id;
-                await LoadData(filter);
+                filter.CurrencyId = Id;
             }
-        }
-    }
-
-
-    private async Task AddDropdownByParentId()
-    {
-        var parameters = new DialogParameters
-        {
+            else
             {
-                "Dropdown",
-                new MasterDropDownRequestDto
-                {
-                    ParentId = Id
-                }
-            } // dropdown model for edit
-        };
-
-        var options = new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Medium,
-            FullWidth = true
-        };
-
-        var dialog = await DialogService.ShowAsync<DropdownDialog>($"Add Dropdown Value - {DropdownName}", parameters, options);
-
-        var result = await dialog.Result;
-
-        // Reload only if Save was successful
-        if (result is not null && !result.Canceled)
-        {
-            PageNumber = 1;
-            PageSize = 25;
-            var filter = new MasterDropDownFilterDto();
-
-            // always show --- parent dropdown value
-            filter.ParentId = Id;
+                SelectedCurrencyId = null;
+            }
             await LoadData(filter);   // your grid reload method
         }
     }
 
 
-    void NavigateToMenu(long menuId)
+    private List<MasterCurrencyRequestDto> Currencies = new();
+    private async Task GetCurrencies()
     {
-        // Navigation or detail page
+        var result = await MasterCurrencyService.GetMasterCurrency(new MasterCurrencyFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            IsActive = true
+        });
+
+
+        if (result.Response.Success)
+        {
+            Currencies = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
     }
 
 
-    void ExportData()
+    private long? SelectedCurrencyId { get; set; } = null;
+
+    private async Task OnCurrencyChanged(long? currencyId)
     {
+        SelectedCurrencyId = currencyId;                        
+        if (SelectedCurrencyId.HasValue)
+        {
+            Filter.CurrencyId = SelectedCurrencyId.Value;
+            await LoadData(Filter);
+        }
+        else
+        {
+            SelectedCurrencyId = null;
+            Filter.CurrencyId = null;
+            await LoadData(Filter);
+        }
 
     }
 
 
-    private void GoBack()
+    private async Task GoBack()
     {
-        Navigation.NavigateTo(Routes.MasterDropdown);
+        await JS.InvokeVoidAsync("history.back");
     }
+
+
+
 
 }
