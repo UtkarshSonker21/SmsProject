@@ -463,10 +463,10 @@
 
     private StaffType? CurrentStaffType;
 
-    bool canView => PermissionService.CanView("course requirements");
-    bool canAdd => PermissionService.CanInsert("course requirements");
-    bool canEdit => PermissionService.CanUpdate("course requirements");
-    bool canDelete => PermissionService.CanDelete("course requirements");
+    bool canView => PermissionService.CanView("course requirements") || PermissionService.CanView("courses-requirements-approval");
+    bool canAdd => PermissionService.CanInsert("course requirements") || PermissionService.CanInsert("courses-requirements-approval");
+    bool canEdit => PermissionService.CanUpdate("course requirements") || PermissionService.CanUpdate("courses-requirements-approval");
+    bool canDelete => PermissionService.CanDelete("course requirements") || PermissionService.CanDelete("courses-requirements-approval");
 
 
     private BaseCurrencyDto baseCurrency = new();

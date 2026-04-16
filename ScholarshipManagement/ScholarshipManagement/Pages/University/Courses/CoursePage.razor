@@ -17,6 +17,7 @@
 @using ScholarshipManagement.Services.SuperAdmin
 @using ScholarshipManagement.Services.University
 @using static ScholarshipManagement.Helper.Constant
+@inject PermissionService PermissionService
 @inject CurrentUserProfileService CurrentUserProfileService
 @inject MasterDropdownService MasterDropdownService
 @inject UniversityService UniversityService
@@ -305,8 +306,19 @@
 
     bool IsUniversityLocked = false;
 
+    bool canView => PermissionService.CanView("courses") || PermissionService.CanView("courses-approval");
+    bool canAdd => PermissionService.CanInsert("courses") || PermissionService.CanInsert("courses-approval");
+    bool canEdit => PermissionService.CanUpdate("courses") || PermissionService.CanUpdate("courses-approval");
+    bool canDelete => PermissionService.CanDelete("courses") || PermissionService.CanDelete("courses-approval");
+
+
     protected override async Task OnInitializedAsync()
     {
+        if (!canView)
+        {
+            Navigation.NavigateTo(Routes.Dashboard);
+        }
+
         model = new MasterCourseRequestDto();
 
         //CurrentStaffType = await AuthService.GetStaffType();
