@@ -16,6 +16,7 @@
 @using ScholarshipManagement.Services.SuperAdmin
 @using ScholarshipManagement.Services.University
 @using static ScholarshipManagement.Helper.Constant
+@inject PermissionService PermissionService
 @inject CurrentUserProfileService CurrentUserProfileService
 @inject UniversityService UniversityService
 @inject CourseTypeService CourseTypeService
@@ -220,8 +221,18 @@
     private StaffType? CurrentStaffType;
     bool IsUniversityLocked = false;
 
+    bool canView => PermissionService.CanView("course types") || PermissionService.CanView("courses-types-approval");
+    bool canAdd => PermissionService.CanInsert("course types") || PermissionService.CanInsert("courses-types-approval");
+    bool canEdit => PermissionService.CanUpdate("course types") || PermissionService.CanUpdate("courses-types-approval");
+    bool canDelete => PermissionService.CanDelete("course types") || PermissionService.CanDelete("courses-types-approval");
+
     protected override async Task OnInitializedAsync()
     {
+        if (!canView)
+        {
+            Navigation.NavigateTo(Routes.Dashboard);
+        }
+
         model = new CourseTypeRequestDto();
 
         // CurrentStaffType = await AuthService.GetStaffType();
