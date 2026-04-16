@@ -7,11 +7,11 @@ namespace ScholarshipManagementAPI.Services.Interface.University
 {
     public interface ICourseRequirementService
     {
-        Task<long> CreateAsync(CourseRequirementRequestDto dto);
-        Task<bool> UpdateAsync(CourseRequirementRequestDto dto);
+        Task<long> CreateAsync(CourseRequirementRequestDto dto, LoggedInUserDto currentUser);
+        Task<bool> UpdateAsync(CourseRequirementRequestDto dto, LoggedInUserDto currentUser);
         Task<bool> DeleteAsync(long id);
 
-        Task<CourseRequirementRequestDto?> GetByIdAsync(long id);
+        Task<CourseRequirementRequestDto?> GetByIdAsync(long id, LoggedInUserDto currentUser);
         Task<PagedResultDto<CourseRequirementRequestDto>> GetByFilterAsync(CourseRequirementFilterDto filter, LoggedInUserDto currentUser);
 
 

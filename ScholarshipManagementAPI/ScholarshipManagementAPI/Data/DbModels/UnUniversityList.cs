@@ -21,9 +21,13 @@ public partial class UnUniversityList
 
     public string? Remarks { get; set; }
 
+    public long? DefaultCurrencyId { get; set; }
+
     public virtual HrStaffMaster? ApprovedByNavigation { get; set; }
 
     public virtual ZzMasterCountry Country { get; set; } = null!;
+
+    public virtual ZzMasterCurrency? DefaultCurrency { get; set; }
 
     public virtual ICollection<HrStaffMaster> HrStaffMasters { get; set; } = new List<HrStaffMaster>();
 

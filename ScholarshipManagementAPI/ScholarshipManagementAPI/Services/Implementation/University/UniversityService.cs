@@ -37,6 +37,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                 IsApproved = dto.IsApproved,
                 ApprovedBy = dto.ApprovedBy,
                 Remarks = dto.Remarks,
+                DefaultCurrencyId = dto.DefaultCurrencyId,
 
                 CreatedDate = DateTime.UtcNow,     // always server-side
             };
@@ -74,8 +75,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             entity.IsActive = dto.IsActive;
             entity.CountryId = dto.CountryId;
             entity.Remarks = dto.Remarks;
+            entity.DefaultCurrencyId = dto.DefaultCurrencyId;
 
-          
+
             // entity.IsApproved = dto.IsApproved;
             // entity.ApprovedBy = dto.ApprovedBy;
             // CreatedDate NOT updated on purpose
@@ -128,6 +130,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                         : null,
 
                     CreatedDate = x.CreatedDate,
+                    DefaultCurrencyId = x.DefaultCurrencyId,
                 })
                 .FirstOrDefaultAsync();
         }
@@ -197,6 +200,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                         : null,
 
                     CreatedDate = x.CreatedDate,
+                    DefaultCurrencyId = x.DefaultCurrencyId,
                 })
                 .ToListAsync();
 

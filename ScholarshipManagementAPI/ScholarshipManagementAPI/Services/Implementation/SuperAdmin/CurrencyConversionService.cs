@@ -7,26 +7,25 @@ using ScholarshipManagementAPI.DTOs.SuperAdmin.CurrencyConversion;
 using ScholarshipManagementAPI.DTOs.SuperAdmin.GeneralSettings;
 using ScholarshipManagementAPI.Services.Interface.SuperAdmin;
 using System.Net.Http;
+using System.Runtime;
 
 namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
 {
     public class CurrencyConversionService : ICurrencyConversionService
     {
         private readonly IGeneralSettingsService _generalSettingsService;
-        private readonly IMasterCurrencyService _masterCurrencyService;
         private readonly AppDbContext _context;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _config;
 
+
         public CurrencyConversionService(
             IGeneralSettingsService generalSettingsService,
-            IMasterCurrencyService masterCurrencyService,
             AppDbContext context,
             HttpClient httpClient, 
             IConfiguration config)
         {
             _generalSettingsService = generalSettingsService;
-            _masterCurrencyService = masterCurrencyService;
             _context = context;
             _httpClient = httpClient;
             _config = config;
@@ -82,7 +81,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
             var rates = await GetLatestRates(baseCurrency);
 
             // Step 3: Mapping
-            var currencyMap = await _masterCurrencyService.GetCurrencyCodeMapAsync();
+            var currencyMap = await GetCurrencyCodeMapAsync();
 
             // Step 4: fetch latest rates from DB for comparison
             var latestRates = await _context.AcCurrencyConversions
@@ -194,7 +193,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
         }
 
 
-
+        // ---------------- GET CURRENT RATES (LATEST PER CURRENCY) ----------------
         public async Task<List<CurrencyConversionRequestDto>> GetCurrentCurrencyRateAsync()
         {
             // Step 1: Base Currency
@@ -236,6 +235,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
 
             return result;
         }
+
 
         // ---------------- GET ALL FILTER ----------------
         public async Task<PagedResultDto<CurrencyConversionRequestDto>> GetByFilterAsync(CurrencyConversionFilterDto filter)
@@ -307,6 +307,42 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
 
 
 
+
+        // ---------------- CURRENCY CONVERSION LOGIC ----------------
+        public decimal ConvertToBase(decimal amount, string fromCurrency, string baseCurrency, decimal rate)
+        {
+            var result = fromCurrency == baseCurrency ? amount : amount / rate;
+
+            return Math.Round(result, 4); 
+        }
+
+
+        // ---------------- Convert from base currency to target currency ----------------
+        public decimal ConvertFromBase(decimal amount, string toCurrency, string baseCurrency, decimal rate)
+        {
+            var result = toCurrency == baseCurrency ? amount : amount * rate;
+
+            return Math.Round(result, 2);
+        }
+
+
+        public async Task<decimal> GetRateAsync(string currencyCode)
+        {
+            return await _context.AcCurrencyConversions
+                .Where(x => x.Currency.CurrencyCode == currencyCode)
+                .OrderByDescending(x => x.FromDate)
+                .Select(x => x.Rates)
+                .FirstOrDefaultAsync();
+        }
+
+
+        private async Task<Dictionary<string, long>> GetCurrencyCodeMapAsync()
+        {
+            return await _context.ZzMasterCurrencies
+                .AsNoTracking()
+                .Where(x => x.IsActive)
+                .ToDictionaryAsync(x => x.CurrencyCode, x => x.CurrencyId);
+        }
 
 
     }

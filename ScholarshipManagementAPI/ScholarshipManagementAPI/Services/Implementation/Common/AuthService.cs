@@ -29,6 +29,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
         private readonly Parser _uaParser;
         private readonly INotificationService _notificationService;
         private readonly ICommonService _commonService;
+        private readonly IGeneralSettingsService _generalSettingsService;
 
         public AuthService(
             AppDbContext context,
@@ -38,7 +39,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
             IConfiguration config,
             Parser uaParser,
             INotificationService notificationService,
-            ICommonService commonService
+            ICommonService commonService,
+            IGeneralSettingsService generalSettingsService
             )
         {
             _context = context;
@@ -49,6 +51,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
             _uaParser = uaParser;
             _notificationService = notificationService;
             _commonService = commonService;
+            _generalSettingsService = generalSettingsService;
         }
 
 
@@ -487,6 +490,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
             var currentRole = user.UsersLoginRoles
                 .FirstOrDefault(x => x.RoleId == roleId && x.LoginId == loginId);
 
+            var currency = await GetDefaultCurrencyAsync(staff);
+
             return new CurrentUserProfileDto
             {
                 LoginId = user.LoginId,
@@ -521,6 +526,10 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
                 City = staff.PermCity,
                 Country = staff.PremCountry,
                 Zip = staff.PermZipCode,
+
+                DefaultCurrencyCode = currency.code,
+                DefaultCurrencyName = currency.name,
+                DefaultCurrencySymbol = currency.symbol,
 
                 //LastLogin = user.LastLoginDate
             };
@@ -698,6 +707,44 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
             var value = BitConverter.ToUInt32(bytes, 0) % 1_000_000;
             return value.ToString("D6");
         }
+
+
+        // helper method to get default currency based on staff's organization or fallback to base currency
+        private async Task<(string code, string name, string symbol)> GetDefaultCurrencyAsync(HrStaffMaster staff)
+        {
+            var config = await _generalSettingsService.GetGeneralConfigAsync();
+
+            var baseCode = config.BaseCurrencyCode;
+            var baseName = config.BaseCurrencyName;
+            var baseSymbol = config.BaseCurrencySymbol;
+
+            if (staff.StaffType == (long)StaffType.University && staff.University?.DefaultCurrencyId != null)
+            {
+                var currency = await _context.ZzMasterCurrencies
+                    .Where(x => x.CurrencyId == staff.University.DefaultCurrencyId)
+                    .Select(x => new { x.CurrencyCode, x.CurrencyName, x.CurrencySymbol })
+                    .FirstOrDefaultAsync();
+
+                if (currency != null)
+                    return (currency.CurrencyCode, currency.CurrencyName, currency.CurrencySymbol);
+            }
+
+            if (staff.StaffType == (long)StaffType.School && staff.School?.DefaultCurrencyId != null)
+            {
+                var currency = await _context.ZzMasterCurrencies
+                    .Where(x => x.CurrencyId == staff.School.DefaultCurrencyId)
+                    .Select(x => new { x.CurrencyCode, x.CurrencyName, x.CurrencySymbol })
+                    .FirstOrDefaultAsync();
+
+                if (currency != null)
+                    return (currency.CurrencyCode, currency.CurrencyName, currency.CurrencySymbol);
+            }
+
+            // fallback → base currency
+            return (baseCode, baseName, baseSymbol);
+        }
+
+
 
         #endregion
 

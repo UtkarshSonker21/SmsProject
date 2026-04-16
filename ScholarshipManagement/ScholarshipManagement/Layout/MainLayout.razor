@@ -194,8 +194,12 @@
                     <div class="submenu">
 
                         <MudMenuItem Dense Style="color:#DC2626;">
-                            <div class="submenu-item" @onclick="ForceReload"@onclick:stopPropagation="true">
-                                <MudIcon Icon="@Icons.Material.Filled.SystemUpdateAlt" Style="font-size:15px;margin-right:3px" />
+                            @* <div class="submenu-item" @onclick="ForceReload" @onclick:stopPropagation="true">
+                                <MudIcon Icon="@Icons.Material.Filled.SystemUpdateAlt" Style="font-size:15px;margin-right:0px" />
+                                <span>Check Updates</span>
+                            </div> *@
+                            <div style="padding-left:0px; display: flex;align-items: center;width: 100%;" @onclick="ForceReload" @onclick:stopPropagation="true">
+                                <MudIcon Icon="@Icons.Material.Filled.SystemUpdateAlt" Style="font-size:15px;margin-right:5px" />
                                 <span>Check Updates</span>
                             </div>
                          </MudMenuItem>

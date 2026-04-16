@@ -105,6 +105,8 @@ namespace ScholarshipManagement.DTOs.School.MasterSchool
         public long? ApprovedBy { get; set; }
 
 
+        public long? DefaultCurrencyId { get; set; }
+
         // For response only
         public string? CountryName { get; set; }
         public string? ApprovedByName { get; set; }

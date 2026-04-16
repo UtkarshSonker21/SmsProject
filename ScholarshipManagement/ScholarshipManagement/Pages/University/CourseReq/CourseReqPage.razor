@@ -91,6 +91,14 @@
             <!-- Left Section (Inside Page Title Bar) -->
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
+                <MudTooltip Text="Back" Placement="Placement.Bottom">
+
+                    <div class="nav-icon" @onclick="GoBack">
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
+                    </div>
+
+                </MudTooltip>
+
                 <div style="display: flex; align-items: center;">
                     <span class="page-title">
                         @title
@@ -461,7 +469,7 @@
     bool canDelete => PermissionService.CanDelete("course requirements");
 
 
-	private BaseCurrencyDto baseCurrency = new();
+    private BaseCurrencyDto baseCurrency = new();
 
     private List<string> AcademicYears = new();
     protected override async Task OnInitializedAsync()
@@ -482,7 +490,20 @@
         var user = CurrentUserProfileService.GetCurrentUserProfile();
         CurrentStaffType = user.StaffType;
 
-        baseCurrency = BaseCurrencyService.GetBaseCurrency();
+
+        if (CurrentStaffType == StaffType.School || CurrentStaffType == StaffType.University)
+        {
+            baseCurrency = new BaseCurrencyDto
+            {
+                Code = user.DefaultCurrencyCode,
+                Name = user.DefaultCurrencyName,
+                Symbol = user.DefaultCurrencySymbol
+            };
+        }
+        else
+        {
+            baseCurrency = BaseCurrencyService.GetBaseCurrency();
+        }
 
         await GetCourses();
         await GetDocuments();
@@ -754,18 +775,24 @@
 
 
     double TotalCost =>
-    (model.RegistrationCost ?? 0) +
-    (model.TutionCost ?? 0) +
-    (model.TextBookCost ?? 0) +
-    (model.AccomoCost ?? 0) +
-    (model.TravellingCost ?? 0) +
-    (model.TransportCost ?? 0) +
-    (model.DocuAttestCost ?? 0) +
-    (model.VisaResiCost ?? 0);
+        Math.Round(
+            (model.RegistrationCost ?? 0) +
+            (model.TutionCost ?? 0) +
+            (model.TextBookCost ?? 0) +
+            (model.AccomoCost ?? 0) +
+            (model.TravellingCost ?? 0) +
+            (model.TransportCost ?? 0) +
+            (model.DocuAttestCost ?? 0) +
+            (model.VisaResiCost ?? 0),
+            2
+        );
 
 
 
-
+    private void GoBack()
+    {
+        Navigation.NavigateTo(Routes.CourseRequirementList);
+    }
 
 }
 

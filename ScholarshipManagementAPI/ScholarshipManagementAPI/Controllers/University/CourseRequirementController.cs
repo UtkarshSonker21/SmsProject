@@ -32,7 +32,7 @@ namespace ScholarshipManagementAPI.Controllers.University
             dto.CreatedDate = DateTime.UtcNow;                              // always server-side
             dto.CreatedBy = JwtClaimHelper.UserName(User).ToString();        // or from claims
 
-            var id = await _service.CreateAsync(dto);
+            var id = await _service.CreateAsync(dto, await _currentUser.GetCurrentUserAsync());
 
             return Ok(new ApiResponseDto
             {
@@ -49,7 +49,7 @@ namespace ScholarshipManagementAPI.Controllers.University
         public async Task<IActionResult> Update(long id, [FromBody] CourseRequirementRequestDto dto)
         {
             dto.ReqId = id;
-            var updated = await _service.UpdateAsync(dto);
+            var updated = await _service.UpdateAsync(dto, await _currentUser.GetCurrentUserAsync());
 
             if (!updated)
             {
@@ -102,7 +102,7 @@ namespace ScholarshipManagementAPI.Controllers.University
         [Authorize]
         public async Task<IActionResult> GetById(long id)
         {
-            var data = await _service.GetByIdAsync(id);
+            var data = await _service.GetByIdAsync(id, await _currentUser.GetCurrentUserAsync());
 
             if (data == null)
             {

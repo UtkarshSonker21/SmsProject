@@ -216,6 +216,10 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.CountryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_MasterSchoolList_ZzMasterCountry");
+
+            entity.HasOne(d => d.DefaultCurrency).WithMany(p => p.MasterSchoolLists)
+                .HasForeignKey(d => d.DefaultCurrencyId)
+                .HasConstraintName("FK_School_Currency");
         });
 
         modelBuilder.Entity<StudentDatum>(entity =>
@@ -467,6 +471,10 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.CountryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UnUniversityList_ZzMasterCountry");
+
+            entity.HasOne(d => d.DefaultCurrency).WithMany(p => p.UnUniversityLists)
+                .HasForeignKey(d => d.DefaultCurrencyId)
+                .HasConstraintName("FK_University_Currency");
         });
 
         modelBuilder.Entity<UsersLogin>(entity =>

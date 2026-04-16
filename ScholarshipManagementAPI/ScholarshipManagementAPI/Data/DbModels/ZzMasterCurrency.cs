@@ -20,4 +20,8 @@ public partial class ZzMasterCurrency
     public DateTime CreatedDate { get; set; }
 
     public virtual ICollection<AcCurrencyConversion> AcCurrencyConversions { get; set; } = new List<AcCurrencyConversion>();
+
+    public virtual ICollection<MasterSchoolList> MasterSchoolLists { get; set; } = new List<MasterSchoolList>();
+
+    public virtual ICollection<UnUniversityList> UnUniversityLists { get; set; } = new List<UnUniversityList>();
 }

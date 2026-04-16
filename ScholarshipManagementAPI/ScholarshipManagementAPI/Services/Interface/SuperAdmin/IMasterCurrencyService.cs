@@ -11,8 +11,5 @@ namespace ScholarshipManagementAPI.Services.Interface.SuperAdmin
 
         Task<MasterCurrencyRequestDto?> GetByIdAsync(long id);
         Task<PagedResultDto<MasterCurrencyRequestDto>> GetByFilterAsync(MasterCurrencyFilterDto filter);
-
-
-        Task<Dictionary<string, long>> GetCurrencyCodeMapAsync();
     }
 }
