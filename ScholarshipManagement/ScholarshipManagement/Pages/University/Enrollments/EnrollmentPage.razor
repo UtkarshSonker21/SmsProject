@@ -10,6 +10,7 @@
 @using ScholarshipManagement.DTOs.School.Students
 @using ScholarshipManagement.DTOs.University.CourseRequirement
 @using ScholarshipManagement.DTOs.University.MasterDocuments
+@using ScholarshipManagement.DTOs.University.MasterUniversity
 @using ScholarshipManagement.Helper.Enums
 @using ScholarshipManagement.Pages.Common
 @using ScholarshipManagement.Pages.Common.Shared
@@ -21,6 +22,7 @@
 @using static ScholarshipManagement.Helper.Constant
 @inject CurrentUserProfileService CurrentUserProfileService
 @inject CourseRequirementService CourseRequirementService
+@inject UniversityService UniversityService
 @inject UniversityDocumentService UniversityDocumentService
 @inject PermissionService PermissionService
 @inject ApprovalService ApprovalService
@@ -68,6 +70,32 @@
 
         <!-- Left -->
         <div class="d-flex align-items-center gap-3" style="padding: 0 24px;">
+
+            <!-- Name FILTER -->
+            <div class="appbar-search dropdown-filter">
+
+                <label class="filter-label">University : </label>
+
+                <MudSelect T="long?"
+                           Value="SelectedUniversityId"
+                           ValueChanged="OnUniversityChanged"
+                           Placeholder="University"
+                           Variant="Variant.Text"
+                           Dense="true"
+                           DisableUnderline="true"
+                           Clearable="true"
+                           Class="dropdown-select">
+
+                    @foreach (var c in Universities)
+                    {
+                        <MudSelectItem T="long?" Value="@c.UniversityId">
+                            @c.UniversityName
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+            </div>
             <div class="appbar-search">
 
 
@@ -528,6 +556,7 @@
 
         await LoadData(Filter);
         await GetDocuments();
+        await GetUniversities();
     }
 
 
@@ -737,6 +766,53 @@
          Navigation.NavigateTo(Routes.EnrolledStudentsByReqId.Replace("{reqId}", dto.ReqId.ToString()));
         // Navigation.NavigateTo(Routes.EnrolledStudents);
     }
+
+
+
+    private List<UniversityRequestDto> Universities = new();
+    private async Task GetUniversities()
+    {
+        var result = await UniversityService.GetMasterUniversity(new UniversityFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            IsActive = true,
+			IsApproved = true,
+        });
+
+
+        if (result.Response.Success)
+        {
+            Universities = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private long? SelectedUniversityId { get; set; } = null;
+
+    private async Task OnUniversityChanged(long? universityId)
+    {
+        SelectedUniversityId = universityId;
+        if (SelectedUniversityId.HasValue)
+        {
+            Filter.UniversityId = SelectedUniversityId.Value;
+            await LoadData(Filter);
+        }
+        else
+        {
+            SelectedUniversityId = null;
+            Filter.UniversityId = null;
+            await LoadData(Filter);
+        }
+
+    }
+
+
 
 
 }

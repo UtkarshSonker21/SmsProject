@@ -79,9 +79,13 @@ public partial class MasterSchoolList
 
     public int StudentSequenceNumber { get; set; }
 
+    public long? DefaultCurrencyId { get; set; }
+
     public virtual UsersLogin? ApprovedByNavigation { get; set; }
 
     public virtual ZzMasterCountry Country { get; set; } = null!;
+
+    public virtual ZzMasterCurrency? DefaultCurrency { get; set; }
 
     public virtual ICollection<HrStaffMaster> HrStaffMasters { get; set; } = new List<HrStaffMaster>();
 

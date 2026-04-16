@@ -1,4 +1,5 @@
 ﻿@page "/course-req-list"
+@page "/course-req-approval"
 
 @attribute [Authorize]
 @layout MainLayout
@@ -109,6 +110,44 @@
 
         <!-- Left -->
         <div class="d-flex align-items-center gap-3" style="padding: 0 24px;">
+
+
+            @if (CurrentStaffType != StaffType.School)
+            {
+                <div class="appbar-search dropdown-filter">
+
+                    <label class="filter-label">Status :</label>
+
+                    <MudSelect T="int?"
+                               Value="@(SelectedStatus.HasValue ? (int?)SelectedStatus.Value : null)"
+                               ValueChanged="OnStatusDropdownChanged"
+                               Placeholder="Status"
+                               Variant="Variant.Text"
+                               Dense="true"
+                               DisableUnderline="true"
+                               Clearable="true"
+                               Class="dropdown-select">
+
+                        <MudSelectItem T="int?" Value="@((int?)null)">All</MudSelectItem>
+
+                        <MudSelectItem T="int?" Value="@((int)ApprovalStatus.Pending)">
+                            Pending
+                        </MudSelectItem>
+
+                        <MudSelectItem T="int?" Value="@((int)ApprovalStatus.Approved)">
+                            Approved
+                        </MudSelectItem>
+
+                        <MudSelectItem T="int?" Value="@((int)ApprovalStatus.Rejected)">
+                            Rejected
+                        </MudSelectItem>
+
+                    </MudSelect>
+                </div>
+
+            }
+
+          
             <div class="appbar-search">
 
 
@@ -136,6 +175,7 @@
                     </svg>
                 }
             </div>
+        
         </div>
 
 
@@ -220,64 +260,6 @@
     </div>
 
 
-    @if (CurrentStaffType != StaffType.School)
-    {
-        <MudTabs Elevation="0" Rounded="true" ActivePanelIndex="_activeTabIndex" ActivePanelIndexChanged="OnTabChanged"
-                 style="padding: 0 24px;">
-
-            <MudTabPanel>
-                <TabContent>
-
-                    <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" style="font-size:16px;" />
-                    All
-                </TabContent>
-            </MudTabPanel>
-
-            <MudTabPanel>
-                <TabContent>
-
-                    <MudIcon Icon="@Icons.Material.Filled.HourglassTop"
-                             Color="Color.Warning"
-                             Class="mr-2" style="font-size:16px;" />
-
-                    <MudText Color="Color.Warning" Typo="Typo.subtitle2">
-                        Pending
-                    </MudText>
-
-                </TabContent>
-            </MudTabPanel>
-
-            <MudTabPanel>
-                <TabContent>
-
-                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
-                             Color="Color.Success"
-                             Class="mr-2" style="font-size:16px;" />
-
-                    <MudText Color="Color.Success" Typo="Typo.subtitle2">
-                        Approved
-                    </MudText>
-
-                </TabContent>
-            </MudTabPanel>
-
-            <MudTabPanel>
-                <TabContent>
-
-                    <MudIcon Icon="@Icons.Material.Filled.Cancel"
-                             Color="Color.Error"
-                             Class="mr-2" style="font-size:16px;" />
-
-                    <MudText Color="Color.Error" Typo="Typo.subtitle2">
-                        Rejected
-                    </MudText>
-
-                </TabContent>
-            </MudTabPanel>
-
-        </MudTabs>
-
-    }
 
 
 
@@ -663,57 +645,56 @@
 
                 @if (CurrentStaffType != StaffType.School)
                 {
+
                     <TemplateColumn Title="Approval"
                                     HeaderClass="fw-bold"
-                                    HeaderStyle="width:280px; min-width:230px; max-width:300px;"
-                                    CellStyle="width:280px; min-width:230px; max-width:300px;"
+                                    HeaderStyle="width:300px; min-width:250px; max-width:350px;"
+                                    CellStyle="width:300px; min-width:250px; max-width:350px;"
                                     Hideable="true">
 
                         <CellTemplate Context="ctx">
 
                             <div class="d-flex flex-column align-items-start">
 
-                                <!-- STATUS BADGE -->
-                                <MudChip Size="Size.Small"
-                                         Variant="Variant.Outlined"
-                                         Color="@GetApprovalChipColor(ctx.Item.ApprovalStatus)"
-                                         Style="min-width:90px; justify-content:center;">
-                                    @GetApprovalChipText(ctx.Item.ApprovalStatus)
-                                </MudChip>
+                                @{
+                                    bool isPending = ctx.Item.ApprovalStatus == (int)ApprovalStatus.Pending;
 
-                                <!-- APPROVED / REJECTED BY -->
-                                @if (ctx.Item.ApprovalStatus != (int)ApprovalStatus.Pending &&
-                                                            !string.IsNullOrWhiteSpace(ctx.Item.ApprovedByName))
-                                {
-                                    <div class="d-flex align-items-center gap-1 text-muted small mt-1"
-                                         title="Action By">
+                                    bool canApprove = isPending &&
+                                    (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin);
 
-                                        <MudIcon Icon="@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
-                                                 Style="font-size:13px;" />
+                                    string tooltipText = "";
 
-                                        @ctx.Item.ApprovedByName
-                                    </div>
+                                    if (canApprove)
+                                    {
+                                        tooltipText = "Click to review & decide";
+                                    }
+                                    else if (!isPending && !string.IsNullOrWhiteSpace(ctx.Item.ApprovedByName))
+                                    {
+                                        tooltipText = $"Action taken by: {ctx.Item.ApprovedByName}";
+                                    }
                                 }
 
-                                <!-- ⭐ APPROVE / REJECT ACTION -->
-                                @if (ctx.Item.ApprovalStatus == (int)ApprovalStatus.Pending &&
-                                                            (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin))
-                                {
-                                    <div class="d-flex align-items-center gap-1 text-primary small mt-1 approval-action"
-                                         @onclick="@(() => ApproveCourseReqAsync(ctx.Item))">
+                                <!-- ✅ CHIP WITH TOOLTIP -->
+                                <MudTooltip Text="@tooltipText"
+                                            Disabled="string.IsNullOrEmpty(tooltipText)">
 
-                                        <MudIcon Icon="@Icons.Material.Filled.PendingActions"
-                                                 Style="font-size:13px;" />
+                                    <MudChip Size="Size.Small"
+                                             Variant="Variant.Outlined"
+                                             Color="@GetApprovalChipColor(ctx.Item.ApprovalStatus)"
+                                             Style="min-width:90px; justify-content:center;"
+                                             Class="@(canApprove ? "cursor-pointer" : "cursor-default")"
+                                             OnClick="@(async () => await OnChipClick(ctx.Item, canApprove))">
 
-                                        <span style="cursor:pointer;">
-                                            Review & decide
-                                        </span>
-                                    </div>
-                                }
+                                        @GetApprovalChipText(ctx.Item.ApprovalStatus)
+
+                                    </MudChip>
+
+                                </MudTooltip>
 
                             </div>
 
                         </CellTemplate>
+
                     </TemplateColumn>
 
                 }
@@ -775,12 +756,16 @@
 
                                     <div style="display:flex; align-items:center; gap:10px;">
 
+                                        @{
+                                            bool isLocked = ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved
+                                            || ctx.Item.ApprovalStatus == (int)ApprovalStatus.Rejected;
+                                        }
+
                                         <!-- EDIT -->
                                         @if (canEdit)
                                         {
-                                            <!-- EDIT -->
-                                            <MudTooltip Text="Approved records cannot be edited"
-                                                        Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved" Placement="Placement.Left">
+                                            <MudTooltip Text="Approved/Rejected records cannot be edited"
+                                                        Disabled="isLocked" Placement="Placement.Left">
 
                                                 <span style="display:flex; align-items:center;">
 
@@ -790,35 +775,36 @@
                                                          stroke-width="1.5"
                                                          stroke="currentColor"
                                                          style="width:20px;
-                                                height:20px;
-                                                cursor:@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? "not-allowed" : "pointer");
-                                                color:@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? "#adb5bd" : "#0d6efd")"
+                                        height:20px;
+                                        cursor:@(isLocked ? "not-allowed" : "pointer");
+                                        color:@(isLocked ? "#adb5bd" : "#0d6efd")"
                                                          @onclick="@(() =>
                                                          {
-                                                             if (ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved)
+                                                             if (!isLocked)
                                                                  EditCourseReq(ctx.Item);
                                                          })">
 
                                                         <path stroke-linecap="round"
                                                               stroke-linejoin="round"
                                                               d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652
-                                                 L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13
-                                                 L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897
-                                                 l8.932-8.931ZM18 14v4.75
-                                                 A2.25 2.25 0 0 1 15.75 21H5.25
-                                                 A2.25 2.25 0 0 1 3 18.75V8.25
-                                                 A2.25 2.25 0 0 1 5.25 6H10" />
+                                         L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13
+                                         L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897
+                                         l8.932-8.931ZM18 14v4.75
+                                         A2.25 2.25 0 0 1 15.75 21H5.25
+                                         A2.25 2.25 0 0 1 3 18.75V8.25
+                                         A2.25 2.25 0 0 1 5.25 6H10" />
                                                     </svg>
 
                                                 </span>
+
                                             </MudTooltip>
                                         }
 
                                         <!-- DELETE -->
                                         @if (canDelete)
                                         {
-                                            <MudTooltip Text="Approved records cannot be deleted"
-                                                        Disabled="ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved" Placement="Placement.Left">
+                                            <MudTooltip Text="Approved/Rejected records cannot be deleted"
+                                                        Disabled="isLocked" Placement="Placement.Left">
 
                                                 <span style="display:flex; align-items:center;">
 
@@ -828,29 +814,29 @@
                                                          stroke-width="1.5"
                                                          stroke="currentColor"
                                                          style="width:20px;
-                                                height:20px;
-                                                cursor:@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? "not-allowed" : "pointer");
-                                                color:@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? "#adb5bd" : "#dc3545")"
+                                        height:20px;
+                                        cursor:@(isLocked ? "not-allowed" : "pointer");
+                                        color:@(isLocked ? "#adb5bd" : "#dc3545")"
                                                          @onclick="@(() =>
                                                          {
-                                                             if (ctx.Item.ApprovalStatus != (int)ApprovalStatus.Approved)
+                                                             if (!isLocked)
                                                                  DeleteCourseReq(ctx.Item);
                                                          })">
 
                                                         <path stroke-linecap="round"
                                                               stroke-linejoin="round"
                                                               d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21
-                                    c.342.052.682.107 1.022.166m-1.022-.165
-                                    L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077
-                                    H8.084a2.25 2.25 0 0 1-2.244-2.077
-                                    L4.772 5.79m14.456 0
-                                    a48.108 48.108 0 0 0-3.478-.397m-12 .562
-                                    c.34-.059.68-.114 1.022-.165m0 0
-                                    a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916
-                                    c0-1.18-.91-2.164-2.09-2.201
-                                    a51.964 51.964 0 0 0-3.32 0
-                                    c-1.18.037-2.09 1.022-2.09 2.201v.916
-                                    m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                         c.342.052.682.107 1.022.166m-1.022-.165
+                                         L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077
+                                         H8.084a2.25 2.25 0 0 1-2.244-2.077
+                                         L4.772 5.79m14.456 0
+                                         a48.108 48.108 0 0 0-3.478-.397m-12 .562
+                                         c.34-.059.68-.114 1.022-.165m0 0
+                                         a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916
+                                         c0-1.18-.91-2.164-2.09-2.201
+                                         a51.964 51.964 0 0 0-3.32 0
+                                         c-1.18.037-2.09 1.022-2.09 2.201v.916
+                                         m7.5 0a48.667 48.108 0 0 0-7.5 0" />
                                                     </svg>
 
                                                 </span>
@@ -938,10 +924,10 @@
     private CourseRequirementFilterDto Filter = new CourseRequirementFilterDto();
 
     private StaffType? CurrentStaffType;
-    bool canView => PermissionService.CanView("course requirements");
-    bool canAdd => PermissionService.CanInsert("course requirements");
-    bool canEdit => PermissionService.CanUpdate("course requirements");
-    bool canDelete => PermissionService.CanDelete("course requirements");
+    bool canView => PermissionService.CanView("course requirements") || PermissionService.CanView("courses-requirements-approval");
+    bool canAdd => PermissionService.CanInsert("course requirements") || PermissionService.CanInsert("courses-requirements-approval");
+    bool canEdit => PermissionService.CanUpdate("course requirements") || PermissionService.CanUpdate("courses-requirements-approval");
+    bool canDelete => PermissionService.CanDelete("course requirements") || PermissionService.CanDelete("courses-requirements-approval");
 
     protected override async Task OnInitializedAsync()
     {
@@ -956,6 +942,12 @@
         @if (CurrentStaffType == StaffType.School)
         {
 			Filter.ApprovalStatus = (int)ApprovalStatus.Approved; // default to approved for school users
+        }
+
+        @if (CurrentStaffType == StaffType.Ngo)
+        {
+			Filter.ApprovalStatus = (int)ApprovalStatus.Pending; // default to pending for NGO users for approval workflow
+            SelectedStatus = (int)ApprovalStatus.Pending;
         }
 
         await LoadData(Filter);
@@ -1007,7 +999,7 @@
         {
             _loading = true;                 // start loading
             await InvokeAsync(StateHasChanged); // refresh UI immediately if needed
-
+            filter.IsActive = true; // only active records
             var result = await CourseRequirementService.GetCourseRequirement(filter);
 
             if (result.Response.Success)
@@ -1177,6 +1169,15 @@
 
     }
 
+    private async Task OnChipClick(CourseRequirementRequestDto item, bool canApprove)
+    {
+        if (!canApprove)
+            return;
+
+        await ApproveCourseReqAsync(item);
+    }
+
+
     private ApprovalRequestDto approvalRequestDto = new ApprovalRequestDto();
     private async Task ApproveCourseReqAsync(CourseRequirementRequestDto dto)
     {
@@ -1282,6 +1283,19 @@
     }
 
 
+    private async Task OnStatusDropdownChanged(int? value)
+    {
+        int index = value switch
+        {
+            (int)ApprovalStatus.Pending => 1,
+            (int)ApprovalStatus.Approved => 2,
+            (int)ApprovalStatus.Rejected => 3,
+            _ => 0 // All
+        };
+
+        await OnTabChanged(index); // reuse same logic
+    }
+
     private ApprovalStatus? SelectedStatus = null; // null = All
     private int _activeTabIndex = 0;
 
@@ -1317,3 +1331,116 @@
 
 
 }
+
+
+
+
+@* <MudTabs Elevation="0" Rounded="true" ActivePanelIndex="_activeTabIndex" ActivePanelIndexChanged="OnTabChanged"
+                 style="padding: 0 24px;">
+
+            <MudTabPanel>
+                <TabContent>
+
+                    <MudIcon Icon="@Icons.Material.Filled.ListAlt" Class="mr-2" style="font-size:16px;" />
+                    All
+                </TabContent>
+            </MudTabPanel>
+
+            <MudTabPanel>
+                <TabContent>
+
+                    <MudIcon Icon="@Icons.Material.Filled.HourglassTop"
+                             Color="Color.Warning"
+                             Class="mr-2" style="font-size:16px;" />
+
+                    <MudText Color="Color.Warning" Typo="Typo.subtitle2">
+                        Pending
+                    </MudText>
+
+                </TabContent>
+            </MudTabPanel>
+
+            <MudTabPanel>
+                <TabContent>
+
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                             Color="Color.Success"
+                             Class="mr-2" style="font-size:16px;" />
+
+                    <MudText Color="Color.Success" Typo="Typo.subtitle2">
+                        Approved
+                    </MudText>
+
+                </TabContent>
+            </MudTabPanel>
+
+            <MudTabPanel>
+                <TabContent>
+
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel"
+                             Color="Color.Error"
+                             Class="mr-2" style="font-size:16px;" />
+
+                    <MudText Color="Color.Error" Typo="Typo.subtitle2">
+                        Rejected
+                    </MudText>
+
+                </TabContent>
+            </MudTabPanel>
+
+        </MudTabs> *@
+
+
+
+@* <TemplateColumn Title="Approval"
+                                    HeaderClass="fw-bold"
+                                    HeaderStyle="width:280px; min-width:230px; max-width:300px;"
+                                    CellStyle="width:280px; min-width:230px; max-width:300px;"
+                                    Hideable="true">
+
+                        <CellTemplate Context="ctx">
+
+                            <div class="d-flex flex-column align-items-start">
+
+                                <!-- STATUS BADGE -->
+                                <MudChip Size="Size.Small"
+                                         Variant="Variant.Outlined"
+                                         Color="@GetApprovalChipColor(ctx.Item.ApprovalStatus)"
+                                         Style="min-width:90px; justify-content:center;">
+                                    @GetApprovalChipText(ctx.Item.ApprovalStatus)
+                                </MudChip>
+
+                                <!-- APPROVED / REJECTED BY -->
+                                @if (ctx.Item.ApprovalStatus != (int)ApprovalStatus.Pending &&
+                                                            !string.IsNullOrWhiteSpace(ctx.Item.ApprovedByName))
+                                {
+                                    <div class="d-flex align-items-center gap-1 text-muted small mt-1"
+                                         title="Action By">
+
+                                        <MudIcon Icon="@(ctx.Item.ApprovalStatus == (int)ApprovalStatus.Approved ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                                 Style="font-size:13px;" />
+
+                                        @ctx.Item.ApprovedByName
+                                    </div>
+                                }
+
+                                <!-- ⭐ APPROVE / REJECT ACTION -->
+                                @if (ctx.Item.ApprovalStatus == (int)ApprovalStatus.Pending &&
+                                                            (CurrentStaffType == StaffType.Ngo || CurrentStaffType == StaffType.SuperAdmin))
+                                {
+                                    <div class="d-flex align-items-center gap-1 text-primary small mt-1 approval-action"
+                                         @onclick="@(() => ApproveCourseReqAsync(ctx.Item))">
+
+                                        <MudIcon Icon="@Icons.Material.Filled.PendingActions"
+                                                 Style="font-size:13px;" />
+
+                                        <span style="cursor:pointer;">
+                                            Review & decide
+                                        </span>
+                                    </div>
+                                }
+
+                            </div>
+
+                        </CellTemplate>
+                    </TemplateColumn> *@

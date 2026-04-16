@@ -65,6 +65,10 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             if (entity.ApprovalStatus == (int)ApprovalStatus.Approved)
                 throw new CustomException("Approved course type cannot be edited");
 
+            // ⭐ BUSINESS RULE CHECK (place here)
+            if (entity.ApprovalStatus == (int)ApprovalStatus.Rejected)
+                throw new CustomException("Rejected course type cannot be edited");
+
             // 🔹 Uniqueness check (same university, same name, different record)
             var exists = await _context.UnMasterCourseTypes
                 .AnyAsync(x =>
@@ -104,9 +108,12 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                 return false;
 
             if (entity.ApprovalStatus == (int)ApprovalStatus.Approved)
-            {
                 throw new CustomException("Approved course types cannot be deleted");
-            }
+
+
+            // ⭐ BUSINESS RULE CHECK (place here)
+            if (entity.ApprovalStatus == (int)ApprovalStatus.Rejected)
+                throw new CustomException("Rejected course type cannot be deleted");
 
             // Soft delete
             entity.IsActive = false;

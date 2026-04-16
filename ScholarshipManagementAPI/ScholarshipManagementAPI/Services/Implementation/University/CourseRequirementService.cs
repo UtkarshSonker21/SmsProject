@@ -10,23 +10,32 @@ using ScholarshipManagementAPI.DTOs.University.MasterCourse;
 using ScholarshipManagementAPI.Helper;
 using ScholarshipManagementAPI.Helper.Enums;
 using ScholarshipManagementAPI.Helper.Utilities;
+using ScholarshipManagementAPI.Services.Implementation.SuperAdmin;
+using ScholarshipManagementAPI.Services.Interface.SuperAdmin;
 using ScholarshipManagementAPI.Services.Interface.University;
 using System.Text.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ScholarshipManagementAPI.Services.Implementation.University
 {
     public class CourseRequirementService : ICourseRequirementService
     {
         private readonly AppDbContext _context;
-        public CourseRequirementService(AppDbContext context)
+        private readonly ICurrencyConversionService _currencyConversionService;
+        private readonly IGeneralSettingsService _generalSettingsService;
+
+        public CourseRequirementService(AppDbContext context, ICurrencyConversionService currencyConversionService, IGeneralSettingsService generalSettingsService)
         {
             _context = context;
+            _currencyConversionService = currencyConversionService;
+            _generalSettingsService = generalSettingsService;
         }
 
 
         // ---------------- CREATE ----------------
-        public async Task<long> CreateAsync(CourseRequirementRequestDto dto)
+        public async Task<long> CreateAsync(CourseRequirementRequestDto dto, LoggedInUserDto currentUser)
         {
+            var (baseCurrency, rate) = await GetCurrencyContextAsync(currentUser.DefaultCurrencyCode);
 
             var entity = new UnCourseReq
             {
@@ -59,6 +68,11 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                 CreatedBy = dto.CreatedBy                      // always server-side
             };
 
+
+
+            // Apply cost conversion
+            ApplyCostConversion(dto, entity, currentUser.DefaultCurrencyCode, baseCurrency, rate);
+
             _context.UnCourseReqs.Add(entity);
             await _context.SaveChangesAsync();
 
@@ -68,7 +82,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
 
 
         // ---------------- UPDATE ----------------
-        public async Task<bool> UpdateAsync(CourseRequirementRequestDto dto)
+        public async Task<bool> UpdateAsync(CourseRequirementRequestDto dto, LoggedInUserDto currentUser)
         {
             var entity = await _context.UnCourseReqs
                 .FirstOrDefaultAsync(x => x.ReqId == dto.ReqId);
@@ -81,6 +95,13 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             // ⭐ BUSINESS RULE CHECK (place here)
             if (entity.ApprovalStatus == (int)ApprovalStatus.Approved)
                 throw new CustomException("Approved course requirement cannot be edited");
+
+            // ⭐ BUSINESS RULE CHECK (place here)
+            if (entity.ApprovalStatus == (int)ApprovalStatus.Rejected)
+                throw new CustomException("Rejected course requirement cannot be edited");
+
+
+            var (baseCurrency, rate) = await GetCurrencyContextAsync(currentUser.DefaultCurrencyCode);
 
             // CourseId usually should NOT be changed
             // entity.CourseId = dto.CourseId;
@@ -113,6 +134,10 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             // entity.CreatedDate = dto.CreatedDate;         // usually not updated
             // entity.CreatedBy = dto.CreatedBy;             // usually not updated
 
+
+            // Apply cost conversion
+            ApplyCostConversion(dto, entity, currentUser.DefaultCurrencyCode, baseCurrency, rate);
+
             await _context.SaveChangesAsync();
 
             return true;
@@ -131,9 +156,12 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
 
 
             if (entity.ApprovalStatus == (int)ApprovalStatus.Approved)
-            {
                 throw new CustomException("Approved course requirement cannot be deleted");
-            }
+
+            // ⭐ BUSINESS RULE CHECK (place here)
+            if (entity.ApprovalStatus == (int)ApprovalStatus.Rejected)
+                throw new CustomException("Rejected course requirement cannot be deleted");
+
 
             // Soft delete
             entity.IsActive = false;
@@ -145,9 +173,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
 
 
         // ---------------- GET BY ID ----------------
-        public async Task<CourseRequirementRequestDto?> GetByIdAsync(long id)
+        public async Task<CourseRequirementRequestDto?> GetByIdAsync(long id, LoggedInUserDto currentUser)
         {
-            return await _context.UnCourseReqs
+            var dto = await _context.UnCourseReqs
                 .AsNoTracking()
                 .Where(x => x.ReqId == id)
                 .Include(x => x.Course)
@@ -188,6 +216,14 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                     ApprovedByName = x.ApprovedByNavigation != null ? x.ApprovedByNavigation.LoginName : null
                 })
                 .FirstOrDefaultAsync();
+
+
+            if (dto == null)
+                return null;
+
+            var (baseCurrency, rate) = await GetCurrencyContextAsync(currentUser.DefaultCurrencyCode);
+
+            return ConvertCostsFromBase(dto, currentUser.DefaultCurrencyCode, baseCurrency, rate);
         }
 
 
@@ -284,7 +320,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                     .Take(filter.PageSize);
             }
 
-            var items = await query
+            var data = await query
                 .Select(x => new CourseRequirementRequestDto
                 {
                     ReqId = x.ReqId,
@@ -322,6 +358,12 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                     ApprovedByName = x.ApprovedByNavigation != null ? x.ApprovedByNavigation.LoginName : null
                 })
                 .ToListAsync();
+
+            var (baseCurrency, rate) = await GetCurrencyContextAsync(currentUser.DefaultCurrencyCode);
+
+            var items = data
+                .Select(dto => ConvertCostsFromBase(dto, currentUser.DefaultCurrencyCode, baseCurrency, rate))
+                .ToList();
 
             return new PagedResultDto<CourseRequirementRequestDto>
             {
@@ -387,7 +429,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             }
 
             // ---------- SELECT (ENROLLMENT DATA) ----------
-            var items = await query
+            var data = await query
                 .Select(x => new CourseRequirementEnrollmentDto
                 {
                     ReqId = x.ReqId,
@@ -422,6 +464,12 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                         (x.VisaResiCost ?? 0)
                 })
                 .ToListAsync();
+
+            var (baseCurrency, rate) = await GetCurrencyContextAsync(currentUser.DefaultCurrencyCode);
+
+            var items = data
+                .Select(dto => ConvertEnrollmentCost(dto, currentUser.DefaultCurrencyCode, baseCurrency, rate))
+                .ToList();
 
             return new PagedResultDto<CourseRequirementEnrollmentDto>
             {
@@ -555,6 +603,114 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                 PageSize = filter.PageSize
             };
         }
+
+
+
+
+
+
+
+        private async Task<(string baseCurrency, decimal rate)> GetCurrencyContextAsync(string userCurrency)
+        {
+            var config = await _generalSettingsService.GetGeneralConfigAsync();
+            var baseCurrency = config.BaseCurrencyCode;
+
+            decimal rate = 1;
+
+            if (userCurrency != baseCurrency)
+            {
+                rate = await _currencyConversionService.GetRateAsync(userCurrency);
+            }
+
+            return (baseCurrency, rate);
+        }
+
+
+        private double? ConvertToBase(double? value, string userCurrency, string baseCurrency, decimal rate)
+        {
+            return value.HasValue
+                ? (double?)_currencyConversionService.ConvertToBase(
+                    Convert.ToDecimal(value.Value),
+                    userCurrency,
+                    baseCurrency,
+                    rate)
+                : null;
+        }
+
+
+
+        private void ApplyCostConversion( 
+            CourseRequirementRequestDto dto,
+            UnCourseReq entity,
+            string userCurrency,
+            string baseCurrency,
+            decimal rate)
+        {
+            entity.RegistrationCost = ConvertToBase(dto.RegistrationCost, userCurrency, baseCurrency, rate);
+            entity.TutionCost = ConvertToBase(dto.TutionCost, userCurrency, baseCurrency, rate);
+            entity.TextBookCost = ConvertToBase(dto.TextBookCost, userCurrency, baseCurrency, rate);
+            entity.AccomoCost = ConvertToBase(dto.AccomoCost, userCurrency, baseCurrency, rate);
+            entity.TravellingCost = ConvertToBase(dto.TravellingCost, userCurrency, baseCurrency, rate);
+            entity.TransportCost = ConvertToBase(dto.TransportCost, userCurrency, baseCurrency, rate);
+            entity.DocuAttestCost = ConvertToBase(dto.DocuAttestCost, userCurrency, baseCurrency, rate);
+            entity.VisaResiCost = ConvertToBase(dto.VisaResiCost, userCurrency, baseCurrency, rate);
+        }
+
+
+
+
+
+        private double? ConvertFromBase(double? value, string userCurrency, string baseCurrency, decimal rate)
+        {
+            return value.HasValue
+                ? (double?)_currencyConversionService.ConvertFromBase(
+                    Convert.ToDecimal(value.Value),
+                    userCurrency,
+                    baseCurrency,
+                    rate)
+                : null;
+        }
+
+
+        private CourseRequirementRequestDto ConvertCostsFromBase(
+            CourseRequirementRequestDto dto,
+            string userCurrency,
+            string baseCurrency,
+            decimal rate)
+        {
+            dto.RegistrationCost = ConvertFromBase(dto.RegistrationCost, userCurrency, baseCurrency, rate);
+            dto.TutionCost = ConvertFromBase(dto.TutionCost, userCurrency, baseCurrency, rate);
+            dto.TextBookCost = ConvertFromBase(dto.TextBookCost, userCurrency, baseCurrency, rate);
+            dto.AccomoCost = ConvertFromBase(dto.AccomoCost, userCurrency, baseCurrency, rate);
+            dto.TravellingCost = ConvertFromBase(dto.TravellingCost, userCurrency, baseCurrency, rate);
+            dto.TransportCost = ConvertFromBase(dto.TransportCost, userCurrency, baseCurrency, rate);
+            dto.DocuAttestCost = ConvertFromBase(dto.DocuAttestCost, userCurrency, baseCurrency, rate);
+            dto.VisaResiCost = ConvertFromBase(dto.VisaResiCost, userCurrency, baseCurrency, rate);
+
+            return dto;
+        }
+
+
+
+
+
+        private CourseRequirementEnrollmentDto ConvertEnrollmentCost(
+            CourseRequirementEnrollmentDto dto,
+            string userCurrency,
+            string baseCurrency,
+            decimal rate)
+        {
+            dto.TotalCost = dto.TotalCost.HasValue
+                ? (double?)_currencyConversionService.ConvertFromBase(
+                    Convert.ToDecimal(dto.TotalCost.Value),
+                    userCurrency,
+                    baseCurrency,
+                    rate)
+                : null;
+
+            return dto;
+        }
+
 
 
     }

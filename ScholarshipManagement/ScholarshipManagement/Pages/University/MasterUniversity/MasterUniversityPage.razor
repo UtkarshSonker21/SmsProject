@@ -8,11 +8,13 @@
 @using ScholarshipManagement.DTOs
 @using ScholarshipManagement.DTOs.Common
 @using ScholarshipManagement.DTOs.SuperAdmin.MasterCountry
+@using ScholarshipManagement.DTOs.SuperAdmin.MasterCurrency
 @using ScholarshipManagement.DTOs.University.MasterUniversity
 @using ScholarshipManagement.Pages.Common
 @using ScholarshipManagement.Services.SuperAdmin
 @using ScholarshipManagement.Services.University
 @using static ScholarshipManagement.Helper.Constant
+@inject MasterCurrencyService MasterCurrencyService
 @inject UniversityService UniversityService
 @inject MasterCountryService MasterCountryService
 @inject IDialogService DialogService
@@ -106,8 +108,28 @@
                                 </MudSelect>
                             </MudItem>
 
+                            <MudItem xs="12" md="4">
 
-                            <MudItem xs="12" md="8">
+                                <MudSelect T="long?"
+                                           Value="SelectedCurrencyId"
+                                           ValueChanged="OnCurrencyChanged"
+                                           Label="Default Currency"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Clearable="true">
+
+                                    @foreach (var c in Currencies)
+                                    {
+                                        <MudSelectItem T="long?" Value="@c.CurrencyId">
+                                            @c.CurrencySymbol @c.CurrencyName (@c.CurrencyCode)
+                                        </MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+
+                            <MudItem xs="12">
                                 <MudTextField T="string"
                                               Label="Remarks"
                                               Variant="Variant.Outlined"
@@ -188,6 +210,7 @@
         {
             await LoadUniversity(Id);
             title = "Edit University";
+			SelectedCurrencyId = model.DefaultCurrencyId;
         }
         else
         {
@@ -197,6 +220,7 @@
         }
 
         await GetCountries();
+        await GetCurrencies();
     }
 
 
@@ -294,5 +318,53 @@
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
+
+
+
+
+
+
+    private List<MasterCurrencyRequestDto> Currencies = new();
+    private async Task GetCurrencies()
+    {
+        var result = await MasterCurrencyService.GetMasterCurrency(new MasterCurrencyFilterDto
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            IsActive = true
+        });
+
+
+        if (result.Response.Success)
+        {
+            Currencies = result.Data.Items;
+        }
+        else
+        {
+            Snackbar.Add(result.Response.Message, Severity.Warning);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private long? SelectedCurrencyId { get; set; } = null;
+
+    private void OnCurrencyChanged(long? currencyId)
+    {
+        SelectedCurrencyId = currencyId;
+        if (SelectedCurrencyId.HasValue)
+        {
+            model.DefaultCurrencyId = SelectedCurrencyId.Value;
+        }
+        else
+        {
+            SelectedCurrencyId = null;
+            model.DefaultCurrencyId = null;
+        }
+
+    }
+
+
+
 
 }

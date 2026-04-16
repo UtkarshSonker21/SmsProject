@@ -21,6 +21,7 @@ namespace ScholarshipManagement.DTOs.University.MasterUniversity
 
         public string? Remarks { get; set; }
 
+        public long? DefaultCurrencyId { get; set; }
 
 
         // Response-only helpers (optional but useful)

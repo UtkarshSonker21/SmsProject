@@ -117,7 +117,6 @@ namespace ScholarshipManagementAPI.Controllers.SuperAdmin
 
         // -------- FILTER / GET ALL --------
         [HttpPost("search")]
-        [Authorize]
         public async Task<IActionResult> GetByFilter(MasterCurrencyFilterDto filter)
         {
             var result = await _service.GetByFilterAsync(filter);

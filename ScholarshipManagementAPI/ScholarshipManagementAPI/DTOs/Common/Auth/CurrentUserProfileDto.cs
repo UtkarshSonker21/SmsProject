@@ -47,5 +47,11 @@ namespace ScholarshipManagementAPI.DTOs.Common.Auth
 
         //public DateTime? LastLogin { get; set; }
 
+
+        // default currency info (for school & university) and for rest send base currency info
+        public string DefaultCurrencyCode { get; set; } = "";
+        public string DefaultCurrencyName { get; set; } = "";
+        public string DefaultCurrencySymbol { get; set; } = "";
+
     }
 }

@@ -194,7 +194,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
         {
             var result = await _cache.GetOrCreateAsync(CacheKeys.GeneralConfig, async entry =>
             {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
 
                 var configs = await _context.ZzGeneralSettings
                     .AsNoTracking()

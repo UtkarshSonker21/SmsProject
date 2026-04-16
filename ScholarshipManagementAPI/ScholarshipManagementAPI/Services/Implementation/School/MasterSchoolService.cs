@@ -64,6 +64,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                 ApprovedBy = null,                             // no approver by default
 
                 CreatedDate = DateTime.UtcNow,     // always server-side
+
+                DefaultCurrencyId = dto.DefaultCurrencyId
             };
 
             _context.MasterSchoolLists.Add(entity);
@@ -122,6 +124,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             entity.SchoolCoOrdenatorEmail = dto.SchoolCoordinatorEmail;
             entity.AcademicyearStartDate = dto.AcademicYearStartDate;
             entity.AcademicyearEndDate = dto.AcademicYearEndDate;
+            entity.DefaultCurrencyId = dto.DefaultCurrencyId;
 
 
             // entity.IsActive = dto.IsActive;
@@ -198,6 +201,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     AcademicYearStartDate = x.AcademicyearStartDate,
                     AcademicYearEndDate = x.AcademicyearEndDate,
                     CreatedDate = x.CreatedDate,
+                    DefaultCurrencyId = x.DefaultCurrencyId,
 
                     ApprovalStatus = x.ApprovalStatus,
                     ApprovedBy = x.ApprovedBy,
@@ -314,6 +318,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     AcademicYearStartDate = x.AcademicyearStartDate,
                     AcademicYearEndDate = x.AcademicyearEndDate,
                     CreatedDate = x.CreatedDate,
+                    DefaultCurrencyId = x.DefaultCurrencyId,
 
                     ApprovalStatus = x.ApprovalStatus,
                     ApprovedBy = x.ApprovedBy,

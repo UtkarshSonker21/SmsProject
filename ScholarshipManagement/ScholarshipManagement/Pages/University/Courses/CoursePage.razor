@@ -49,6 +49,14 @@
             <!-- Left Section (Inside Page Title Bar) -->
             <div style="display: flex; height: 64px; padding: 0 26px; align-items: center;">
 
+                <MudTooltip Text="Back" Placement="Placement.Bottom">
+
+                    <div class="nav-icon" @onclick="GoBack">
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
+                    </div>
+
+                </MudTooltip>
+
                 <div style="display: flex; align-items: center;">
                     <span class="page-title">
                         @title
@@ -498,5 +506,10 @@
         await InvokeAsync(StateHasChanged);
     }
 
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo(Routes.CourseList);
+    }
 
 }

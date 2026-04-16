@@ -175,14 +175,6 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
         }
 
 
-        public async Task<Dictionary<string, long>> GetCurrencyCodeMapAsync()
-        {
-            return await _context.ZzMasterCurrencies
-                .AsNoTracking()
-                .Where(x => x.IsActive)
-                .ToDictionaryAsync(x => x.CurrencyCode, x => x.CurrencyId);
-        }
-
 
     }
 }
