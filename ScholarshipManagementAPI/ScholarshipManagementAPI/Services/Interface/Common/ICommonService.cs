@@ -1,5 +1,6 @@
 ﻿using ScholarshipManagementAPI.DTOs.Common.HrStaff;
 using ScholarshipManagementAPI.DTOs.Common.Menu;
+using ScholarshipManagementAPI.DTOs.Common.Settings;
 using ScholarshipManagementAPI.DTOs.SuperADmin.ZzMasterDropdown;
 
 namespace ScholarshipManagementAPI.Services.Interface.Common
@@ -9,6 +10,9 @@ namespace ScholarshipManagementAPI.Services.Interface.Common
         Task<List<UsersModuleDto>> GetAllUsersModule();
 
         Task<List<LoadMenuDto>> LoadMenusByRoleAsync(long roleId);
+
+        // dashboard service
+        Task<DashboardDto> GetDashboardAsync();
 
 
         // profile upload service

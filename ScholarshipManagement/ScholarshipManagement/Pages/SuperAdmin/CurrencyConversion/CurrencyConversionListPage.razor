@@ -80,7 +80,7 @@
             <!-- Name FILTER -->
             <div class="appbar-search dropdown-filter">
 
-                <label class="filter-label">Login Name : </label>
+                <label class="filter-label">Currency : </label>
 
                 <MudSelect T="long?"
                            Value="SelectedCurrencyId"
@@ -440,11 +440,10 @@
     private CurrencyConversionFilterDto Filter = new CurrencyConversionFilterDto();
 
 
-    bool canView => PermissionService.CanView("currencies") || PermissionService.CanView("currency_conversions");
-    bool canAdd => PermissionService.CanInsert("currencies") || PermissionService.CanInsert("currency_conversions");
-    bool canEdit => PermissionService.CanUpdate("currencies") || PermissionService.CanUpdate("currency_conversions");
-    bool canDelete => PermissionService.CanDelete("currencies") || PermissionService.CanDelete("currency_conversions");
-
+    bool canView => PermissionService.CanView("currencies") || PermissionService.CanView("currency-conversion");
+    bool canAdd => PermissionService.CanInsert("currencies") || PermissionService.CanInsert("currency-conversion");
+    bool canEdit => PermissionService.CanUpdate("currencies") || PermissionService.CanUpdate("currency-conversion");
+    bool canDelete => PermissionService.CanDelete("currencies") || PermissionService.CanDelete("currency-conversion");
 
     [Parameter]
     public long Id { get; set; }

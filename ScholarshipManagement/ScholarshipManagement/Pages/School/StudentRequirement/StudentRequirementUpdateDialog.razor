@@ -266,6 +266,104 @@
                                           Margin="Margin.Dense" />
                         </MudItem>
 
+                        <!-- ACTION BUTTONS -->
+                        <MudItem xs="12">
+                            <div class="d-flex justify-end gap-2" style="margin:10px 0;">
+                                <button @onclick="Save" class="dialog-btn" type="button">Save</button>
+                                <button @onclick="Cancel" class="dialog-btn" type="button">Cancel</button>
+                            </div>
+                        </MudItem>
+
+                    </MudGrid>
+                }
+
+                
+                @if (CurrentStaffType == StaffType.Marketing)
+                {
+                    <MudGrid Spacing="3">
+
+                        <MudItem xs="12">
+
+                            <!-- Toggle -->
+                            <div class="d-flex align-items-center gap-1 text-primary small mt-1 approval-action"
+                                 style="cursor:pointer;"
+                                 @onclick="@(() => showCost = !showCost)">
+
+                                <MudIcon Icon="@(showCost? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                         Style="font-size:14px;" />
+
+                                <span>
+                                    @(showCost ? "Hide Cost Breakdown" : "View Cost Breakdown")
+                                </span>
+
+                            </div>
+
+                        </MudItem>
+
+                        @if (showCost)
+                        {
+                            <MudItem xs="12">
+                                <div style="background:#ecfdf5; padding:12px; border-radius:8px; border:1px solid #22c55e;">
+
+                                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                                        💰 Cost Breakdown
+                                    </MudText>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Registration</span>
+                                        <span>@(Req.RegistrationCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Tuition</span>
+                                        <span>@(Req.TutionCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>TextBook</span>
+                                        <span>@(Req.TextBookCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Accommodation</span>
+                                        <span>@(Req.AccomoCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Travelling</span>
+                                        <span>@(Req.TravellingCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Transport</span>
+                                        <span>@(Req.TransportCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Doc Attest</span>
+                                        <span>@(Req.DocuAttestCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between">
+                                        <span>Visa/Resi</span>
+                                        <span>@(Req.VisaResiCost?.ToString("N0") ?? "N/A") USD</span>
+                                    </div>
+
+                                    <MudDivider Class="my-2" />
+
+                                    <div class="d-flex justify-space-between">
+                                        <b>Total</b>
+                                        <b>@TotalCost.ToString("N0") USD</b>
+                                    </div>
+
+                                    <div class="d-flex justify-space-between mt-2">
+                                        <b>Total Cost + Administrative</b>
+                                        <b>@TotalAdministrativeCost.ToString("N0") USD</b>
+                                    </div>
+
+                                </div>
+                            </MudItem>
+                        }
 
 
                         <!-- Show only when Sponsored -->
@@ -300,7 +398,11 @@
                         </MudItem>
 
                     </MudGrid>
+                                    
                 }
+
+
+
 
             </MudForm>
 

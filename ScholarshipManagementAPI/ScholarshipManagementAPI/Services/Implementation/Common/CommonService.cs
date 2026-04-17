@@ -3,7 +3,9 @@ using ScholarshipManagementAPI.Data.Contexts;
 using ScholarshipManagementAPI.Data.DbModels;
 using ScholarshipManagementAPI.DTOs.Common.HrStaff;
 using ScholarshipManagementAPI.DTOs.Common.Menu;
+using ScholarshipManagementAPI.DTOs.Common.Settings;
 using ScholarshipManagementAPI.DTOs.SuperADmin.ZzMasterDropdown;
+using ScholarshipManagementAPI.Helper.Enums;
 using ScholarshipManagementAPI.Services.Interface.Common;
 using ScholarshipManagementAPI.Services.Interface.SuperAdmin;
 
@@ -110,6 +112,109 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
 
 
 
+        public async Task<DashboardDto> GetDashboardAsync()
+        {
+            var now = DateTime.Now;
+            var lastMonth = now.AddMonths(-1);
+
+            // 🔹 Core counts
+            var totalStudents = await _context.StudentData.CountAsync();
+            var totalApplications = await _context.StudentReqLists.CountAsync();
+
+            // var nominatedCandidates = await _context.StudentReqLists.CountAsync(x => x.Status == 1);
+
+            var acceptedApplications = await _context.StudentReqLists.CountAsync(x => x.UniAwardingstatus == (int)AwardingStatus.Awarded);
+            var sponsoredCandidates = await _context.StudentReqLists.CountAsync(x => x.DaAdmissionStatus == (int)SponsoredStatus.Sponsored);
+
+
+            // 🔹 Monthly data
+            var newStudentsThisMonth = await _context.StudentData
+                .CountAsync(x => x.CreatedDate.Month == now.Month && x.CreatedDate.Year == now.Year);
+
+            var studentsLastMonth = await _context.StudentData
+                .CountAsync(x => x.CreatedDate.Month == lastMonth.Month && x.CreatedDate.Year == lastMonth.Year);
+
+            var applicationsThisMonth = await _context.StudentReqLists
+                .CountAsync(x => x.CreatedDate.Month == now.Month && x.CreatedDate.Year == now.Year);
+
+            var applicationsLastMonth = await _context.StudentReqLists
+                .CountAsync(x => x.CreatedDate.Month == lastMonth.Month && x.CreatedDate.Year == lastMonth.Year);
+
+            // 🔹 Growth
+            var studentsGrowth = CalculateGrowth(newStudentsThisMonth, studentsLastMonth);
+            var applicationsGrowth = CalculateGrowth(applicationsThisMonth, applicationsLastMonth);
+
+            // 🔹 Build DTO
+            var dto = new DashboardDto
+            {
+                TotalStudents = totalStudents,
+                TotalApplications = totalApplications,
+                //NominatedCandidates = nominatedCandidates,
+                AcceptedApplications = acceptedApplications,
+                SponsoredCandidates = sponsoredCandidates,
+
+                NewStudentsThisMonth = newStudentsThisMonth,
+                ApplicationsThisMonth = applicationsThisMonth,
+
+                StudentsGrowthPercentage = studentsGrowth ?? 0,
+                ApplicationsGrowthPercentage = applicationsGrowth ?? 0
+            };
+
+            // Add dynamic cards (UI-ready)
+            dto.Cards = new List<DashboardCardDto>
+        {
+            CreateCard("total_students", "Total Students", totalStudents, studentsGrowth),
+            CreateCard("applications", "Applications", totalApplications, applicationsGrowth),
+            //CreateCard("nominated", "Nominated Candidates", nominatedCandidates, null),
+            CreateCard("accepted", "Accepted Applications", acceptedApplications, null),
+            CreateCard("sponsored", "Sponsored Candidates", sponsoredCandidates, null)
+        };
+
+            return dto;
+        }
+
+
+
+        // Card Builder
+        private DashboardCardDto CreateCard(string key, string title, int value, decimal? growth)
+        {
+            var (icon, color) = GetCardUI(key);
+
+            return new DashboardCardDto
+            {
+                Key = key,
+                Title = title,
+                Value = value,
+                GrowthPercentage = growth,
+                Icon = icon,
+                Color = color
+            };
+        }
+
+        // UI Mapping
+        private (string icon, string color) GetCardUI(string key)
+        {
+            return key switch
+            {
+                "total_students" => ("graduation-cap", "green"),
+                "applications" => ("file", "blue"),
+                "pending" => ("clock", "orange"),
+                "approved" => ("check-circle", "green"),
+                "rejected" => ("times-circle", "red"),
+                _ => ("info", "gray")
+            };
+        }
+
+        // Growth Calculation
+        private decimal? CalculateGrowth(int current, int previous)
+        {
+            if (previous == 0)
+                return current > 0 ? 100 : 0;
+
+            return ((current - previous) * 100m) / previous;
+        }
+
+
 
         #region File Upload Methods
 
@@ -197,6 +302,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
 
 
         #endregion
+
+
 
 
 
