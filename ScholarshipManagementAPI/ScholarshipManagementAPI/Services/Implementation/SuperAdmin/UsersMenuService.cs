@@ -124,11 +124,11 @@ namespace ScholarshipManagementAPI.Services.Implementation.SuperAdmin
             entity.ParentId = dto.ParentId;
             entity.PagePath = dto.PagePath;
 
-            // entity.ActualName = dto.ActualName;
+            entity.ActualName = dto.ActualName;
 
             entity.IsView = dto.IsView;
 
-            //entity.LevelNo = dto.LevelNo;
+            entity.LevelNo = dto.LevelNo;
             entity.SequenceNo = dto.SequenceNo;
 
             entity.IsDashboard = dto.IsDashboard;
