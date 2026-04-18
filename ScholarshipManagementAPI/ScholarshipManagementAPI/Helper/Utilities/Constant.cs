@@ -1,4 +1,7 @@
-﻿using System.Security.Cryptography;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Identity;
+using ScholarshipManagementAPI.Data.DbModels;
+using System.Security.Cryptography;
 
 namespace ScholarshipManagementAPI.Helper.Utilities
 {
@@ -71,31 +74,48 @@ namespace ScholarshipManagementAPI.Helper.Utilities
             }
 
 
-            //public static string HashPassword(string password)
-            //{
-            //    return BCrypt.Net.BCrypt.HashPassword(password);
-            //}
-
-            //public static bool VerifyPassword(string password, string hash)
-            //{
-            //    return BCrypt.Net.BCrypt.Verify(password, hash);
-            //}
-
-
-            // Generates a username using StaffType prefix and LoginId (IDENTITY).
-            public static string GenerateUsername(long staffType, long loginId)
+            // Generates a username using StaffType prefix and staffId (IDENTITY).
+            public static string GenerateUsername(long staffType, long staffId)
             {
-                string prefix = staffType switch
+                // Year (last 2 digits)
+                // var year = DateTime.UtcNow.ToString("yy");
+                //return $"STF-{year}-{staffId:D6}-{typeCode}";
+
+                string typeCode = staffType switch
                 {
                     1 => "SA",    // SuperAdmin
                     2 => "NGO",   // NGO
-                    3 => "SC",    // School
-                    4 => "UN",    // University
-                    _ => "USR"
+                    3 => "SCH",   // School
+                    4 => "UNI",   // University
+                    5 => "MKT",   // Marketing
+                    _ => "USR"    // User
                 };
 
                 // D6 = pad with zeros (000128)
-                return $"{prefix}_{loginId:D6}";
+                return $"{typeCode}{(staffId + 10000):D6}";
+            }
+
+
+            private static readonly PasswordHasher<UsersLogin> _passwordHasher = new();
+
+            // Hash password
+            public static string HashPassword(UsersLogin user, string password)
+            {
+                return _passwordHasher.HashPassword(user, password);
+            }
+
+
+
+            // Verify password
+            public static bool VerifyPassword(UsersLogin user, string hashedPassword, string enteredPassword)
+            {
+                var result = _passwordHasher.VerifyHashedPassword(
+                    user,
+                    hashedPassword,
+                    enteredPassword
+                );
+
+                return result == PasswordVerificationResult.Success;
             }
 
         }
