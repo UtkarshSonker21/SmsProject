@@ -38,11 +38,11 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
             //ApplyStaffTypeAndOrganisationRules(dto,)
 
             // ---------- 2. Duplicate login check ----------
-            if (await _context.UsersLogins
-                .AnyAsync(x => x.LoginName == dto.LoginName))
-            {
-                throw new CustomException("User with same login name already exists");
-            }
+            //if (await _context.UsersLogins
+            //    .AnyAsync(x => x.LoginName == dto.LoginName))
+            //{
+            //    throw new CustomException("User with same login name already exists");
+            //}
 
             // ---------- 3. Begin transaction ----------
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -88,16 +88,19 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
                 await _context.SaveChangesAsync();
 
                 var generatedPassword = HelperMethods.GeneratePassword();
+                var loginName = HelperMethods.GenerateUsername(dto.StaffType, staff.StaffId);
 
                 // ---------- 5. Create UsersLogin ----------
                 var usersLogin = new UsersLogin
                 {
                     StaffId = staff.StaffId,
-                    LoginName = !string.IsNullOrWhiteSpace(dto.LoginName)
-                    ? dto.LoginName : $"{staff.StaffFirstName}{staff.StaffLastName}",
+                    LoginName = loginName,
+
+                    //LoginName = !string.IsNullOrWhiteSpace(dto.LoginName)
+                    //? dto.LoginName : $"{staff.StaffFirstName}{staff.StaffLastName}",
 
                     // Password & OTP are NULL initially
-                    Password = generatedPassword,
+                    // Password = password,
                     TempPassword = null,
                     TempPassDateTime = null,
 
@@ -108,6 +111,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
                     CreatedBy = dto.CreatedBy,
                     CreatedDate = dto.CreatedDate
                 };
+
+                // hash AFTER object creation
+                usersLogin.Password = HelperMethods.HashPassword(usersLogin, generatedPassword);
 
                 _context.UsersLogins.Add(usersLogin);
                 await _context.SaveChangesAsync();
@@ -129,6 +135,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
 
                     (long)StaffType.Ngo => "NGO Administration",
                     (long)StaffType.SuperAdmin => "System Administration",
+                    (long)StaffType.Marketing => "Marketing",
                     _ => string.Empty
                 };
 
@@ -318,7 +325,11 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
 
                     // organisation name (CLEAN)
                     OrganisationName = x.StaffType == (long)StaffType.University ? x.University!.UniversityName :
-                                       x.StaffType == (long)StaffType.School ? x.School!.SchoolName : null,
+                                       x.StaffType == (long)StaffType.School ? x.School!.SchoolName :
+                                       x.StaffType == (long)StaffType.SuperAdmin ? "Super Admin" :
+                                       x.StaffType == (long)StaffType.Ngo ? "NGO Admin" :
+                                       x.StaffType == (long)StaffType.Marketing ? "Marketing" :
+                                       null,
 
                     StaffSalutation = x.StaffSalutation,
                     StaffFirstName = x.StaffFirstName,

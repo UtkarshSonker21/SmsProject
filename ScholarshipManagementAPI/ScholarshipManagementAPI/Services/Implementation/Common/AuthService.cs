@@ -15,6 +15,7 @@ using System.Data;
 using System.Reflection;
 using System.Security.Cryptography;
 using UAParser;
+using static ScholarshipManagementAPI.Helper.Utilities.Constant;
 using static System.Net.WebRequestMethods;
 
 namespace ScholarshipManagementAPI.Services.Implementation.Common
@@ -57,14 +58,31 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
 
         public async Task<LoginResponseDto> LoginAsync(LoginRequestDto dto) 
         {
+            //var user = await _context.UsersLogins
+            //    .Where(x =>
+            //        x.LoginName == dto.LoginName &&
+            //        x.Password == dto.Password &&
+            //        x.IsActive
+            //    ).FirstOrDefaultAsync();
+
             var user = await _context.UsersLogins
                 .Where(x =>
                     x.LoginName == dto.LoginName &&
-                    x.Password == dto.Password &&  // hash later
                     x.IsActive
                 ).FirstOrDefaultAsync();
 
             if (user == null)
+                throw new UnauthorizedAccessException("Invalid credentials");
+
+
+            // Verify hashed password
+            var isValid = HelperMethods.VerifyPassword(
+                user,
+                user.Password,
+                dto.Password
+            );
+
+            if (!isValid)
                 throw new UnauthorizedAccessException("Invalid credentials");
 
             return await BuildLoginResponseAsync(user);
@@ -223,8 +241,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
                 .Include(x => x.Staff)
                     .ThenInclude(s => s.School)
                 .FirstOrDefaultAsync(x =>
-                    x.ForgotEmail == request.EmailOrUsername.Trim() &&
-                    x.IsActive);
+                    (x.ForgotEmail.Trim() == request.EmailOrUsername.Trim() 
+                    || x.LoginName.Trim() == request.EmailOrUsername.Trim())
+                    && x.IsActive);
 
             // Avoid user enumeration
             if (user == null)
@@ -309,14 +328,30 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
             var newPassword = request.NewPassword.Trim();
 
             // check if new password is same as old password
-            if (!string.IsNullOrEmpty(user.Password) &&
-                user.Password.Equals(newPassword, StringComparison.Ordinal))
-            {
-                throw new CustomException("New password cannot be same as old password.");
-            }
+            //if (!string.IsNullOrEmpty(user.Password) &&
+            //    user.Password.Equals(newPassword, StringComparison.Ordinal))
+            //{
+            //    throw new CustomException("New password cannot be same as old password.");
+            //}
 
             // new password
-            user.Password = newPassword;
+            // user.Password = newPassword;
+
+            // Check if new password same as old (use hasher)
+            if (!string.IsNullOrEmpty(user.Password))
+            {
+                var isSame = HelperMethods.VerifyPassword(
+                    user,
+                    user.Password,
+                    newPassword
+                );
+
+                if (isSame)
+                    throw new CustomException("New password cannot be same as old password.");
+            }
+
+            // Hash new password
+            user.Password = HelperMethods.HashPassword(user, newPassword);
 
             // Invalidate token
             user.TempPassword = null;
@@ -484,6 +519,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
                 (long)StaffType.School => staff.School?.SchoolName ?? string.Empty,
                 (long)StaffType.Ngo => "NGO Administration",
                 (long)StaffType.SuperAdmin => "System Administration",
+                (long)StaffType.Marketing => "Marketing",
                 _ => string.Empty
             };
 
