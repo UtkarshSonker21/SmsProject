@@ -23,11 +23,17 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
         // ---------------- CREATE ----------------
         public async Task<long> CreateAsync(StudentRequestDto dto)
         {
-            //if (await _context.StudentData
-            //    .AnyAsync(x => x.StudentNumber == dto.StudentNumber))
-            //{
-            //    throw new CustomException("Student with same number already exists");
-            //}
+            if (await _context.StudentData
+                .AnyAsync(x => x.MobileNo == dto.MobileNo))
+            {
+                throw new CustomException("Student with same mobile number already exists");
+            }
+
+            if (await _context.StudentData
+                .AnyAsync(x => x.EmailId == dto.EmailID))
+            {
+                throw new CustomException("Student with same email already exists");
+            }
 
             var studentNumber = await GenerateStudentNumberAsync(dto.SchoolId);
 
@@ -92,6 +98,19 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
 
             if (entity == null)
                 return false;
+
+
+            if (await _context.StudentData
+                .AnyAsync(x => x.MobileNo == dto.MobileNo && x.StudentId != dto.StudentId))
+            {
+                throw new CustomException("Student with same mobile number already exists");
+            }
+
+            if (await _context.StudentData
+                .AnyAsync(x => x.EmailId == dto.EmailID && x.StudentId != dto.StudentId))
+            {
+                throw new CustomException("Student with same email already exists");
+            }
 
             // entity.StudentId = dto.StudentId.Value;
             // entity.SchoolId = dto.SchoolId.Value;
@@ -239,11 +258,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                 query = query.Where(x =>
                     x.StudentNumber.ToLower().Contains(search) ||
                     x.StudentFirstName.ToLower().Contains(search) ||
-                    (x.StudentLastName != null && x.StudentLastName.ToLower().Contains(search)) ||
-                    (x.StudentOtherName != null && x.StudentOtherName.ToLower().Contains(search)) ||
-                    (x.Nin != null && x.Nin.ToLower().Contains(search)) ||
-                    (x.MobileNo != null && x.MobileNo.ToLower().Contains(search)) ||
-                    (x.EmailId != null && x.EmailId.ToLower().Contains(search))
+                    (x.StudentLastName != null && x.StudentLastName.ToLower().Contains(search))
                 );
             }
 

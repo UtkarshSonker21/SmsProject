@@ -72,7 +72,8 @@ namespace ScholarshipManagementAPI.Controllers.Common
 
 
 
-        [HttpGet]
+        [HttpGet("load-dashboard")]
+        [Authorize]
         public async Task<IActionResult> GetDashboard()
         {
             var result = await _service.GetDashboardAsync();

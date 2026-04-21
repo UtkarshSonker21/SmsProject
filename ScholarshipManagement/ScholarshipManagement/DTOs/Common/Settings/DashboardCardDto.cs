@@ -1,4 +1,4 @@
-﻿namespace ScholarshipManagementAPI.DTOs.Common.Settings
+﻿namespace ScholarshipManagement.DTOs.Common.Settings
 {
     public class DashboardCardDto
     {
@@ -10,7 +10,6 @@
 
         public string Icon { get; set; } = string.Empty;
         public string Color { get; set; } = string.Empty;
-
         public string Url { get; set; } = string.Empty;
     }
 }

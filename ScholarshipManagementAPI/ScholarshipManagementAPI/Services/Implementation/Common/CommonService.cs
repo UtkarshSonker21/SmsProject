@@ -117,58 +117,78 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
             var now = DateTime.Now;
             var lastMonth = now.AddMonths(-1);
 
-            // 🔹 Core counts
-            var totalStudents = await _context.StudentData.CountAsync();
-            var totalApplications = await _context.StudentReqLists.CountAsync();
+            // 🔹 TOTAL COUNTS
+            var nominatedCandidates = await _context.StudentReqLists.CountAsync();
 
-            // var nominatedCandidates = await _context.StudentReqLists.CountAsync(x => x.Status == 1);
+            var acceptedApplications = await _context.StudentReqLists
+                .CountAsync(x => x.UniAwardingstatus == (int)AwardingStatus.Awarded);
 
-            var acceptedApplications = await _context.StudentReqLists.CountAsync(x => x.UniAwardingstatus == (int)AwardingStatus.Awarded);
-            var sponsoredCandidates = await _context.StudentReqLists.CountAsync(x => x.DaAdmissionStatus == (int)SponsoredStatus.Sponsored);
+            var sponsoredCandidates = await _context.StudentReqLists
+                .CountAsync(x => x.DaAdmissionStatus == (int)SponsoredStatus.Sponsored);
 
+            var rejectedApplications = await _context.StudentReqLists
+                .CountAsync(x => x.UniAwardingstatus == (int)AwardingStatus.Rejected);
 
-            // 🔹 Monthly data
-            var newStudentsThisMonth = await _context.StudentData
+            // CURRENT MONTH (status-wise)
+            var nominatedThisMonth = await _context.StudentReqLists
                 .CountAsync(x => x.CreatedDate.Month == now.Month && x.CreatedDate.Year == now.Year);
 
-            var studentsLastMonth = await _context.StudentData
+            var acceptedThisMonth = await _context.StudentReqLists
+                .CountAsync(x => x.UniAwardingstatus == (int)AwardingStatus.Awarded
+                    && x.CreatedDate.Month == now.Month && x.CreatedDate.Year == now.Year);
+
+            var sponsoredThisMonth = await _context.StudentReqLists
+                .CountAsync(x => x.DaAdmissionStatus == (int)SponsoredStatus.Sponsored
+                    && x.CreatedDate.Month == now.Month && x.CreatedDate.Year == now.Year);
+
+            var rejectedThisMonth = await _context.StudentReqLists
+                .CountAsync(x => x.UniAwardingstatus == (int)AwardingStatus.Rejected
+                    && x.CreatedDate.Month == now.Month && x.CreatedDate.Year == now.Year);
+
+            // LAST MONTH (status-wise)
+            var nominatedLastMonth = await _context.StudentReqLists
                 .CountAsync(x => x.CreatedDate.Month == lastMonth.Month && x.CreatedDate.Year == lastMonth.Year);
 
-            var applicationsThisMonth = await _context.StudentReqLists
-                .CountAsync(x => x.CreatedDate.Month == now.Month && x.CreatedDate.Year == now.Year);
+            var acceptedLastMonth = await _context.StudentReqLists
+                .CountAsync(x => x.UniAwardingstatus == (int)AwardingStatus.Awarded
+                    && x.CreatedDate.Month == lastMonth.Month && x.CreatedDate.Year == lastMonth.Year);
 
-            var applicationsLastMonth = await _context.StudentReqLists
-                .CountAsync(x => x.CreatedDate.Month == lastMonth.Month && x.CreatedDate.Year == lastMonth.Year);
+            var sponsoredLastMonth = await _context.StudentReqLists
+                .CountAsync(x => x.DaAdmissionStatus == (int)SponsoredStatus.Sponsored
+                    && x.CreatedDate.Month == lastMonth.Month && x.CreatedDate.Year == lastMonth.Year);
 
-            // 🔹 Growth
-            var studentsGrowth = CalculateGrowth(newStudentsThisMonth, studentsLastMonth);
-            var applicationsGrowth = CalculateGrowth(applicationsThisMonth, applicationsLastMonth);
+            var rejectedLastMonth = await _context.StudentReqLists
+                .CountAsync(x => x.UniAwardingstatus == (int)AwardingStatus.Rejected
+                    && x.CreatedDate.Month == lastMonth.Month && x.CreatedDate.Year == lastMonth.Year);
 
-            // 🔹 Build DTO
+            // GROWTH (per status)
+            var nominatedGrowth = CalculateGrowth(nominatedThisMonth, nominatedLastMonth);
+            var acceptedGrowth = CalculateGrowth(acceptedThisMonth, acceptedLastMonth);
+            var sponsoredGrowth = CalculateGrowth(sponsoredThisMonth, sponsoredLastMonth);
+            var rejectedGrowth = CalculateGrowth(rejectedThisMonth, rejectedLastMonth);
+
+            // DTO
             var dto = new DashboardDto
             {
-                TotalStudents = totalStudents,
-                TotalApplications = totalApplications,
-                //NominatedCandidates = nominatedCandidates,
+                NominatedCandidates = nominatedCandidates,
                 AcceptedApplications = acceptedApplications,
                 SponsoredCandidates = sponsoredCandidates,
+                RejectedApplications = rejectedApplications,
 
-                NewStudentsThisMonth = newStudentsThisMonth,
-                ApplicationsThisMonth = applicationsThisMonth,
+                ApplicationsThisMonth = nominatedThisMonth,
 
-                StudentsGrowthPercentage = studentsGrowth ?? 0,
-                ApplicationsGrowthPercentage = applicationsGrowth ?? 0
+                // optional global
+                ApplicationsGrowthPercentage = nominatedGrowth ?? 0
             };
 
-            // Add dynamic cards (UI-ready)
+            // CARDS (correct growth applied)
             dto.Cards = new List<DashboardCardDto>
-        {
-            CreateCard("total_students", "Total Students", totalStudents, studentsGrowth),
-            CreateCard("applications", "Applications", totalApplications, applicationsGrowth),
-            //CreateCard("nominated", "Nominated Candidates", nominatedCandidates, null),
-            CreateCard("accepted", "Accepted Applications", acceptedApplications, null),
-            CreateCard("sponsored", "Sponsored Candidates", sponsoredCandidates, null)
-        };
+            {
+                CreateCard("nominated", "Nominated Candidates", nominatedCandidates, nominatedGrowth),
+                CreateCard("accepted", "Accepted Applications", acceptedApplications, acceptedGrowth),
+                CreateCard("sponsored", "Sponsored Candidates", sponsoredCandidates, sponsoredGrowth),
+                CreateCard("rejected", "Rejected Applications", rejectedApplications, rejectedGrowth)
+            };
 
             return dto;
         }
@@ -187,7 +207,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
                 Value = value,
                 GrowthPercentage = growth,
                 Icon = icon,
-                Color = color
+                Color = color,
+                Url = GetCardUrl(key)
             };
         }
 
@@ -196,12 +217,24 @@ namespace ScholarshipManagementAPI.Services.Implementation.Common
         {
             return key switch
             {
-                "total_students" => ("graduation-cap", "green"),
-                "applications" => ("file", "blue"),
-                "pending" => ("clock", "orange"),
-                "approved" => ("check-circle", "green"),
-                "rejected" => ("times-circle", "red"),
-                _ => ("info", "gray")
+                "nominated" => ("file", "info"),              // Blue
+                "accepted" => ("check-circle", "success"),   // Green
+                "sponsored" => ("school", "warning"),         // Orange
+                "rejected" => ("times-circle", "danger"),    // Red
+                _ => ("info", "info")
+            };
+        }
+
+
+        private string GetCardUrl(string key)
+        {
+            return key switch
+            {
+                "nominated" => "/student-req-list",
+                "accepted" => "/enrolled/students?type=accepted",
+                "sponsored" => "/enrolled/students?type=sponsored",
+                "rejected" => "/enrolled/students?type=rejected",
+                _ => "#"
             };
         }
 

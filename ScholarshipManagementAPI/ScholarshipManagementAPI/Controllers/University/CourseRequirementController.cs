@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScholarshipManagementAPI.DTOs.Common.Response;
+using ScholarshipManagementAPI.DTOs.School.StudentRequirements;
 using ScholarshipManagementAPI.DTOs.School.Students;
 using ScholarshipManagementAPI.DTOs.University.CourseRequirement;
 using ScholarshipManagementAPI.DTOs.University.MasterCourse;
@@ -164,7 +165,7 @@ namespace ScholarshipManagementAPI.Controllers.University
         // -------- ENROLLED STUDENTS --------
         [HttpPost("enrollments/students/search/{reqId}")]
         [Authorize]
-        public async Task<IActionResult> GetEnrolledStudentsByReqId(long reqId, StudentFilterDto filter)
+        public async Task<IActionResult> GetEnrolledStudentsByReqId(long reqId, StudentRequirementFilterDto filter)
         {
             var result = await _service.GetEnrolledStudentsAsync(reqId, filter, await _currentUser.GetCurrentUserAsync());
 
@@ -182,7 +183,7 @@ namespace ScholarshipManagementAPI.Controllers.University
         // -------- All ENROLLED STUDENTS --------
         [HttpPost("enrollments/students/search-all")]
         [Authorize]
-        public async Task<IActionResult> GetAllEnrolledStudents(StudentFilterDto filter)
+        public async Task<IActionResult> GetAllEnrolledStudents(StudentRequirementFilterDto filter)
         {
             var result = await _service.GetEnrolledStudentsAsync(null , filter, await _currentUser.GetCurrentUserAsync());
 

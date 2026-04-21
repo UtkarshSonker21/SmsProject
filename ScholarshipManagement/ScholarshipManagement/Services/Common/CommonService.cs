@@ -1,6 +1,7 @@
 ﻿using ScholarshipManagement.DTOs.Common.HrStaff;
 using ScholarshipManagement.DTOs.Common.Menu;
 using ScholarshipManagement.DTOs.Common.Response;
+using ScholarshipManagement.DTOs.Common.Settings;
 using ScholarshipManagement.DTOs.SuperAdmin.MasterDropdown;
 using System.Net.Http.Json;
 using static ScholarshipManagement.Helper.Constant;
@@ -35,7 +36,16 @@ namespace ScholarshipManagement.Services.Common
         }
 
 
+        public async Task<(DashboardDto Data, ApiResponseDto Response)> GetDashboard()
+        {
+            var response = await _http.GetAsync(ApiEndpoints.GetDashboard);
 
+            var apiResponse = await HandleResponse(response);
+
+            var data = GetObject<DashboardDto>(apiResponse) ?? new DashboardDto();
+
+            return (data, apiResponse);
+        }
 
 
 

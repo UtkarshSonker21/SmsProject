@@ -6,6 +6,11 @@ namespace ScholarshipManagement.DTOs.School.StudentRequirements
     public class StudentRequirementFilterDto : BaseFilterDto
     {
         public long? StudentID { get; set; }
+
+        public long? SchoolId { get; set; }
+
+        public string? StudentNumber { get; set; }
+
         public long? ReqId { get; set; }
 
 

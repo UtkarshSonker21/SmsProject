@@ -484,7 +484,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
 
 
         // ---------------- GET ALL Enrolled Students ----------------
-        public async Task<PagedResultDto<EnrolledStudentDto>> GetEnrolledStudentsAsync(long? reqId, StudentFilterDto filter, LoggedInUserDto currentUser)
+        public async Task<PagedResultDto<EnrolledStudentDto>> GetEnrolledStudentsAsync(long? reqId, StudentRequirementFilterDto filter, LoggedInUserDto currentUser)
         {
             var query = _context.StudentReqLists
                 .AsNoTracking()
@@ -507,10 +507,20 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             //}
 
 
-                // ---------- Filters ----------
-                if (filter.SchoolId.HasValue)
+            // ---------- Filters ----------
+            if (filter.SchoolId.HasValue)
             {
                 query = query.Where(x => x.Student.SchoolId == filter.SchoolId.Value);
+            }
+
+            if (filter.UniAwardingStatus.HasValue)
+            {
+                query = query.Where(x => x.UniAwardingstatus == (int)filter.UniAwardingStatus.Value);
+            }
+
+            if (filter.DaAdmissionStatus.HasValue)
+            {
+                query = query.Where(x => x.DaAdmissionStatus == (int)filter.DaAdmissionStatus.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(filter.SearchText))
