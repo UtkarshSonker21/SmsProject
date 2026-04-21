@@ -574,7 +574,7 @@
 
 
     private StaffType? CurrentStaffType;
-    bool canView => PermissionService.CanView("students-requirement");
+    bool canView => PermissionService.CanView("students-requirement") || PermissionService.CanView("dashboard");
     bool canAdd => PermissionService.CanInsert("students-requirement");
     bool canEdit => PermissionService.CanUpdate("students-requirement");
     bool canDelete => PermissionService.CanDelete("students-requirement");

@@ -8,6 +8,7 @@
 @using ScholarshipManagement.DTOs
 @using ScholarshipManagement.DTOs.Common
 @using ScholarshipManagement.DTOs.Ngo
+@using ScholarshipManagement.DTOs.School.StudentRequirements
 @using ScholarshipManagement.DTOs.School.Students
 @using ScholarshipManagement.DTOs.University.CourseRequirement
 @using ScholarshipManagement.DTOs.University.MasterDocuments
@@ -175,6 +176,44 @@
 
         <!-- Left -->
         <div class="d-flex align-items-center gap-3" style="padding: 0 24px;">
+
+            <!-- Name FILTER -->
+            @if (CurrentStaffType == StaffType.University)
+            {
+                <div class="appbar-search dropdown-filter">
+
+                    <label class="filter-label">Awarding : </label>
+
+                    <MudSelect T="int?"
+                               Value="@(SelectedAwardingStatus.HasValue ? (int?)SelectedAwardingStatus.Value : null)"
+                               ValueChanged="OnwardingStatusDropdownChanged"
+                               Placeholder="Status"
+                               Variant="Variant.Text"
+                               Dense="true"
+                               DisableUnderline="true"
+                               Clearable="true"
+                               Class="dropdown-select">
+
+                        <MudSelectItem T="int?" Value="@((int?)null)">All</MudSelectItem>
+
+                        <MudSelectItem T="int?" Value="@((int)AwardingStatus.Awarded)">
+                            Awarded
+                        </MudSelectItem>
+
+                        <MudSelectItem T="int?" Value="@((int)AwardingStatus.Rejected)">
+                            Rejected
+                        </MudSelectItem>
+
+
+                        <MudSelectItem T="int?" Value="@((int)AwardingStatus.InProcess)">
+                            InProcess
+                        </MudSelectItem>
+
+                    </MudSelect>
+
+                </div>
+            }
+            
             <div class="appbar-search">
 
 
@@ -202,6 +241,7 @@
                     </svg>
                 }
             </div>
+        
         </div>
 
 
@@ -688,10 +728,10 @@
     int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize); // calculated
     private List<EnrolledStudentDto> Items = new();
     private MudDataGrid<EnrolledStudentDto>? dataGrid;
-    private StudentFilterDto Filter = new StudentFilterDto();
+    private StudentRequirementFilterDto Filter = new StudentRequirementFilterDto();
 
     private StaffType? CurrentStaffType;
-    bool canView => PermissionService.CanView("course-enrollment") || PermissionService.CanView("enrolled-students");
+    bool canView => PermissionService.CanView("course-enrollment") || PermissionService.CanView("enrolled-students") || PermissionService.CanView("dashboard");
     bool canAdd => PermissionService.CanInsert("course-enrollment") || PermissionService.CanInsert("enrolled-students");
     bool canEdit => PermissionService.CanUpdate("course-enrollment") || PermissionService.CanUpdate("enrolled-students");
     bool canDelete => PermissionService.CanDelete("course-enrollment") || PermissionService.CanDelete("enrolled-students");
@@ -711,9 +751,42 @@
         var user = CurrentUserProfileService.GetCurrentUserProfile();
         CurrentStaffType = user.StaffType;
 
-        await LoadData(Filter);
-        //await GetDocuments();
+        // await LoadData(Filter);
+        await ApplyDashboardFilter();
+
     }
+
+    private async Task ApplyDashboardFilter()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        var type = query["type"];
+
+        var filter = new StudentRequirementFilterDto();
+
+        switch (type)
+        {
+            case "accepted":
+                filter.UniAwardingStatus = (int)AwardingStatus.Awarded; 
+                break;
+
+            case "sponsored":
+                filter.DaAdmissionStatus = (int)SponsoredStatus.Sponsored;         
+                break;
+
+            case "rejected":
+                filter.UniAwardingStatus = (int)AwardingStatus.Rejected;
+                break;
+
+            default:
+                // nominated → no filter
+                break;
+        }
+
+        await LoadData(filter); // reuse your method
+    }
+
 
 
     // global search
@@ -754,7 +827,7 @@
 
 
     private bool _loading = false;
-    private async Task LoadData(StudentFilterDto filter)
+    private async Task LoadData(StudentRequirementFilterDto filter)
     {
         try
         {
@@ -1001,6 +1074,35 @@
         await InvokeAsync(StateHasChanged);
 
     }
+
+
+    private AwardingStatus? SelectedAwardingStatus = null; // null = All
+    private async Task OnwardingStatusDropdownChanged(int? value)
+    {
+        SelectedAwardingStatus = value switch
+        {
+            0 => AwardingStatus.Awarded,
+            1 => AwardingStatus.Rejected,
+            2 => AwardingStatus.InProcess,
+            _ => null
+        };
+
+        // Reset paging when tab changes
+        PageNumber = 1;
+        PageSize = 25;
+        TotalRecords = 0;
+
+        var filter = new StudentRequirementFilterDto
+        {
+            PageNumber = PageNumber,
+            PageSize = PageSize,
+            UniAwardingStatus = SelectedAwardingStatus.HasValue ? (int)SelectedAwardingStatus.Value : null,
+            SearchText = _search              // if you have search
+        };
+
+        await LoadData(filter);
+    }
+
 
 
 }

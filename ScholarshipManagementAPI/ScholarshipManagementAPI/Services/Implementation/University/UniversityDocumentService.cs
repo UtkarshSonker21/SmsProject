@@ -22,6 +22,11 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
 
         public async Task<long> CreateAsync(UniversityDocumentRequestDto dto)
         {
+            if (await _context.UnMasterDocs
+                .AnyAsync(x => x.DocumentName == dto.DocumentName && x.UniversityId == dto.UniversityId))
+            {
+                throw new CustomException("Document with same name already exists");
+            }
 
             var entity = new UnMasterDoc
             {
@@ -50,6 +55,14 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             if (entity == null)
             {
                 throw new CustomException("University document not found");
+            }
+
+            if (await _context.UnMasterDocs
+                .AnyAsync(x => x.DocumentName == dto.DocumentName 
+                && x.UniversityId == dto.UniversityId 
+                && x.UniversityDocsId != dto.UniversityDocsId))
+            {
+                throw new CustomException("Document with same name already exists");
             }
 
             // UniversityDocsId usually should NOT be changed

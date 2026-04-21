@@ -24,7 +24,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
         public async Task<long> CreateAsync(CourseTypeRequestDto dto)
         {
             var exists = await _context.UnMasterCourseTypes
-                .AnyAsync(x => x.UniversityId == dto.UniversityId &&
+                .AnyAsync(x => x.UniversityId == dto.UniversityId && x.IsActive &&
                           x.CourseTypeName.ToLower() == dto.CourseTypeName.ToLower());
 
             if (exists)
@@ -73,7 +73,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
             var exists = await _context.UnMasterCourseTypes
                 .AnyAsync(x =>
                     x.CourseTypeId != dto.CourseTypeId &&
-                    x.UniversityId == dto.UniversityId &&
+                    x.UniversityId == dto.UniversityId && x.IsActive &&
                     x.CourseTypeName.ToLower() == dto.CourseTypeName.ToLower());
 
             if (exists)
@@ -84,7 +84,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
 
             // 🔹 Update allowed fields
             entity.CourseTypeName = dto.CourseTypeName;
-            entity.UniversityId = dto.UniversityId;
+            // entity.UniversityId = dto.UniversityId;
 
             // entity.IsActive = dto.IsActive;
 

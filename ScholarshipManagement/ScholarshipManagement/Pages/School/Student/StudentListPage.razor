@@ -300,8 +300,7 @@
                         <div class="d-flex align-items-center gap-3">
 
                             <!-- Std Photo -->
-                            <img src="@(string.IsNullOrEmpty(ctx.Item.Photo)? "/images/male-icon.png"
-                                                                                                                                                      : ctx.Item.Photo)"
+                            <img src="@(string.IsNullOrEmpty(ctx.Item.Photo)? "/images/male-icon.png": ctx.Item.Photo)"
                                  alt="Student Photo"
                                  style="width:35px;height:35px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;" />
 
@@ -540,7 +539,7 @@
                                          stroke="currentColor"
                                          style="width:20px; height:20px; cursor:pointer; color:#0d6efd"
                                          title="Edit"
-                                         @onclick="@(() => EditStudent(ctx.Item))">
+                                         @onclick="@(() => EditStudent(ctx.Item))" @onclick:stopPropagation="true">
                                         <path stroke-linecap="round"
                                               stroke-linejoin="round"
                                               d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652
@@ -564,7 +563,7 @@
                                          stroke="currentColor"
                                          style="width:20px; height:20px; cursor:pointer; color:#dc3545"
                                          title="Delete"
-                                         @onclick="@(() => DeleteStudent(ctx.Item))">
+                                         @onclick="@(() => DeleteStudent(ctx.Item))" @onclick:stopPropagation="true">
                                         <path stroke-linecap="round"
                                               stroke-linejoin="round"
                                               d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21
@@ -954,6 +953,7 @@
 
         await LoadData(filter);
     }
+
 
 
 

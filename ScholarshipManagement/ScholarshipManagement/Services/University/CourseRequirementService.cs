@@ -1,4 +1,5 @@
 ﻿using ScholarshipManagement.DTOs.Common.Response;
+using ScholarshipManagement.DTOs.School.StudentRequirements;
 using ScholarshipManagement.DTOs.School.Students;
 using ScholarshipManagement.DTOs.University.CourseRequirement;
 using ScholarshipManagement.Services.Common;
@@ -80,7 +81,7 @@ namespace ScholarshipManagement.Services.University
         }
 
 
-        public async Task<(PagedResultDto<EnrolledStudentDto> Data, ApiResponseDto Response)> GetEnrolledStudentsByReqId(long reqId, StudentFilterDto filter)
+        public async Task<(PagedResultDto<EnrolledStudentDto> Data, ApiResponseDto Response)> GetEnrolledStudentsByReqId(long reqId, StudentRequirementFilterDto filter)
         {
             var response = await _http.PostAsJsonAsync(
                 $"university/master-course-requirement/enrollments/students/search/{reqId}", filter);
@@ -93,7 +94,7 @@ namespace ScholarshipManagement.Services.University
             return (data, apiResponse);
         }
 
-        public async Task<(PagedResultDto<EnrolledStudentDto> Data, ApiResponseDto Response)> GetAllEnrolledStudents(StudentFilterDto filter)
+        public async Task<(PagedResultDto<EnrolledStudentDto> Data, ApiResponseDto Response)> GetAllEnrolledStudents(StudentRequirementFilterDto filter)
         {
             var response = await _http.PostAsJsonAsync(
                 "university/master-course-requirement/enrollments/students/search-all", filter);

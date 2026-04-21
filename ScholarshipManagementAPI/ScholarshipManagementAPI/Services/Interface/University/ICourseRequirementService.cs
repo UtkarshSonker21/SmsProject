@@ -1,5 +1,6 @@
 ﻿using ScholarshipManagementAPI.DTOs.Common.Auth;
 using ScholarshipManagementAPI.DTOs.Common.Response;
+using ScholarshipManagementAPI.DTOs.School.StudentRequirements;
 using ScholarshipManagementAPI.DTOs.School.Students;
 using ScholarshipManagementAPI.DTOs.University.CourseRequirement;
 
@@ -18,7 +19,7 @@ namespace ScholarshipManagementAPI.Services.Interface.University
 
         Task<PagedResultDto<CourseRequirementEnrollmentDto>> GetEnrollmentsAsync(CourseRequirementFilterDto filter, LoggedInUserDto currentUser);
 
-        Task<PagedResultDto<EnrolledStudentDto>> GetEnrolledStudentsAsync(long? reqId, StudentFilterDto filter, LoggedInUserDto currentUser);
+        Task<PagedResultDto<EnrolledStudentDto>> GetEnrolledStudentsAsync(long? reqId, StudentRequirementFilterDto filter, LoggedInUserDto currentUser);
 
     }
 }

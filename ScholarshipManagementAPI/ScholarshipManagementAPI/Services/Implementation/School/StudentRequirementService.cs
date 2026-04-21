@@ -89,16 +89,28 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                 if (dto.ReqId <= 0)
                     throw new CustomException("Invalid requirement.");
 
+                var actualUniversityId = await _context.UnCourseReqs
+                    .Where(r => r.ReqId == dto.ReqId)
+                    .Select(r => r.Course.UniversityId)
+                    .FirstOrDefaultAsync();
+
+                if (actualUniversityId == 0)
+                    throw new CustomException("Invalid requirement mapping.");
+
+                if (dto.UniversityId != actualUniversityId)
+                    throw new CustomException("Requirement does not belong to selected university.");
+
                 // 🔹 Check existing
                 var exists = await _context.StudentReqLists
                     .Include(x => x.Req)
                     .ThenInclude(r => r.Course)
-                    .AnyAsync(x => x.StudentId == dto.StudentID && x.Req.Course.UniversityId == dto.UniversityId);
+                    .AnyAsync(x => x.StudentId == dto.StudentID 
+                                   && x.Req.Course.UniversityId == dto.UniversityId);
 
                 if (exists)
                     throw new CustomException("Student already applied in this university.");
 
-                // 🔹 Create mapping
+                // 🔹 Create mappingD
                 var entity = new StudentReqList
                 {
                     StudentId = dto.StudentID,
@@ -157,7 +169,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             var exists = await _context.StudentReqLists
                 .Include(x => x.Req)
                 .ThenInclude(r => r.Course)
-                .AnyAsync(x => x.StudentId == dto.StudentID && x.Req.Course.UniversityId == dto.UniversityId && x.StudentReqId != dto.StudentReqID);
+                .AnyAsync(x => x.StudentId == dto.StudentID 
+                               && x.Req.Course.UniversityId == dto.UniversityId 
+                               && x.StudentReqId != dto.StudentReqID);
 
             if (exists)
                 throw new CustomException("Student already applied in this university.");
@@ -311,17 +325,42 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
         // ---------------- DELETE ----------------
         public async Task<bool> DeleteAsync(long id)
         {
-            var entity = await _context.StudentReqLists
-                .FirstOrDefaultAsync(x => x.StudentReqId == id);
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
-            if (entity == null)
-                return false;
+            try
+            {
+                var entity = await _context.StudentReqLists
+                    .FirstOrDefaultAsync(x => x.StudentReqId == id);
 
-            _context.StudentReqLists.Remove(entity);
+                if (entity == null)
+                    return false;
 
-            await _context.SaveChangesAsync();
+                // Delete child documents FIRST
+                var documents = await _context.StudentDocuments
+                    .Where(x => x.StudentReqId == id)
+                    .ToListAsync();
 
-            return true;
+                if (documents.Any())
+                {
+                    _context.StudentDocuments.RemoveRange(documents);
+                }
+
+                // Delete parent
+                _context.StudentReqLists.Remove(entity);
+
+                await _context.SaveChangesAsync();
+
+                // Commit
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch (Exception)
+            {
+                // Rollback on error
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
 
@@ -474,17 +513,12 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                 var search = filter.SearchText.Trim().ToLower();
 
                 query = query.Where(x =>
-                    (x.ReasonRejection != null && x.ReasonRejection.ToLower().Contains(search)) ||
-                    (x.MissedDocuments != null && x.MissedDocuments.ToLower().Contains(search)) ||
-                    (x.CreateEmailBy != null && x.CreateEmailBy.ToLower().Contains(search)) ||
-                    (x.ReasonInProgress != null && x.ReasonInProgress.ToLower().Contains(search)) ||
-
-                    // Related data
-                    (x.Student != null &&
-                        ((x.Student.StudentFirstName + " " + x.Student.StudentLastName).ToLower().Contains(search))) ||
-
-                    (x.Req != null && x.Req.Course != null &&
-                        x.Req.Course.CourseName.ToLower().Contains(search))
+                    x.Student != null &&
+                    (
+                        x.Student.StudentNumber.ToLower().Contains(search) ||
+                        x.Student.StudentFirstName.ToLower().Contains(search) ||
+                        (x.Student.StudentLastName != null && x.Student.StudentLastName.ToLower().Contains(search))
+                    )
                 );
             }
 

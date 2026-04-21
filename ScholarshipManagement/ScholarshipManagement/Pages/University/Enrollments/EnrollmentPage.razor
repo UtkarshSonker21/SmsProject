@@ -72,30 +72,34 @@
         <div class="d-flex align-items-center gap-3" style="padding: 0 24px;">
 
             <!-- Name FILTER -->
-            <div class="appbar-search dropdown-filter">
+            @if(CurrentStaffType != StaffType.University)
+            {
+                <div class="appbar-search dropdown-filter">
 
-                <label class="filter-label">University : </label>
+                    <label class="filter-label">University : </label>
 
-                <MudSelect T="long?"
-                           Value="SelectedUniversityId"
-                           ValueChanged="OnUniversityChanged"
-                           Placeholder="University"
-                           Variant="Variant.Text"
-                           Dense="true"
-                           DisableUnderline="true"
-                           Clearable="true"
-                           Class="dropdown-select">
+                    <MudSelect T="long?"
+                               Value="SelectedUniversityId"
+                               ValueChanged="OnUniversityChanged"
+                               Placeholder="University"
+                               Variant="Variant.Text"
+                               Dense="true"
+                               DisableUnderline="true"
+                               Clearable="true"
+                               Class="dropdown-select">
 
-                    @foreach (var c in Universities)
-                    {
-                        <MudSelectItem T="long?" Value="@c.UniversityId">
-                            @c.UniversityName
-                        </MudSelectItem>
-                    }
+                        @foreach (var c in Universities)
+                        {
+                            <MudSelectItem T="long?" Value="@c.UniversityId">
+                                @c.UniversityName
+                            </MudSelectItem>
+                        }
 
-                </MudSelect>
+                    </MudSelect>
 
-            </div>
+                </div>
+            }
+
             <div class="appbar-search">
 
 

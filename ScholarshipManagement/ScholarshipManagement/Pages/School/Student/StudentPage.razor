@@ -855,6 +855,14 @@
             //     return;
             // }
 
+
+            // Format ALL name fields safely
+            model.StudentFirstName = StringHelper.ToTitleCase(model.StudentFirstName);
+            model.StudentLastName = StringHelper.ToTitleCase(model.StudentLastName);
+            model.StudentOtherName = StringHelper.ToTitleCase(model.StudentOtherName);
+
+
+
             var ok = model.StudentId is null or 0
                      ? await StudentService.AddStudent(model)
                      : await StudentService.UpdateStudent(model);
@@ -1155,6 +1163,23 @@
         photoPreviewUrl = null;
         model.Photo = null;
     }
+
+
+
+
+
+    public static class StringHelper
+    {
+        public static string? ToTitleCase(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+
+            return System.Globalization.CultureInfo.CurrentCulture.TextInfo
+                .ToTitleCase(input.Trim().ToLower());
+        }
+    }
+
 
 
 }
