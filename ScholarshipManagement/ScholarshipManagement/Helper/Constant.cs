@@ -147,6 +147,7 @@
 
             public const string GetAllUsersModule = "common/user-modules";
             public const string GetAllMenu = "common/load-menus";
+            public const string GetDashboard = "common/load-dashboard";
 
         }
 

@@ -313,7 +313,6 @@
 
 
         TState.OnChange += OnLanguageChanged;
-
     }
 
 
@@ -354,6 +353,7 @@
         var baseCurrency = await GeneralSettingService.GetBaseCurrency();
         BaseCurrencyService.SetBaseCurrency(baseCurrency.Data);
     }
+
 
 
     private bool _drawerOpen = false;

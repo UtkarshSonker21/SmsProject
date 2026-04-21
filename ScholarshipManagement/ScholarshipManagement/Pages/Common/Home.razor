@@ -5,11 +5,13 @@
 @layout MainLayout
 @using Microsoft.AspNetCore.Authorization
 @using MudBlazor
+@using ScholarshipManagement.DTOs.Common.Settings
 @using ScholarshipManagement.Helper.Translations
 @using ScholarshipManagement.Services.Common
 @using ApexCharts
 @using Color = MudBlazor.Color
 @using Size = MudBlazor.Size
+@inject CommonService CommonService
 @inject AuthService AuthService
 @inject IDialogService DialogService
 @inject IJSRuntime JS
@@ -276,10 +278,6 @@
     </MudContainer>
 
 </div>
-
-
-@* <Loader Text="Loading"
-        SecondaryText="Fetching Data..." Visible="true" /> *@
  
 
 
@@ -287,9 +285,10 @@
 
 
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         TState.OnChange += OnLanguageChanged;
+        await LoadDashboard();
     }
 
     private void OnLanguageChanged()
@@ -334,64 +333,16 @@
 
 
 
-    public class ChartData
+
+
+    private DashboardDto dashboard = new DashboardDto();
+    private async Task LoadDashboard()
     {
-		public string Month { get; set; } = string.Empty;
-        public int Count { get; set; }
+        var result = await CommonService.GetDashboard();
+        dashboard = result.Data;
     }
 
-    List<ChartData> chartData = new()
-    {
-        new() { Month = "Jan", Count = 20 },
-        new() { Month = "Feb", Count = 35 },
-        new() { Month = "Mar", Count = 50 },
-        new() { Month = "Apr", Count = 40 },
-        new() { Month = "May", Count = 65 },
-        new() { Month = "Jun", Count = 80 }
-    };
 
-
-    public class StatusData
-    {
-		public string Label { get; set; } = string.Empty;
-        public int Value { get; set; }
-    }
-
-    List<StatusData> statusData = new()
-{
-    new() { Label = "Approved", Value = 45 },
-    new() { Label = "Pending", Value = 30 },
-    new() { Label = "Rejected", Value = 25 }
-};
-
-    ApexChartOptions<StatusData> barOptions = new()
-    {
-        Chart = new Chart
-        {
-            Type = ApexCharts.ChartType.Bar
-        },
-        PlotOptions = new PlotOptions
-        {
-            Bar = new PlotOptionsBar
-            {
-                Horizontal = false
-            }
-        }
-    };
-
-
-    ApexChartOptions<StatusData> lineOptions = new()
-    {
-        Chart = new Chart { Type = ApexCharts.ChartType.Line },
-        PlotOptions = new PlotOptions
-        {
-            Bar = new PlotOptionsBar
-            {
-                Horizontal = true // Set your horizontal preference here
-            }
-        },
-        Stroke = new Stroke { Curve = Curve.Smooth }
-    };
 
 
 }
