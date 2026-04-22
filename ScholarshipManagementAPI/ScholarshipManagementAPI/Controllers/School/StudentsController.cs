@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScholarshipManagementAPI.DTOs.Common.Response;
 using ScholarshipManagementAPI.DTOs.School.MasterSchool;
+using ScholarshipManagementAPI.DTOs.School.StudentRequirements;
 using ScholarshipManagementAPI.DTOs.School.Students;
 using ScholarshipManagementAPI.Helper.Utilities;
 using ScholarshipManagementAPI.Services.Interface.School;
@@ -22,8 +23,9 @@ namespace ScholarshipManagementAPI.Controllers.School
 
         // -------- CREATE --------
         [HttpPost("create")]
-        public async Task<IActionResult> Create(StudentRequestDto dto)
+        public async Task<IActionResult> Create([FromForm] StudentRequestDto dto, IFormFile? RecommendationLetterFile)
         {
+            dto.RecommendationLetterFile = RecommendationLetterFile;
             dto.CreatedBy = JwtClaimHelper.UserName(User);
             dto.CreatedDate = DateTime.UtcNow;
 
@@ -41,9 +43,10 @@ namespace ScholarshipManagementAPI.Controllers.School
         // -------- UPDATE --------
         [HttpPut("update/{id:long}")]
         [Authorize]
-        public async Task<IActionResult> Update(long id, [FromBody] StudentRequestDto dto)
+        public async Task<IActionResult> Update(long id, [FromForm] StudentRequestDto dto, IFormFile? RecommendationLetterFile)
         {
             dto.StudentId = id;
+            dto.RecommendationLetterFile = RecommendationLetterFile;
             var updated = await _service.UpdateAsync(dto);
 
             if (!updated)
@@ -136,8 +139,6 @@ namespace ScholarshipManagementAPI.Controllers.School
                     : "Data fetched successfully"
             });
         }
-
-
 
 
 

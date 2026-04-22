@@ -1,4 +1,3 @@
-using ApexCharts;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -49,7 +48,7 @@ builder.Services.AddHttpClient("ApiClient", client =>
 //});
 
 // ApexCharts                   
-builder.Services.AddApexCharts();
+//builder.Services.AddApexCharts();
 
 // Services
 builder.Services.AddScoped<AuthService>();

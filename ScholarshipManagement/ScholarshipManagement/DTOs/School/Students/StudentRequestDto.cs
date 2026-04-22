@@ -113,8 +113,7 @@ namespace ScholarshipManagement.DTOs.School.Students
         [Range(0, 999999)]
         public decimal? EnglishPlacementTest { get; set; }
 
-        [StringLength(1000)]
-        public string? RecommendationLetterPath { get; set; }
+
 
 
         public string? CreatedBy { get; set; }
@@ -122,11 +121,15 @@ namespace ScholarshipManagement.DTOs.School.Students
         public DateTime CreatedDate { get; set; }
 
 
+        // FILE UPLOAD
+        // public IFormFile? RecommendationLetterFile { get; set; }
+
+
         // RESPOSNE
 
         public string? SchoolName { get; set; }
         public string? ShortName { get; set; }
 
-
+        public string? RecommendationLetterPath { get; set; }
     }
 }

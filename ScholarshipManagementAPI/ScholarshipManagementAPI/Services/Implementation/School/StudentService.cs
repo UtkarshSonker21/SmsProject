@@ -13,10 +13,12 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
     public class StudentService : IStudentService
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public StudentService(AppDbContext context)
+        public StudentService(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
 
@@ -36,6 +38,11 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             }
 
             var studentNumber = await GenerateStudentNumberAsync(dto.SchoolId);
+
+            var filePath = await UploadRecommendationLetterAsync(
+                dto.RecommendationLetterFile,
+                studentNumber
+            );
 
             var entity = new StudentDatum
             {
@@ -75,7 +82,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                 ClearTargetsFutureGoals = dto.ClearTargetsFutureGoals,
                 MaxMarks = dto.MaxMarks,
                 EnglishPlacementTest = dto.EnglishPlacementTest,
-                RecommendationLetterPath = dto.RecommendationLetterPath,
+                RecommendationLetterPath = filePath,
                 CreatedBy = dto.CreatedBy,
                 CreatedDate = dto.CreatedDate
             };
@@ -83,7 +90,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             _context.StudentData.Add(entity);
             await _context.SaveChangesAsync();
 
-            return entity.SchoolId;
+            return entity.StudentId;
         }
 
 
@@ -111,6 +118,13 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             {
                 throw new CustomException("Student with same email already exists");
             }
+
+
+            var filePath = await UploadRecommendationLetterAsync(
+                dto.RecommendationLetterFile,
+                entity.StudentNumber
+            );
+
 
             // entity.StudentId = dto.StudentId.Value;
             // entity.SchoolId = dto.SchoolId.Value;
@@ -150,7 +164,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
             entity.ClearTargetsFutureGoals = dto.ClearTargetsFutureGoals;
             entity.MaxMarks = dto.MaxMarks;
             entity.EnglishPlacementTest = dto.EnglishPlacementTest;
-            entity.RecommendationLetterPath = dto.RecommendationLetterPath;
+            entity.RecommendationLetterPath = filePath;
 
             // entity.CreatedDate = dto.CreatedDate;         // usually not updated
             // entity.CreatedBy = dto.CreatedBy;             // usually not updated
@@ -180,6 +194,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
         // ---------------- GET BY ID ----------------
         public async Task<StudentRequestDto?> GetByIdAsync(long id)
         {
+            var baseUrl = _configuration["AppSettings:BackendUrl"]?.TrimEnd('/');
+
             return await _context.StudentData
                 .Include(x => x.School)
                 .AsNoTracking()
@@ -223,7 +239,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     ClearTargetsFutureGoals = x.ClearTargetsFutureGoals,
                     MaxMarks = x.MaxMarks,
                     EnglishPlacementTest = x.EnglishPlacementTest,
-                    RecommendationLetterPath = x.RecommendationLetterPath,
+                    RecommendationLetterPath = x.RecommendationLetterPath != null ? $"{baseUrl}/{x.RecommendationLetterPath}" : null,
                     CreatedBy = x.CreatedBy,
                     CreatedDate = x.CreatedDate,
 
@@ -238,6 +254,8 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
         // ---------------- GET ALL FILTER ----------------
         public async Task<PagedResultDto<StudentRequestDto>> GetByFilterAsync(StudentFilterDto filter)
         {
+            var baseUrl = _configuration["AppSettings:BackendUrl"]?.TrimEnd('/');
+
             var query = _context.StudentData
                 .Include(x => x.School)
                 .AsNoTracking()
@@ -317,7 +335,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
                     ClearTargetsFutureGoals = x.ClearTargetsFutureGoals,
                     MaxMarks = x.MaxMarks,
                     EnglishPlacementTest = x.EnglishPlacementTest,
-                    RecommendationLetterPath = x.RecommendationLetterPath,
+                    RecommendationLetterPath = x.RecommendationLetterPath != null ? $"{baseUrl}/{x.RecommendationLetterPath}" : null,
                     CreatedBy = x.CreatedBy,
                     CreatedDate = x.CreatedDate,
 
@@ -372,6 +390,45 @@ namespace ScholarshipManagementAPI.Services.Implementation.School
 
             return studentNumber;
         }
+
+
+
+        private async Task<string?> UploadRecommendationLetterAsync(IFormFile? file, string studentNumber)
+        {
+            if (file == null)
+                return null;
+
+            if (file.Length == 0)
+                throw new CustomException("File is empty.");
+
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            var ext = Path.GetExtension(file.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(ext))
+                throw new CustomException("Invalid file type. Only PDF/DOC/DOCX allowed.");
+
+            if (file.Length > 5 * 1024 * 1024)
+                throw new CustomException("File size must be less than 5MB.");
+
+            var originalName = Path.GetFileName(file.FileName).Replace(" ", "_");
+            var fileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid()}_{originalName}";
+
+            var folder = Path.Combine("wwwroot", "uploads", "students", studentNumber, "recommendations");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            var fullPath = Path.Combine(folder, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.CreateNew))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return $"/uploads/students/{studentNumber}/recommendations/{fileName}";
+        }
+
+
 
 
         #endregion

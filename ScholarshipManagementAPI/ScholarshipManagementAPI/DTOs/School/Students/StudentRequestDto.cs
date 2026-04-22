@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace ScholarshipManagementAPI.DTOs.School.Students
 {
@@ -113,11 +114,10 @@ namespace ScholarshipManagementAPI.DTOs.School.Students
         [Range(0, 999999)]
         public decimal? EnglishPlacementTest { get; set; }
 
-        [StringLength(1000)]
-        public string? RecommendationLetterPath { get; set; }
+        [JsonIgnore]
+        public IFormFile? RecommendationLetterFile { get; set; }
 
-
-        public string? CreatedBy { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
 
         public DateTime CreatedDate { get; set; }
 
@@ -130,6 +130,8 @@ namespace ScholarshipManagementAPI.DTOs.School.Students
         public string? FullName { get; set; }
         public string? FormatedCreatedBy { get; set; }
         public string? FormattedCreatedDate { get; set; }
+
+        public string? RecommendationLetterPath { get; set; }
 
     }
 }
