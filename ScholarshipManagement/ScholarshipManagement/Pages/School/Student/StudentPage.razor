@@ -22,6 +22,9 @@
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+
 
 <style>
 
@@ -114,6 +117,12 @@
         .primary-btn:hover {
             background: #1565C0 !important;
         }
+
+
+    .view-action:hover {
+        text-decoration: underline;
+        opacity: 0.85;
+    }
 
 </style>
 
@@ -691,33 +700,6 @@
 
                             <MudItem xs="12" md="4">
                                 <MudSelect T="string"
-                                           Label="Recommendation Letter"
-                                           Placeholder="--- Select ---"
-                                           Variant="Variant.Outlined"
-                                           Margin="Margin.Dense"
-                                           @bind-Value="model.RecommendationLetter"
-                                           For="@(() => model.RecommendationLetter)"
-                                           Clearable="true">
-
-                                    @foreach (var div in Availability)
-                                    {
-                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
-                                    }
-
-                                </MudSelect>
-                            </MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudTextField T="string"
-                                              Label="Recommendation Letter Path"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              @bind-Value="model.RecommendationLetterPath"
-                                              For="@(() => model.RecommendationLetterPath)" />
-                            </MudItem>
-
-                            <MudItem xs="12" md="4">
-                                <MudSelect T="string"
                                            Label="Self Determination"
                                            Placeholder="--- Select ---"
                                            Variant="Variant.Outlined"
@@ -770,6 +752,65 @@
                                 </MudSelect>
                             </MudItem>
 
+
+
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string"
+                                           Label="Recommendation Letter"
+                                           Placeholder="--- Select ---"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           @bind-Value="model.RecommendationLetter"
+                                           For="@(() => model.RecommendationLetter)"
+                                           Clearable="true">
+
+                                    @foreach (var div in Availability)
+                                    {
+                                        <MudSelectItem Value="@div.DisplayText">@div.DisplayText</MudSelectItem>
+                                    }
+
+                                </MudSelect>
+                            </MudItem>
+
+                            @if (model.RecommendationLetter == "Available")
+                            {
+                                <MudItem xs="12" md="4">
+
+                                    <MudTextField T="string"
+                                                  Value="@(selectedFile?.Name ?? GetCleanFileName(model.RecommendationLetterPath))"
+                                                  Label="@(selectedFile != null ? "File Selected" : "Choose File")"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  ReadOnly="true"
+                                                  Adornment="Adornment.End"
+                                                  AdornmentIcon="@Icons.Material.Filled.Upload"
+                                                  IconSize="Size.Small"
+                                                  OnAdornmentClick="OpenFilePicker" />
+
+                                    <InputFile id="fileInput"
+                                               OnChange="HandleFileUpload"
+                                               style="display:none" />
+
+                                    @if (!string.IsNullOrEmpty(model.RecommendationLetterPath))
+                                    {
+                                        <MudTooltip Text="Click to open file">
+                                            <div class="d-flex align-items-center gap-1 text-primary small mt-1 view-action"
+                                                 style="cursor:pointer;"
+                                                 @onclick="@OpenFile">
+
+                                                <MudIcon Icon="@Icons.Material.Filled.Edit"
+                                                         Style="font-size:14px;" />
+
+                                                <span>
+                                                    View @GetCleanFileName(model.RecommendationLetterPath)
+                                                </span>
+                                            </div>
+                                        </MudTooltip>
+                                    }
+                                </MudItem>
+
+                            }
+                            
 
                             <!-- ================= ACTION ================= -->
                             <MudItem xs="12" Class="mt-5">
@@ -864,8 +905,8 @@
 
 
             var ok = model.StudentId is null or 0
-                     ? await StudentService.AddStudent(model)
-                     : await StudentService.UpdateStudent(model);
+                     ? await StudentService.AddStudent(model, selectedFile)
+                     : await StudentService.UpdateStudent(model, selectedFile);
 
             if (ok.Success)
             {
@@ -1181,5 +1222,43 @@
     }
 
 
+
+
+
+    private IBrowserFile? selectedFile;
+
+    private async Task OpenFilePicker()
+    {
+        await JS.InvokeVoidAsync("triggerFileInput", "fileInput");
+    }
+
+    private void HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private string? GetCleanFileName(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return null;
+
+        var fileName = Path.GetFileName(path);
+
+        if (string.IsNullOrEmpty(fileName))
+            return null;
+
+        var index = fileName.LastIndexOf('_');
+
+        return index >= 0 ? fileName[(index + 1)..] : fileName;
+    }
+
+
+    private async Task OpenFile()
+    {
+        if (!string.IsNullOrEmpty(model.RecommendationLetterPath))
+        {
+            await JS.InvokeVoidAsync("open", model.RecommendationLetterPath, "_blank");
+        }
+    }
 
 }
