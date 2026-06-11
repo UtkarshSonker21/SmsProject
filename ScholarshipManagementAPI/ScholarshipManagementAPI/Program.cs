@@ -39,6 +39,7 @@ builder.Services.AddCors(options =>
          {
              policy.WithOrigins(
                  "https://localhost:7064",                    // Local dev client (Blazor WASM)
+                 "https://localhost:7197",                    // Local dev client (Blazor WASM)
                  "https://smsui.runasp.net"                   // staging dev client (Blazor WASM)
              )
              .AllowAnyHeader()
@@ -228,6 +229,13 @@ builder.Services.AddScoped<IUniversityDocumentService, UniversityDocumentService
 builder.Services.AddScoped<IApprovalService, ApprovalService>();
 builder.Services.AddScoped<IDonorService, DonorService>();
 
+
+// new service 
+builder.Services.AddScoped<IFacultiesService, FacultiesService>();
+builder.Services.AddScoped<ICoursesService, CoursesService>();
+builder.Services.AddScoped<IDocumentTypesService, DocumentTypesService>();
+builder.Services.AddScoped<ISponsorshipTypesService, SponsorshipTypesService>();
+builder.Services.AddScoped<IProgramsService, ProgramsService>();
 
 
 // Swagger configuration

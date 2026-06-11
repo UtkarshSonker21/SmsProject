@@ -31,6 +31,12 @@ public partial class UnUniversityList
 
     public virtual ICollection<HrStaffMaster> HrStaffMasters { get; set; } = new List<HrStaffMaster>();
 
+    public virtual ICollection<KfCourse> KfCourses { get; set; } = new List<KfCourse>();
+
+    public virtual ICollection<KfFaculty> KfFaculties { get; set; } = new List<KfFaculty>();
+
+    public virtual ICollection<KfProgram> KfPrograms { get; set; } = new List<KfProgram>();
+
     public virtual ICollection<UnMasterCourseType> UnMasterCourseTypes { get; set; } = new List<UnMasterCourseType>();
 
     public virtual ICollection<UnMasterCourse> UnMasterCourses { get; set; } = new List<UnMasterCourse>();

@@ -2,20 +2,20 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScholarshipManagementAPI.DTOs.Common.Response;
-using ScholarshipManagementAPI.DTOs.University.Courses;
 using ScholarshipManagementAPI.DTOs.University.Faculties;
+using ScholarshipManagementAPI.DTOs.University.MasterUniversity;
 using ScholarshipManagementAPI.Helper.Utilities;
 using ScholarshipManagementAPI.Services.Interface.University;
 
 namespace ScholarshipManagementAPI.Controllers.University
 {
     [ApiController]
-    [Route("api/university/courses")]
-    public class CoursesController : ControllerBase
+    [Route("api/university/faculties")]
+    public class FacultiesController : ControllerBase
     {
-        private readonly ICoursesService _service;
+        private readonly IFacultiesService _service;
 
-        public CoursesController(ICoursesService service)
+        public FacultiesController(IFacultiesService service)
         {
             _service = service;
         }
@@ -23,7 +23,7 @@ namespace ScholarshipManagementAPI.Controllers.University
         // -------- CREATE --------
         [HttpPost("create")]
         [Authorize]
-        public async Task<IActionResult> Create(CourseRequestDto dto)
+        public async Task<IActionResult> Create(FacultyRequestDto dto)
         {
             dto.CreatedDate = DateTime.UtcNow;                            // always server-side
             dto.CreatedBy = JwtClaimHelper.LoginId(User);                 // or from claims
@@ -34,7 +34,7 @@ namespace ScholarshipManagementAPI.Controllers.University
             {
                 Success = true,
                 Result = id,
-                Message = "Course created successfully"
+                Message = "Faculty created successfully"
             });
         }
 
@@ -42,9 +42,9 @@ namespace ScholarshipManagementAPI.Controllers.University
         // -------- UPDATE --------
         [HttpPut("update/{id:long}")]
         [Authorize]
-        public async Task<IActionResult> Update(long id, [FromBody] CourseRequestDto dto)
+        public async Task<IActionResult> Update(long id, [FromBody] FacultyRequestDto dto)
         {
-            dto.CourseId = id;
+            dto.FacultyId = id;
             dto.UpdatedDate = DateTime.UtcNow;                            // always server-side
             dto.UpdatedBy = JwtClaimHelper.LoginId(User);                 // or from claims
 
@@ -63,7 +63,7 @@ namespace ScholarshipManagementAPI.Controllers.University
             return Ok(new ApiResponseDto
             {
                 Success = true,
-                Message = "Course updated successfully",
+                Message = "Faculty updated successfully",
                 Result = updated,
             });
         }
@@ -89,7 +89,7 @@ namespace ScholarshipManagementAPI.Controllers.University
             return Ok(new ApiResponseDto
             {
                 Success = true,
-                Message = "Course deleted successfully",
+                Message = "Faculty deleted successfully",
                 Result = deleted
             });
         }
@@ -125,7 +125,7 @@ namespace ScholarshipManagementAPI.Controllers.University
         // -------- FILTER / GET ALL --------
         [HttpPost("search")]
         [Authorize]
-        public async Task<IActionResult> GetByFilter(CourseFilterDto filter)
+        public async Task<IActionResult> GetByFilter(FacultyFilterDto filter)
         {
             var result = await _service.GetByFilterAsync(filter);
 

@@ -23,9 +23,10 @@ namespace ScholarshipManagementAPI.Controllers.School
 
         // -------- CREATE --------
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromForm] StudentRequestDto dto, IFormFile? RecommendationLetterFile)
+        public async Task<IActionResult> Create([FromForm] StudentRequestDto dto)
         {
-            dto.RecommendationLetterFile = RecommendationLetterFile;
+            //, IFormFile? RecommendationLetterFile
+            //dto.RecommendationLetterFile = RecommendationLetterFile;
             dto.CreatedBy = JwtClaimHelper.UserName(User);
             dto.CreatedDate = DateTime.UtcNow;
 
@@ -43,10 +44,12 @@ namespace ScholarshipManagementAPI.Controllers.School
         // -------- UPDATE --------
         [HttpPut("update/{id:long}")]
         [Authorize]
-        public async Task<IActionResult> Update(long id, [FromForm] StudentRequestDto dto, IFormFile? RecommendationLetterFile)
+        public async Task<IActionResult> Update(long id, [FromForm] StudentRequestDto dto)
         {
+            //, IFormFile? RecommendationLetterFile
+            //dto.RecommendationLetterFile = RecommendationLetterFile;
+
             dto.StudentId = id;
-            dto.RecommendationLetterFile = RecommendationLetterFile;
             var updated = await _service.UpdateAsync(dto);
 
             if (!updated)
