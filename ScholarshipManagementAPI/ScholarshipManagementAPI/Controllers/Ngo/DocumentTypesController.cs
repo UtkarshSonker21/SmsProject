@@ -2,28 +2,30 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScholarshipManagementAPI.DTOs.Common.Response;
+using ScholarshipManagementAPI.DTOs.Ngo.DocumentsTypes;
 using ScholarshipManagementAPI.DTOs.University.Courses;
-using ScholarshipManagementAPI.DTOs.University.Faculties;
 using ScholarshipManagementAPI.Helper.Utilities;
+using ScholarshipManagementAPI.Services.Interface.Ngo;
 using ScholarshipManagementAPI.Services.Interface.University;
 
-namespace ScholarshipManagementAPI.Controllers.University
+namespace ScholarshipManagementAPI.Controllers.Ngo
 {
     [ApiController]
-    [Route("api/university/courses")]
-    public class CoursesController : ControllerBase
+    [Route("api/university/document-types")]
+    public class DocumentTypesController : ControllerBase
     {
-        private readonly ICoursesService _service;
+        private readonly IDocumentTypesService _service;
 
-        public CoursesController(ICoursesService service)
+        public DocumentTypesController(IDocumentTypesService service)
         {
             _service = service;
         }
 
+
         // -------- CREATE --------
         [HttpPost("create")]
         [Authorize]
-        public async Task<IActionResult> Create(CourseRequestDto dto)
+        public async Task<IActionResult> Create(DocumentTypeRequestDto dto)
         {
             dto.CreatedDate = DateTime.UtcNow;                            // always server-side
             dto.CreatedBy = JwtClaimHelper.LoginId(User);                 // or from claims
@@ -34,7 +36,7 @@ namespace ScholarshipManagementAPI.Controllers.University
             {
                 Success = true,
                 Result = id,
-                Message = "Course created successfully"
+                Message = "Document type created successfully"
             });
         }
 
@@ -42,9 +44,9 @@ namespace ScholarshipManagementAPI.Controllers.University
         // -------- UPDATE --------
         [HttpPut("update/{id:long}")]
         [Authorize]
-        public async Task<IActionResult> Update(long id, [FromBody] CourseRequestDto dto)
+        public async Task<IActionResult> Update(long id, [FromBody] DocumentTypeRequestDto dto)
         {
-            dto.CourseId = id;
+            dto.DocumentTypeId = id;
             dto.UpdatedDate = DateTime.UtcNow;                            // always server-side
             dto.UpdatedBy = JwtClaimHelper.LoginId(User);                 // or from claims
 
@@ -63,7 +65,7 @@ namespace ScholarshipManagementAPI.Controllers.University
             return Ok(new ApiResponseDto
             {
                 Success = true,
-                Message = "Course updated successfully",
+                Message = "Document type updated successfully",
                 Result = updated,
             });
         }
@@ -89,7 +91,7 @@ namespace ScholarshipManagementAPI.Controllers.University
             return Ok(new ApiResponseDto
             {
                 Success = true,
-                Message = "Course deleted successfully",
+                Message = "Document type deleted successfully",
                 Result = deleted
             });
         }
@@ -125,7 +127,7 @@ namespace ScholarshipManagementAPI.Controllers.University
         // -------- FILTER / GET ALL --------
         [HttpPost("search")]
         [Authorize]
-        public async Task<IActionResult> GetByFilter(CourseFilterDto filter)
+        public async Task<IActionResult> GetByFilter(DocumentTypeFilterDto filter)
         {
             var result = await _service.GetByFilterAsync(filter);
 

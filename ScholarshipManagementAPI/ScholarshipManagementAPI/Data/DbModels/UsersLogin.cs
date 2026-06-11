@@ -27,6 +27,26 @@ public partial class UsersLogin
 
     public DateTime? TempPassDateTime { get; set; }
 
+    public virtual ICollection<KfCourse> KfCourseCreatedByNavigations { get; set; } = new List<KfCourse>();
+
+    public virtual ICollection<KfCourse> KfCourseUpdatedByNavigations { get; set; } = new List<KfCourse>();
+
+    public virtual ICollection<KfDocumentType> KfDocumentTypeCreatedByNavigations { get; set; } = new List<KfDocumentType>();
+
+    public virtual ICollection<KfDocumentType> KfDocumentTypeUpdatedByNavigations { get; set; } = new List<KfDocumentType>();
+
+    public virtual ICollection<KfFaculty> KfFacultyCreatedByNavigations { get; set; } = new List<KfFaculty>();
+
+    public virtual ICollection<KfFaculty> KfFacultyUpdatedByNavigations { get; set; } = new List<KfFaculty>();
+
+    public virtual ICollection<KfProgram> KfProgramCreatedByNavigations { get; set; } = new List<KfProgram>();
+
+    public virtual ICollection<KfProgram> KfProgramUpdatedByNavigations { get; set; } = new List<KfProgram>();
+
+    public virtual ICollection<KfSponsorshipType> KfSponsorshipTypeCreatedByNavigations { get; set; } = new List<KfSponsorshipType>();
+
+    public virtual ICollection<KfSponsorshipType> KfSponsorshipTypeUpdatedByNavigations { get; set; } = new List<KfSponsorshipType>();
+
     public virtual ICollection<MasterSchoolList> MasterSchoolLists { get; set; } = new List<MasterSchoolList>();
 
     public virtual HrStaffMaster Staff { get; set; } = null!;

@@ -22,6 +22,24 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<HrStaffMaster> HrStaffMasters { get; set; }
 
+    public virtual DbSet<KfCourse> KfCourses { get; set; }
+
+    public virtual DbSet<KfCourseFaculty> KfCourseFaculties { get; set; }
+
+    public virtual DbSet<KfDocumentType> KfDocumentTypes { get; set; }
+
+    public virtual DbSet<KfFaculty> KfFaculties { get; set; }
+
+    public virtual DbSet<KfProgram> KfPrograms { get; set; }
+
+    public virtual DbSet<KfProgramCost> KfProgramCosts { get; set; }
+
+    public virtual DbSet<KfProgramCourse> KfProgramCourses { get; set; }
+
+    public virtual DbSet<KfProgramDocument> KfProgramDocuments { get; set; }
+
+    public virtual DbSet<KfSponsorshipType> KfSponsorshipTypes { get; set; }
+
     public virtual DbSet<MasterDonorList> MasterDonorLists { get; set; }
 
     public virtual DbSet<MasterSchoolList> MasterSchoolLists { get; set; }
@@ -150,6 +168,218 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.University).WithMany(p => p.HrStaffMasters)
                 .HasForeignKey(d => d.UniversityId)
                 .HasConstraintName("FK_Staff_University");
+        });
+
+        modelBuilder.Entity<KfCourse>(entity =>
+        {
+            entity.HasKey(e => e.CourseId).HasName("PK__kf_cours__C92D71A706135DFF");
+
+            entity.ToTable("kf_courses");
+
+            entity.Property(e => e.CourseCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CourseNameAr).HasMaxLength(300);
+            entity.Property(e => e.CourseNameEn).HasMaxLength(300);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.KfCourseCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_courses_CreatedBy_UsersLogin");
+
+            entity.HasOne(d => d.University).WithMany(p => p.KfCourses)
+                .HasForeignKey(d => d.UniversityId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_courses_UniversityId_UnUniversityList");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.KfCourseUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .HasConstraintName("FK_kf_courses_UpdatedBy_UsersLogin");
+        });
+
+        modelBuilder.Entity<KfCourseFaculty>(entity =>
+        {
+            entity.HasKey(e => e.CourseFacultyId).HasName("PK__kf_cours__651FB9999D690814");
+
+            entity.ToTable("kf_course_faculties");
+
+            entity.HasOne(d => d.Course).WithMany(p => p.KfCourseFaculties)
+                .HasForeignKey(d => d.CourseId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_course_faculties_Course");
+
+            entity.HasOne(d => d.Faculty).WithMany(p => p.KfCourseFaculties)
+                .HasForeignKey(d => d.FacultyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_course_faculties_Faculty");
+        });
+
+        modelBuilder.Entity<KfDocumentType>(entity =>
+        {
+            entity.HasKey(e => e.DocumentTypeId).HasName("PK__kf_docum__DBA390E17F1AF084");
+
+            entity.ToTable("kf_document_types");
+
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.DefaultRequired).HasDefaultValue(true);
+            entity.Property(e => e.DocumentName).HasMaxLength(200);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.KfDocumentTypeCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_document_types_CreatedBy_UsersLogin");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.KfDocumentTypeUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .HasConstraintName("FK_kf_document_types_UpdatedBy_UsersLogin");
+        });
+
+        modelBuilder.Entity<KfFaculty>(entity =>
+        {
+            entity.HasKey(e => e.FacultyId).HasName("PK__kf_facul__306F630E1B2A0CAA");
+
+            entity.ToTable("kf_faculties");
+
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.FacultyCode)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.FacultyName).HasMaxLength(200);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.KfFacultyCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_faculties_CreatedBy_UsersLogin");
+
+            entity.HasOne(d => d.University).WithMany(p => p.KfFaculties)
+                .HasForeignKey(d => d.UniversityId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_faculties_UniversityId_UnUniversityList");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.KfFacultyUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .HasConstraintName("FK_kf_faculties_UpdatedBy_UsersLogin");
+        });
+
+        modelBuilder.Entity<KfProgram>(entity =>
+        {
+            entity.HasKey(e => e.ProgramId).HasName("PK__kf_progr__75256058DE5E1DE3");
+
+            entity.ToTable("kf_programs");
+
+            entity.Property(e => e.AccreditationStatus).HasDefaultValue((byte)0);
+            entity.Property(e => e.CommitteeComment).HasMaxLength(2000);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.Degree)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsDraft).HasDefaultValue(true);
+            entity.Property(e => e.MinAcceptanceRate).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.ProgramCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ProgramName).HasMaxLength(300);
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.KfProgramCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_programs_CreatedBy_UsersLogin");
+
+            entity.HasOne(d => d.Faculty).WithMany(p => p.KfPrograms)
+                .HasForeignKey(d => d.FacultyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_programs_FacultyId_Faculties");
+
+            entity.HasOne(d => d.University).WithMany(p => p.KfPrograms)
+                .HasForeignKey(d => d.UniversityId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_programs_UniversityId_UnUniversityList");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.KfProgramUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .HasConstraintName("FK_kf_programs_UpdatedBy_UsersLogin");
+        });
+
+        modelBuilder.Entity<KfProgramCost>(entity =>
+        {
+            entity.HasKey(e => e.ProgramCostId).HasName("PK__kf_progr__C57E046D355450BE");
+
+            entity.ToTable("kf_program_costs");
+
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+
+            entity.HasOne(d => d.Program).WithMany(p => p.KfProgramCosts)
+                .HasForeignKey(d => d.ProgramId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_program_costs_Program");
+
+            entity.HasOne(d => d.SponsorshipType).WithMany(p => p.KfProgramCosts)
+                .HasForeignKey(d => d.SponsorshipTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_program_costs_SponsorshipType");
+        });
+
+        modelBuilder.Entity<KfProgramCourse>(entity =>
+        {
+            entity.HasKey(e => e.ProgramCourseId).HasName("PK__kf_progr__8BD8F31E5D79C385");
+
+            entity.ToTable("kf_program_courses");
+
+            entity.Property(e => e.SemesterNo).HasDefaultValue(1);
+
+            entity.HasOne(d => d.Course).WithMany(p => p.KfProgramCourses)
+                .HasForeignKey(d => d.CourseId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_program_courses_Course");
+
+            entity.HasOne(d => d.Program).WithMany(p => p.KfProgramCourses)
+                .HasForeignKey(d => d.ProgramId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_program_courses_Program");
+        });
+
+        modelBuilder.Entity<KfProgramDocument>(entity =>
+        {
+            entity.HasKey(e => e.ProgramDocumentId).HasName("PK__kf_progr__6C73C4769D555FF3");
+
+            entity.ToTable("kf_program_documents");
+
+            entity.Property(e => e.IsRequired).HasDefaultValue(true);
+
+            entity.HasOne(d => d.DocumentType).WithMany(p => p.KfProgramDocuments)
+                .HasForeignKey(d => d.DocumentTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_program_documents_DocumentType");
+
+            entity.HasOne(d => d.Program).WithMany(p => p.KfProgramDocuments)
+                .HasForeignKey(d => d.ProgramId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_program_documents_Program");
+        });
+
+        modelBuilder.Entity<KfSponsorshipType>(entity =>
+        {
+            entity.HasKey(e => e.SponsorshipTypeId).HasName("PK__kf_spons__E06B5E93DE97DEE2");
+
+            entity.ToTable("kf_sponsorship_types");
+
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.SponsorshipName).HasMaxLength(200);
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.KfSponsorshipTypeCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_kf_sponsorship_types_CreatedBy_UsersLogin");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.KfSponsorshipTypeUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .HasConstraintName("FK_kf_sponsorship_types_UpdatedBy_UsersLogin");
         });
 
         modelBuilder.Entity<MasterDonorList>(entity =>
