@@ -25,9 +25,8 @@ namespace ScholarshipManagementAPI.DTOs.University.Courses
 
 
         // Faculties Mapping
-        public List<long> FacultyIds { get; set; } = new();
-
-
+        public List<CourseFacultyDto> Faculties { get; set; } = new();
+        public List<int> FacultyIds { get; set; } = new();
 
 
         // Response

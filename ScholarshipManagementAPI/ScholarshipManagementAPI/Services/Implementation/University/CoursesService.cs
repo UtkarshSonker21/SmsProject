@@ -190,7 +190,13 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                     CourseNameEn = x.CourseNameEn,
                     CourseNameAr = x.CourseNameAr,
 
-                    FacultyIds = x.KfCourseFaculties.Select(cf => cf.FacultyId).ToList(),
+                    Faculties = x.KfCourseFaculties
+                    .Select(cf => new CourseFacultyDto
+                    {
+                        FacultyId = cf.FacultyId,
+                        FacultyName = cf.Faculty.FacultyName
+                    })
+                    .ToList(),
 
                     IsActive = x.IsActive,
                     CreatedDate = x.CreatedDate,
@@ -265,7 +271,13 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                     CourseNameEn = x.CourseNameEn,
                     CourseNameAr = x.CourseNameAr,
 
-                    FacultyIds = x.KfCourseFaculties.Select(cf => cf.FacultyId).ToList(),
+                    Faculties = x.KfCourseFaculties
+                    .Select(cf => new CourseFacultyDto
+                    {
+                        FacultyId = cf.FacultyId,
+                        FacultyName = cf.Faculty.FacultyName
+                    })
+                    .ToList(),
 
                     IsActive = x.IsActive,
                     CreatedDate = x.CreatedDate,
