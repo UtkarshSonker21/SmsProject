@@ -84,7 +84,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<ZzMasterDropDown> ZzMasterDropDowns { get; set; }
 
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AcCurrencyConversion>(entity =>
@@ -274,9 +273,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.AccreditationStatus).HasDefaultValue((byte)0);
             entity.Property(e => e.CommitteeComment).HasMaxLength(2000);
             entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.Degree)
-                .HasMaxLength(50)
-                .IsUnicode(false);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.IsDraft).HasDefaultValue(true);
             entity.Property(e => e.MinAcceptanceRate).HasColumnType("decimal(5, 2)");

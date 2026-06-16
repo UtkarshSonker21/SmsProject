@@ -384,6 +384,9 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                             ProgramCostId = c.ProgramCostId,
                             SponsorshipTypeId = c.SponsorshipTypeId,
                             SponsorshipTypeName = c.SponsorshipType.SponsorshipName,
+                            FrequencyTypeId = c.SponsorshipType.FrequencyType,
+                            // 1- One-time costs (FrequencyTypeId == 1)
+                            // 2- Recurring(Semester) costs (FrequencyTypeId == 2)
                             Amount = c.Amount
                         })
                         .ToList(),

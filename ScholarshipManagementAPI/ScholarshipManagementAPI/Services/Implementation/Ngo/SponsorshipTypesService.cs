@@ -166,7 +166,7 @@ namespace ScholarshipManagementAPI.Services.Implementation.Ngo
             var totalCount = await query.CountAsync();
 
             // ---------- Ordering ----------
-            query = query.OrderByDescending(x => x.SponsorshipTypeId);
+            query = query.OrderBy(x => x.SponsorshipTypeId);
 
             // ---------- Pagination rule ----------
             if (filter.PageSize > 0)

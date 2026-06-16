@@ -15,7 +15,7 @@ public partial class KfProgram
 
     public string ProgramCode { get; set; } = null!;
 
-    public string Degree { get; set; } = null!;
+    public byte Degree { get; set; }
 
     public int NumberOfSemesters { get; set; }
 
