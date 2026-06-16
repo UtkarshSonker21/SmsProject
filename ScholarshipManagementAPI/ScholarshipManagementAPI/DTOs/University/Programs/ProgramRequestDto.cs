@@ -21,8 +21,7 @@ namespace ScholarshipManagementAPI.DTOs.University.Programs
         public string ProgramCode { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(50)]
-        public string Degree { get; set; } = string.Empty;
+        public byte Degree { get; set; }
 
         public int NumberOfSemesters { get; set; }
 

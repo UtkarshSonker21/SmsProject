@@ -9,8 +9,8 @@ using ScholarshipManagementAPI.Services.Interface.Ngo;
 
 namespace ScholarshipManagementAPI.Controllers.Ngo
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/ngo/sponsorship-types")]
     public class SponsorshipTypesController : ControllerBase
     {
         private readonly ISponsorshipTypesService _service;

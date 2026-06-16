@@ -4,6 +4,7 @@ using ScholarshipManagementAPI.Data.DbModels;
 using ScholarshipManagementAPI.DTOs.Common.Response;
 using ScholarshipManagementAPI.DTOs.University.Faculties;
 using ScholarshipManagementAPI.DTOs.University.MasterUniversity;
+using ScholarshipManagementAPI.Helper.Enums;
 using ScholarshipManagementAPI.Helper.Utilities;
 using ScholarshipManagementAPI.Services.Interface.University;
 
@@ -215,6 +216,87 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
         }
 
 
+
+
+        // ---------------- GET FACULTY PROGRAMS DASHBOARD ----------------
+
+        public async Task<FacultyProgramsDashboardDto>GetFacultyProgramsDashboardAsync(long universityId)
+        {
+            var programsQuery = _context.KfPrograms
+                .AsNoTracking()
+                .Where(x =>
+                    x.UniversityId == universityId &&
+                    x.IsActive);
+
+            var result = new FacultyProgramsDashboardDto
+            {
+                TotalFaculties = await _context.KfFaculties
+                    .CountAsync(x =>
+                        x.UniversityId == universityId &&
+                        x.IsActive),
+
+                AccreditedPrograms = await programsQuery
+                    .CountAsync(x =>
+                        x.AccreditationStatus ==
+                        (byte)AccreditationStatusEnum.Accredited),
+
+                UnderReviewPrograms = await programsQuery
+                    .CountAsync(x =>
+                        x.AccreditationStatus ==
+                        (byte)AccreditationStatusEnum.Pending)
+            };
+
+            result.Faculties = await programsQuery
+                .GroupBy(x => new
+                {
+                    x.FacultyId,
+                    x.Faculty.FacultyName,
+                    x.Faculty.FacultyCode
+                })
+                .Select(g => new FacultyProgramsSummaryDto
+                {
+                    FacultyId = g.Key.FacultyId,
+                    FacultyName = g.Key.FacultyName,
+                    FacultyCode = g.Key.FacultyCode,
+
+                    TotalPrograms = g.Count(),
+
+                    AverageSemesters =
+                        Math.Round(
+                            g.Average(x => (decimal)x.NumberOfSemesters),
+                            1),
+
+                    Programs = g
+                        .OrderBy(x => x.ProgramName)
+                        .Select(x => new FacultyProgramItemDto
+                        {
+                            ProgramId = x.ProgramId,
+                            ProgramName = x.ProgramName,
+                            ProgramCode = x.ProgramCode,
+
+                            IsDraft = x.IsDraft,
+
+                            AccreditationStatus =
+                                x.AccreditationStatus,
+
+                            StatusName =
+                                x.IsDraft
+                                    ? "Draft"
+                                    : x.AccreditationStatus ==
+                                      (byte)AccreditationStatusEnum.Pending
+                                        ? "Under Review"
+                                    : x.AccreditationStatus ==
+                                      (byte)AccreditationStatusEnum.Accredited
+                                        ? "Accredited"
+                                    : "Rejected"
+                        })
+                        .ToList()
+                })
+                .OrderBy(x => x.FacultyName)
+                .ToListAsync();
+
+            return result;
+        }
 
     }
 }

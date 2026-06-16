@@ -5,7 +5,9 @@ using ScholarshipManagementAPI.DTOs.Common.Response;
 using ScholarshipManagementAPI.DTOs.University.Faculties;
 using ScholarshipManagementAPI.DTOs.University.MasterUniversity;
 using ScholarshipManagementAPI.Helper.Utilities;
+using ScholarshipManagementAPI.Services.Implementation.University;
 using ScholarshipManagementAPI.Services.Interface.University;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ScholarshipManagementAPI.Controllers.University
 {
@@ -139,6 +141,22 @@ namespace ScholarshipManagementAPI.Controllers.University
             });
         }
 
+
+
+        // ---------------- GET FACULTY PROGRAMS DASHBOARD ----------------
+        [HttpGet("faculty-programs/{universityId}")]
+        public async Task<IActionResult> Dashboard(long universityId)
+        {
+            var data = await _service.GetFacultyProgramsDashboardAsync(universityId);
+
+            return Ok(new ApiResponseDto
+            {
+                Success = true,
+                Result = data,
+                Message = "Record found"
+            });
+
+        }
 
     }
 }

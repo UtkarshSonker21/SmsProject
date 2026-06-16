@@ -12,5 +12,10 @@ namespace ScholarshipManagementAPI.Services.Interface.University
 
         Task<FacultyRequestDto?> GetByIdAsync(long id);
         Task<PagedResultDto<FacultyRequestDto>> GetByFilterAsync(FacultyFilterDto filter);
+
+
+        // ---------------- GET FACULTY PROGRAMS DASHBOARD ----------------
+        Task<FacultyProgramsDashboardDto> GetFacultyProgramsDashboardAsync(long universityId);
+
     }
 }
