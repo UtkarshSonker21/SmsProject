@@ -216,12 +216,12 @@ namespace ScholarshipManagementAPI.Services.Implementation.University
                 }
 
                 // Back to Draft
-                else if (!wasDraft && dto.IsDraft)
-                {
-                    entity.AccreditationStatus = null;
-                    entity.SubmittedDate = null;
-                    entity.CommitteeComment = null;
-                }
+                //else if (!wasDraft && dto.IsDraft)
+                //{
+                //    entity.AccreditationStatus = null;
+                //    entity.SubmittedDate = null;
+                //    entity.CommitteeComment = null;
+                //}
 
                 entity.UpdatedBy = dto.UpdatedBy;
                 entity.UpdatedDate = dto.UpdatedDate;

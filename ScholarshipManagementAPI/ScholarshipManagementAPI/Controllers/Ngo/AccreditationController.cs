@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScholarshipManagementAPI.DTOs.Common.Response;
 using ScholarshipManagementAPI.DTOs.Ngo;
+using ScholarshipManagementAPI.DTOs.Ngo.Accreditation;
 using ScholarshipManagementAPI.Helper;
 using ScholarshipManagementAPI.Helper.Enums;
 using ScholarshipManagementAPI.Helper.Utilities;
@@ -14,13 +15,13 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace ScholarshipManagementAPI.Controllers.Ngo
 {
     [ApiController]
-    [Route("api/ngo/approval")]
-    public class ApprovalController : ControllerBase
+    [Route("api/ngo/accreditation")]
+    public class AccreditationController : ControllerBase
     {
-        private readonly IApprovalService _service;
+        private readonly IAccreditationService _service;
         private readonly CurrentUserContextService _currentUser;
 
-        public ApprovalController(IApprovalService service, CurrentUserContextService currentUser)
+        public AccreditationController(IAccreditationService service, CurrentUserContextService currentUser)
         {
             _service = service;
             _currentUser = currentUser;
@@ -148,6 +149,24 @@ namespace ScholarshipManagementAPI.Controllers.Ngo
             });
         }
 
+
+
+        [HttpPost("program")]
+        public async Task<IActionResult> AccreditateProgram(ProgramAccreditationDto dto)
+        {
+
+            var currentUser = await _currentUser.GetCurrentUserAsync();
+            dto.UpdatedBy = currentUser.LoginId;
+            var result = await _service.AccreditateProgram(dto);
+
+            return Ok(new ApiResponseDto
+            {
+                Success = true,
+                Message = "Program updated successfully",
+                Result = result,
+            });
+
+        }
 
 
 
