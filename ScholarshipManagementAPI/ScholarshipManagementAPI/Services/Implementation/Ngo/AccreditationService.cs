@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ScholarshipManagementAPI.Data.Contexts;
+using ScholarshipManagementAPI.DTOs.Ngo.Accreditation;
 using ScholarshipManagementAPI.Helper;
 using ScholarshipManagementAPI.Helper.Enums;
 using ScholarshipManagementAPI.Helper.Utilities;
@@ -7,10 +8,10 @@ using ScholarshipManagementAPI.Services.Interface.Ngo;
 
 namespace ScholarshipManagementAPI.Services.Implementation.Ngo
 {
-    public class ApprovalService : IApprovalService
+    public class AccreditationService : IAccreditationService
     {
         private readonly AppDbContext _context;
-        public ApprovalService(AppDbContext context)
+        public AccreditationService(AppDbContext context)
         {
             _context = context;
         }
@@ -187,47 +188,41 @@ namespace ScholarshipManagementAPI.Services.Implementation.Ngo
         }
 
 
-        //public async Task<bool> ApproveUniversityAsync(long id, int approvalStatus, long approvedBy)
-        //{
-        //    var entity = await _context.UnUniversityLists
-        //        .FirstOrDefaultAsync(x => x.UniversityId == id);
+        public async Task<bool> AccreditateProgram(ProgramAccreditationDto dto)
+        {
+            var program = await _context.KfPrograms.FirstOrDefaultAsync(x => x.ProgramId == dto.ProgramId);
 
-        //    if (entity == null)
-        //        throw new CustomException("University not found");
+            if (program == null)
+                return false;
 
-        //    // validate enum
-        //    if (!Enum.IsDefined(typeof(ApprovalStatus), approvalStatus))
-        //        throw new CustomException("Invalid approval status");
+            if (program.IsDraft)
+            {
+                throw new CustomException("Draft program cannot be accredited");
+            }
 
-        //    // block pending
-        //    if (approvalStatus == (int)ApprovalStatus.Pending)
-        //        throw new CustomException("Pending status cannot be set from approval action");
+            if (program.AccreditationStatus != (byte)AccreditationStatusEnum.Pending)
+            {
+                throw new CustomException("Only pending programs can be reviewed");
+            }
 
-        //    // prevent re-approval
-        //    if (entity.ApprovalStatus == (int)ApprovalStatus.Approved &&
-        //        approvalStatus == (int)ApprovalStatus.Approved)
-        //        throw new CustomException("University already approved");
+            if (dto.AccreditationStatus ==
+                AccreditationStatusEnum.Pending)
+            {
+                throw new CustomException("Committee cannot set status to Pending");
+            }
 
-        //    // prevent re-reject 
-        //    if (entity.ApprovalStatus == (int)ApprovalStatus.Rejected &&
-        //        approvalStatus == (int)ApprovalStatus.Rejected)
-        //        throw new CustomException("University already rejected");
+            program.AccreditationStatus = (byte)dto.AccreditationStatus;
 
-        //    // prevent reject after approve
-        //    if (entity.ApprovalStatus == (int)ApprovalStatus.Approved &&
-        //        approvalStatus == (int)ApprovalStatus.Rejected)
-        //        throw new CustomException("Approved University cannot be rejected");
+            program.CommitteeComment = dto.CommitteeComment;
 
-        //    // usually updated via ngo
-        //    entity.ApprovalStatus = approvalStatus;
-        //    entity.ApprovedBy = approvedBy;
+            program.UpdatedBy = dto.UpdatedBy;
 
-        //    await _context.SaveChangesAsync();
+            program.UpdatedDate =  DateTime.UtcNow;
 
-        //    return true;
-        //}
+            await _context.SaveChangesAsync();
 
-
+            return true;
+        }
 
     }
 }
