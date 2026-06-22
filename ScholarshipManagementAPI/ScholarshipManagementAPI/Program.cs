@@ -40,6 +40,7 @@ builder.Services.AddCors(options =>
              policy.WithOrigins(
                  "https://localhost:7064",                    // Local dev client (Blazor WASM)
                  "https://localhost:7197",                    // Local dev client (Blazor WASM)
+                 "https://sms-ui-v1.runasp.net",             // staging dev client (Blazor WASM)
                  "https://smsui.runasp.net"                   // staging dev client (Blazor WASM)
              )
              .AllowAnyHeader()
